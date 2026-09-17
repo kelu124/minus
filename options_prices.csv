@@ -1,0 +1,25 @@
+category,option_group,part,function,key_spec,price_usd_lcsc_qty20_50,notes
+mcu,-,RP2350B,controller,dual Cortex-M33 + PIO,1.10,indicative; RP2350A ~0.80
+pulser,unipolar_5v,note_5V_only,use USB 5V as +HV directly,no boost IC; FET+driver+T/R only,0.00,cheapest HV path; low amplitude; upgrade via HV header (T7)
+pulser,unipolar,HV_NMOS_100V,TX FET,single ~100V N-MOSFET,0.60,indicative
+pulser,unipolar,gate_driver,MOSFET gate driver,e.g. UCC27511 / TC4420,0.90,indicative
+pulser,unipolar,boost_HV,HV boost supply IC,e.g. LT3494 / TPS6139x,1.50,indicative; inductor is a passive
+pulser,bipolar,MD1213,3-state pulser driver,drives +/-100V P/N FETs,4.00,Microchip; DP5 (un0rick/pic0rick)
+pulser,bipolar,TC6320,HV MOSFET pair,+/-100V 2A P+N,3.00,Microchip; DP5
+pulser,bipolar_5v,neg5v_chargepump,generate -5V from +5V,e.g. TPS60403 / ICL7660 / LM2776,0.40,cheap symmetric +/-5V rail (T6); low amplitude bipolar
+pulser,bipolar,neg_rail_inv,inverting supply for higher - rail,e.g. LT3463 dual / TPS6040x,3.00,indicative; for higher-voltage bipolar only
+pulser,integrated,STHV748,pulser + T/R (quad),+/-90V 3/5-level +T/R,10.00,ST; 1 of 4 ch used
+support,tr_switch,MD0100,T/R switch,passive HV limiter,3.00,indicative; not needed w/ STHV748 or TUSS
+gain,vga,AD8331,LNA+VGA+postamp,48 dB to 120 MHz,10.00,ADI; proven in un0rick/pic0rick/IUP (DP5)
+gain,vga,AD8338,low-power VGA,0-80 dB single-ended,4.00,ADI; WULPUS PRO / BioGAP
+gain,vga,AD8330,low-cost VGA,~50 dB DC-150 MHz diff,6.00,ADI
+gain,vga,AD603,cheap VGA,~40 dB 90 MHz,4.00,ADI; needs external LNA
+gain,lna,LNA_opamp,LNA for AD603/AD8367,low-noise op-amp,1.00,indicative
+gain,gain_ctrl,MCP4812,DAC for TGC ramp,12-bit dual SPI,1.50,optional; RP2350 PWM+RC = 0
+adc,ext,AD9235-20,external ADC,12-bit 20 MSps parallel,10.00,LCSC C514274 (AD9235BRUZ-20)
+adc,ext,AD9235-40,external ADC,12-bit 40 MSps parallel,13.00,indicative
+adc,ext,AD9200,external ADC,10-bit 20 MSps parallel,6.00,indicative
+adc,ext,AD9280,external ADC,8-bit 32 MSps parallel,4.00,indicative; ~48 dB only (marginal vs P5)
+adc,ext,ADC10065,external ADC,10-bit 65 MSps parallel,10.00,un0rick/pic0rick (DP5); faster than needed at 3-4 MHz
+adc,ext,LTC2203,external ADC,16-bit 25 MSps parallel,25.00,IUP; high dynamic range, pricey/large
+adc,internal,RP2350_ADC,internal ADC,12-bit 500 kSps,0.00,envelope-only; too slow for 3-4 MHz raw RF

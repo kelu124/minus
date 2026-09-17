@@ -2,6 +2,11 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Surveyed gain (VGA/TGC) alternatives to AD8331 (AD8338/AD8330/AD603/
+  integrated AFEs/log-amp) → analysis §3b. Built `options.md` (filtered shortlist:
+  pulser/gain/ADC vs criteria) + `options_prices.csv` (LCSC qty 20–50, active parts).
+  Added HV options: 5V-rail-only (no boost) and cheap ±5V via +5→−5V charge pump.
+  Added memory 0006 (pricing basis) + RF-ACCESS open question in requirements.
 - 2026-09-17 — requirements.md v0.3: NDT/education; **workshop-badge** for an US
   conference (muscle-monitoring topic; **piezo provided**); **3–4 MHz**; **unipolar**
   pulser; **A-/M-mode**; **programmable/coded excitation** (RP2350 PIO); transducer

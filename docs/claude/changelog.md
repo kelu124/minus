@@ -8,7 +8,10 @@ the sha.
 
 ## Pending
 
-- _(this changelog line only — rides to next commit)_
+- Add `options.md` (filtered pulser/gain/ADC shortlist + priced builds) +
+  `options_prices.csv` (LCSC qty 20–50); analysis §3b gain options; requirements
+  RF-ACCESS + 5V/±5V HV options; memory 0006 (pricing basis); earlier bd81776..
+  requirements bits (OLED/RPi header/silkscreen/etc. already committed).
 
 ## Committed
 

@@ -99,7 +99,8 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 | ID | Open decision | Working assumption in this draft |
 |----|---------------|----------------------------------|
 | TBD-6 | Unit BOM cost | **drive as low as possible**; explore cheap options (no fixed cap yet) |
-| ADEC | External ADC choice | **external high-speed ADC** on RP2350 PIO; at 3–4 MHz a **~20–30 MSps, 10–12-bit** part suffices (cheaper/smaller than 65 MSps) — pick the lowest-cost part that meets P3 |
+| ADEC | External ADC choice | **external high-speed ADC** on RP2350 PIO; at 3–4 MHz a **~20–30 MSps, 10–12-bit** part suffices (cheaper/smaller than 65 MSps) — pick the lowest-cost part that meets P3. See [`options.md`](options.md) §3 |
+| RF-ACCESS | **Raw RF vs envelope?** | **Working assumption: raw RF** (F3). Key question: do we want users to access the **raw RF signal, not just the envelope?** Raw RF is what justifies the on-device **DSP** (S6), **coded excitation** + matched filtering (T4), and the external high-speed ADC. **Envelope-only would be simpler/cheaper but would not justify the DSP** and would collapse the external-ADC route (an internal 500 kSps ADC would do). **Decision pending** — if confirmed raw-RF, ADEC stands; if envelope-only, re-scope §0/§9 |
 
 ---
 
@@ -172,9 +173,11 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **T1 [M]** Generate a configurable **unipolar** HV pulse for ~3–4 MHz excitation.
 - **T2 [M]** Pulse amplitude: unipolar, **configurable**, baseline **~+20–30 V**,
   capability up to **~+50 V** if cheap to do; single minimal HV rail (DP2/DP3).
-- **T3 [M]** Simplest unipolar transmit: **single HV MOSFET + gate driver + small
-  boost rail** (WULPUS-style) — lowest part count; plus a T/R switch/clamp to protect
-  RX (MD0100/MMBD-class).
+- **T3 [M]** Simplest unipolar transmit: **single MOSFET + gate driver** driving the
+  transducer, plus a T/R switch/clamp to protect RX (MD0100/MMBD-class). The HV rail
+  may be as simple as the **USB +5 V rail directly** (no boost IC — cheapest, low
+  amplitude) or a **small boost** for a stronger pulse; either way the HV node is on a
+  header (T7) so users can **swap in external HV**. Choose per `options.md` (U0/U1).
 - **T4 [M]** **Programmable / arbitrary excitation** — the pulser gate is driven by
   the **RP2350 PIO**, so workshop users can generate multi-cycle bursts, swept-
   frequency (chirp), pulse-position and on-off-keyed (OOK) **coded excitation** and
@@ -182,9 +185,11 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **T5 [note]** True **bipolar phase codes** (e.g., ±1 Barker) need a *bipolar*
   pulser; the unipolar baseline supports frequency/pulse-train/OOK coding only.
 - **T6 [S]** **Bipolar option (conditional):** bipolar transmit is accepted **iff** a
-  **cheap, simple symmetric ± rail** can be generated — explore low-cost options such
-  as an inverting charge pump, a dual-output / SEPIC-Ćuk converter, a single
-  transformer-coupled supply, or two small boost converters (one inverted). If found,
+  **cheap, simple symmetric ± rail** can be generated. **Cheapest answer: a
+  +5→−5V charge pump** (e.g. TPS60403 / ICL7660 / LM2776, ~$0.4) gives a symmetric
+  **±5V** rail — low amplitude but enough to demo **true ±1 phase-coded excitation**
+  (options.md B0). For higher voltage, explore an inverting/dual-output / SEPIC-Ćuk
+  converter or two small boosts (one inverted). If a viable ± rail is used,
   a bipolar pulser (e.g. MD1210/MD1213 + TC6320, as in pic0rick — DP5) becomes
   viable and **unlocks true ±1 phase-coded excitation** for the workshop (synergy
   with T4). Otherwise, stay unipolar (T1–T3).

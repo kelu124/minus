@@ -59,9 +59,22 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
 - **Displays [S]:** addressable **RGB LED** (F11) + small **I²C OLED** (SSD1306-class,
   F12) for autonomous on-badge display without a host.
 
-**Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
-part; exact HV level; whether a cheap ± rail makes bipolar worthwhile; then draft the
-costed BOM + block diagram.
+**Component options (trade study):** `options.md` (root) + `options_prices.csv` — a
+filtered shortlist from analysis.md, priced per option (LCSC qty 20–50, see [[0006-pricing-basis]]):
+- **Pulser:** U0 5V-rail-only (cheapest, no boost) / U1 +boost / U2 MD1213+TC6320
+  (reuse) / B0 ±5V via +5→−5V charge pump (cheap bipolar, true phase codes) / B1/B2
+  higher-V bipolar. HV node on a header (T7) for external-HV upgrade.
+- **Gain:** G1 AD8338 (front-runner, cheap/low-power) / G2 AD8331 (reuse) / G3 AD603+LNA.
+- **ADC:** A1 AD9235-20 (12-bit, LCSC) / A2 AD9200 (10-bit, cheaper) / A3 ADC10065
+  (reuse) / A4 AD9280 (8-bit, marginal).
+- Candidate active-IC BOM: **~$16 cheapest** (U0+AD8338+AD9200+RP2350) → **~$44 derisked**.
+
+**Open question RF-ACCESS (req §4):** do users need **raw RF** (not just envelope)?
+Raw RF justifies the DSP (S6) + coded excitation (T4) + external ADC; envelope-only
+would be cheaper but drop those. Working assumption = raw RF.
+
+**Still open:** RF-ACCESS confirmation; ADEC (ADC pick); HV level (5V vs boost vs ±5V);
+then draft the costed BOM + block diagram.
 
 **Not yet decided (open):** exact target frequency (≤3 MHz would reopen Route A),
 unipolar vs bipolar, ADC (speed/bits), controller (RP2040/RP2350 vs iCE40), plus the

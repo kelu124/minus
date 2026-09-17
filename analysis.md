@@ -105,6 +105,33 @@ iCE40 FPGA).
 
 ---
 
+## 3b. Receive gain / TGC options
+
+The VGA/TGC stage is the other analog choice. What the field uses (from the survey):
+
+| Part | Gain | Notes | Used by |
+|------|------|-------|---------|
+| **AD8331** (/8332/8334) | 48 dB (LNA+VGA) | ultrasound-grade, linear-in-dB, to 120 MHz | un0rick, pic0rick, IUP, Murgen, W. Qiu |
+| **AD8338** | 0–80 dB | low-power (mW), single-ended, RC-ramp TGC | **WULPUS PRO, BioGAP** |
+| AD8330 | ~50 dB | ADI "low-cost" wideband VGA (differential) | — |
+| AD603 / AD8367 | ~40–45 dB | cheap VGA, **needs external LNA**, lower DR | cheap/DIY designs |
+| VCA8500 / MAX2077 | VGA | | Govindan/Vasudevan; Weng |
+| **AFE58xx / AD927x** | integrated LNA+VGA+ADC | one chip, but **multi-channel, pricey, power-hungry** | 8-ch research boards |
+| TUSS4470 / LT5507 / AD830x | log-amp / envelope | compresses DR, **no linear TGC**, ≤1 MHz | Open Echo; WULPUS PRO envelope |
+| MSP430 PGA | fixed | no TGC (fixed gain) | WULPUS original |
+
+**Contenders for minus (single-channel, cheap, 3–4 MHz):**
+- **AD8331** — derisked reuse (DP5, your boards), 48 dB, ~$8–12.
+- **AD8338** — cheaper, lower power, proven in the WULPUS wearables → likely the
+  better badge fit.
+- **AD603 + external LNA** — BOM-floor option, ~40 dB, lower dynamic range.
+- Integrated AFEs (AFE58xx/AD927x) are over-spec/expensive for one channel.
+- **BOM saver:** drive the analog gain-control voltage from **RP2350 PWM + RC** rather
+  than a dedicated DAC IC (pic0rick used an MCP4812) — one fewer part.
+
+_Decision pending with ADEC; AD8338 is the current front-runner for cost/power,
+AD8331 the derisked fallback._
+
 ## 4. Where to start (reference designs on disk)
 - [`design/pic0rick/panel_adc_pulser_hv/`](design/pic0rick/) — a KiCad **3-in-1
   ADC + pulser + HV** panel = the closest single-board starting point for Route B.

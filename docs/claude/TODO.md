@@ -8,9 +8,10 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - Requirements v0.3: NDT/workshop-badge, 3–4 MHz, unipolar, A-/M-mode, RP2350 + USB-C,
   provided piezo, coded excitation, multi-connector, derisk-by-reuse (DP5) all locked.
   Only ADEC (external ADC choice) + exact HV level remain open.
-- Next: pick a low-cost ~20–30 MSps 10–12-bit external ADC (ADEC); confirm HV level;
-  draft a **costed BOM + block diagram** reusing un0rick/pic0rick blocks (unipolar HV
-  pulser, AD8331 VGA, PIO ADC capture), ported to RP2350.
+- Confirm **RF-ACCESS** (raw RF vs envelope) — gates the external-ADC section.
+- Pick from `options.md`: pulser (U0/U1/U2/B0), gain (AD8338 vs AD8331), ADC
+  (AD9200/AD9235); refresh `options_prices.csv` from live LCSC (qty 20–50).
+- Then draft a **costed BOM + block diagram** reusing un0rick/pic0rick blocks on RP2350.
 
 ## Next
 
