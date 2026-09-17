@@ -1,9 +1,32 @@
 # minus — Requirements (draft)
 
-**Status:** draft v0.1, 2026-09-17. Grounded in [`docs/claude/memory/0001-project-scope.md`],
+**Status:** draft v0.2, 2026-09-17. Grounded in [`docs/claude/memory/0001-project-scope.md`],
 the survey in [`systems/`](systems/README.md), and the route/pulser analysis in
 [`analysis.md`](analysis.md). Requirement values marked **TBD** need a decision
 (see §4). Priorities use MoSCoW: **[M]** must, **[S]** should, **[C]** could, **[W]** won't-yet.
+
+**v0.2 firm requirements (from the owner):** smallest practical board, cheapest BOM,
+design as simple as possible, and **RP2350 as the MCU** (resolves TBD-7; host link is
+its native USB, resolving TBD-4). See **Design principles** below and §10.
+
+## 0. Design principles (overriding [M])
+
+- **DP1 — Small:** smallest practical single board.
+- **DP2 — Cheap:** minimise BOM cost and part count.
+- **DP3 — Simple:** simplest design that meets the functional requirements; fewest
+  ICs, jelly-bean parts, easy hand-assembly and reproduction.
+- **DP4 — RP2350 MCU:** the controller is the Raspberry Pi **RP2350** (see §10).
+
+These principles are tie-breakers: when two designs meet the functional requirements,
+prefer the smaller / cheaper / simpler one.
+
+> **Architecture note (RP2350 + ADC).** The RP2350's on-chip SAR ADC is **12-bit,
+> 500 kSps** — far too slow for 1–5 MHz raw RF (P3 needs ≥ 20 MSps). So minus uses
+> **RP2350 + one external high-speed ADC** clocked into the RP2350 **PIO** (the
+> pic0rick pattern on RP2350). Keeping that single external ADC minimal is the main
+> tension against DP1–DP3. *If the 1–5 MHz raw-RF requirement were relaxed to
+> ≤~1 MHz envelope/ToF, the internal ADC could be used and the board gets much
+> simpler — that is the alternative, flagged as ADEC below, not the current baseline.*
 
 ---
 
@@ -37,15 +60,21 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 4. Assumptions & open decisions (must be resolved to freeze v1.0)
 
+**Resolved (owner decisions):**
+- **TBD-4 → RESOLVED:** host link is **USB**, via an **on-board USB connector,
+  USB-C preferred**; the board is **USB bus-powered** (§10, §11).
+- **TBD-7 → RESOLVED:** controller is the **RP2350** MCU (§10, DP4).
+
+**Still open:**
+
 | ID | Open decision | Working assumption in this draft |
 |----|---------------|----------------------------------|
 | TBD-1 | Clinical vs non-clinical | **non-clinical** research/education |
 | TBD-2 | Target centre frequency within 1–5 MHz | design for the **full 1–5 MHz** band |
-| TBD-3 | Transmit polarity | **bipolar** preferred; unipolar allowed if it wins on BOM |
-| TBD-4 | Host link | **USB-tethered** baseline; wireless is [C] |
+| TBD-3 | Transmit polarity | **bipolar** preferred; unipolar allowed if it wins on BOM (DP2/DP3) |
 | TBD-5 | Imaging mode beyond A-mode | A-mode core; single-element scanned B-mode is [C] |
 | TBD-6 | Target unit BOM cost | **≤ USD 150** target (to confirm) |
-| TBD-7 | Controller | RP2040/RP2350 **or** iCE40 FPGA (§10) |
+| ADEC | ADC architecture | **external high-speed ADC** on RP2350 PIO (keeps 1–5 MHz raw RF). Alt: internal 500 kSps ADC only if band relaxed to ≤~1 MHz envelope |
 
 ---
 
@@ -108,36 +137,44 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 9. Digitization & data (D)
 
-- **D1 [M]** Digitize raw RF at the P3/P4 rate/resolution.
-- **D2 [M]** Buffer at least **one full acquisition line** on-board (RAM/FIFO) before
-  transfer, decoupling ADC bursts from the host link.
+- **D1 [M]** Digitize raw RF at the P3/P4 rate/resolution using an **external
+  high-speed ADC** (ADEC) — the RP2350 internal 500 kSps ADC is insufficient (§0).
+- **D2 [M]** Buffer at least **one full acquisition line** in **RP2350 RAM** (via
+  PIO/DMA FIFO), decoupling ADC bursts from the USB transfer.
 - **D3 [S]** Sustain streaming of consecutive lines at the working PRF over the host
   link without loss (or buffer + burst).
 - **D4 [C]** On-board persistent storage (SD) for untethered raw capture (cf. IUP).
 
 ## 10. Control, connectivity & host (C)
 
-- **C1 [M]** A controller (MCU or FPGA, TBD-7) shall sequence TX/RX with
-  **cycle-accurate timing** and move samples to the host.
-- **C2 [M]** Host interface: **USB** (TBD-4), presenting a documented command/data
-  protocol.
+- **C1 [M]** The controller shall be the **Raspberry Pi RP2350** (DP4). It shall
+  sequence TX/RX with **cycle-accurate timing** using **PIO**, and capture the
+  external ADC (ADEC) into RAM via PIO/DMA. *(RP2350B preferred for the extra GPIO
+  needed by a parallel ADC bus + control lines.)*
+- **C2 [M]** Host interface: **USB** on the RP2350's native USB, via an **on-board
+  USB connector (USB-C preferred)**, presenting a documented command/data protocol.
 - **C3 [M]** A **Python** host API/reference client shall configure acquisitions and
   read back raw data.
-- **C4 [C]** Wireless (BLE/Wi-Fi) host link for untethered use.
+- **C4 [C]** Wireless (BLE/Wi-Fi) host link for untethered use — only if it does not
+  compromise DP1–DP3.
 - **C5 [S]** Standard expansion header (e.g., PMOD) for options (mux, storage).
 
 ## 11. Power (PW)
 
-- **PW1 [M]** Powered from the host link (**USB 5 V**) in the tethered baseline.
-- **PW2 [S]** Total power **≤ ~2 W** in tethered operation.
-- **PW3 [C]** Battery option for untethered use if C4 is pursued.
+- **PW1 [M]** **USB bus-powered** from the on-board USB-C connector (5 V); no
+  separate power input required for baseline operation.
+- **PW2 [S]** Total power within the USB budget and **≤ ~2 W** tethered.
+- **PW3 [M]** On-board generation of the rails the chain needs (e.g., ADC/AFE
+  supplies and the HV pulser rail) from USB 5 V, kept minimal per DP2/DP3.
+- **PW4 [C]** Battery option for untethered use if C4 is pursued.
 
 ## 12. Mechanical / form factor (M)
 
-- **M1 [M]** Single PCB (or a small stack), fabricable by a standard low-cost house
+- **M1 [M]** **Single small PCB** (DP1), fabricable by a standard low-cost house
   (e.g., JLCPCB) from the published files.
-- **M2 [S]** Compact benchtop form factor; transducer via SMA/coax.
-- **M3 [C]** Wearable/handheld form factor is out of scope for v1.0.
+- **M2 [M]** On-board **USB-C** connector (host + power). Transducer via SMA/coax.
+- **M3 [S]** Compact benchtop form factor; minimise board area.
+- **M4 [C]** Wearable/handheld form factor is out of scope for v1.0.
 
 ## 13. Cost & BOM (B)
 

@@ -5,8 +5,11 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- Resolve `requirements.md` §4 open decisions (TBD-1..7: clinical?, target freq, TX
-  polarity, host link, imaging mode, BOM cost, controller) → requirements v1.0.
+- Requirements v0.2: MCU=RP2350, on-board USB-C bus-powered, small/cheap/simple
+  locked. Remaining open: clinical? (TBD-1), target freq (TBD-2), TX polarity
+  (TBD-3), imaging mode (TBD-5), BOM cost (TBD-6), external-ADC choice (ADEC) → v1.0.
+- Then: pick the external ADC + pulser, draft a costed BOM and block diagram
+  (start from `design/pic0rick/panel_adc_pulser_hv/`, port RP2040→RP2350).
 
 ## Next
 

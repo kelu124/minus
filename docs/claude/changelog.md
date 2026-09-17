@@ -8,10 +8,13 @@ the sha.
 
 ## Pending
 
-- Draft root `requirements.md` (v0.1, MoSCoW + open-decision TBDs); cross-link from
-  analysis.md; update memory 0005 / TODO / DONE / log.
+- requirements.md v0.2: lock owner decisions (RP2350 MCU, on-board USB-C bus-powered,
+  small/cheap/simple DP1–DP4); external-ADC note; memory 0005 + docs.
 
 ## Committed
+
+- 2026-09-17  6b64555  Draft root `requirements.md` (v0.1, MoSCoW + open-decision
+  TBDs); cross-link from analysis.md; memory 0005 + docs. **Pushed.**
 
 - 2026-09-17  0dea95f  Per-system "Piezo 1–5 MHz" + "ADC sampling" attributes (19
   sheets + template + quick-ref); root `analysis.md` (routes + light-BOM pulsers);

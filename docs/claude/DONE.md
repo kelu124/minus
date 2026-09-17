@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — requirements.md v0.2: locked owner decisions — MCU **RP2350**, on-board
+  **USB-C** bus-powered, and design principles **small/cheap/simple** (DP1–DP4). Added
+  the RP2350-internal-ADC-too-slow note ⇒ external ADC required; updated §4/§10/§11/
+  §12/D1–D2 and memory 0005.
 - 2026-09-17 — Drafted `requirements.md` (root, v0.1): MoSCoW requirements across
   functional/performance/AFE/pulser/data/control/power/mechanical/cost/SW/openness/
   safety + verification + traceability, with §4 open-decision list (TBD-1..7).
