@@ -2,6 +2,12 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — requirements.md v0.3: NDT/education; **workshop-badge** for an US
+  conference (muscle-monitoring topic; **piezo provided**); **3–4 MHz**; **unipolar**
+  pulser; **A-/M-mode**; **programmable/coded excitation** (RP2350 PIO); transducer
+  connectors **SMA + 2×1 header + uFL**; controller precise timing + gap-free ADC
+  streaming; **DP5 derisk-by-reuse** of the owner's Murgen/un0rick/lit3rick/pic0rick;
+  on-body-use safety; BOM as-low-as-possible. Updated memory 0005.
 - 2026-09-17 — requirements.md v0.2: locked owner decisions — MCU **RP2350**, on-board
   **USB-C** bus-powered, and design principles **small/cheap/simple** (DP1–DP4). Added
   the RP2350-internal-ADC-too-slow note ⇒ external ADC required; updated §4/§10/§11/

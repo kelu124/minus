@@ -8,10 +8,14 @@ the sha.
 
 ## Pending
 
-- requirements.md v0.2: lock owner decisions (RP2350 MCU, on-board USB-C bus-powered,
-  small/cheap/simple DP1–DP4); external-ADC note; memory 0005 + docs.
+- requirements.md v0.3: NDT/workshop-badge, 3–4 MHz, unipolar, A-/M-mode, coded
+  excitation, multi-connector (SMA/header/uFL), precise-timing + gap-free-ADC
+  controller, DP5 derisk-by-reuse, provided piezo, on-body safety; memory 0005 + docs.
 
 ## Committed
+
+- 2026-09-17  b21abac  requirements.md v0.2: RP2350 MCU + on-board USB-C bus-powered +
+  DP1–DP4 (small/cheap/simple); external-ADC note; memory 0005. **Pushed.**
 
 - 2026-09-17  6b64555  Draft root `requirements.md` (v0.1, MoSCoW + open-decision
   TBDs); cross-link from analysis.md; memory 0005 + docs. **Pushed.**

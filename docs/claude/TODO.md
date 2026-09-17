@@ -5,11 +5,12 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- Requirements v0.2: MCU=RP2350, on-board USB-C bus-powered, small/cheap/simple
-  locked. Remaining open: clinical? (TBD-1), target freq (TBD-2), TX polarity
-  (TBD-3), imaging mode (TBD-5), BOM cost (TBD-6), external-ADC choice (ADEC) → v1.0.
-- Then: pick the external ADC + pulser, draft a costed BOM and block diagram
-  (start from `design/pic0rick/panel_adc_pulser_hv/`, port RP2040→RP2350).
+- Requirements v0.3: NDT/workshop-badge, 3–4 MHz, unipolar, A-/M-mode, RP2350 + USB-C,
+  provided piezo, coded excitation, multi-connector, derisk-by-reuse (DP5) all locked.
+  Only ADEC (external ADC choice) + exact HV level remain open.
+- Next: pick a low-cost ~20–30 MSps 10–12-bit external ADC (ADEC); confirm HV level;
+  draft a **costed BOM + block diagram** reusing un0rick/pic0rick blocks (unipolar HV
+  pulser, AD8331 VGA, PIO ADC capture), ported to RP2350.
 
 ## Next
 

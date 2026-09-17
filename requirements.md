@@ -1,6 +1,6 @@
 # minus — Requirements (draft)
 
-**Status:** draft v0.2, 2026-09-17. Grounded in [`docs/claude/memory/0001-project-scope.md`],
+**Status:** draft v0.3, 2026-09-17. Grounded in [`docs/claude/memory/0001-project-scope.md`],
 the survey in [`systems/`](systems/README.md), and the route/pulser analysis in
 [`analysis.md`](analysis.md). Requirement values marked **TBD** need a decision
 (see §4). Priorities use MoSCoW: **[M]** must, **[S]** should, **[C]** could, **[W]** won't-yet.
@@ -9,6 +9,18 @@ the survey in [`systems/`](systems/README.md), and the route/pulser analysis in
 design as simple as possible, and **RP2350 as the MCU** (resolves TBD-7; host link is
 its native USB, resolving TBD-4). See **Design principles** below and §10.
 
+**v0.3 firm requirements (from the owner):** **non-clinical (NDT)** use (TBD-1);
+target transducer **3–4 MHz** (TBD-2); **unipolar** pulser for simplicity (TBD-3);
+**A-mode core, M-mode optional** (TBD-5); **drive BOM as low as possible** — actively
+explore cheap options (TBD-6).
+
+**v0.3 context (from the owner):** minus is the hands-on device for a **workshop at an
+ultrasound conference**. It keeps a conference **"badge" form factor**, on a limited
+budget (many units), and must let attendees **experiment** — e.g. try **coded/encoded
+excitation** (see §8 T4). Example workshop topic: **muscle-contraction monitoring**
+(A-/M-mode of superficial muscle). The **piezo transducer is provided** with the kit
+(a known ~3–4 MHz single element), so the front-end can be tuned to it.
+
 ## 0. Design principles (overriding [M])
 
 - **DP1 — Small:** smallest practical single board.
@@ -16,39 +28,50 @@ its native USB, resolving TBD-4). See **Design principles** below and §10.
 - **DP3 — Simple:** simplest design that meets the functional requirements; fewest
   ICs, jelly-bean parts, easy hand-assembly and reproduction.
 - **DP4 — RP2350 MCU:** the controller is the Raspberry Pi **RP2350** (see §10).
+- **DP5 — Derisk by reuse:** prefer **proven building blocks from the owner's own,
+  validated designs** — echomods/**Murgen**, **un0rick**, **lit3rick**, **pic0rick**
+  (the owner has built these and is happy with their performance). Reuse their pulser,
+  T/R, VGA/TGC, ADC-capture, and PIO patterns rather than inventing new ones. Design
+  files are on disk in [`design/`](design/README.md).
 
 These principles are tie-breakers: when two designs meet the functional requirements,
-prefer the smaller / cheaper / simpler one.
+prefer the smaller / cheaper / simpler one, and the one that **reuses proven blocks**.
 
 > **Architecture note (RP2350 + ADC).** The RP2350's on-chip SAR ADC is **12-bit,
-> 500 kSps** — far too slow for 1–5 MHz raw RF (P3 needs ≥ 20 MSps). So minus uses
-> **RP2350 + one external high-speed ADC** clocked into the RP2350 **PIO** (the
-> pic0rick pattern on RP2350). Keeping that single external ADC minimal is the main
-> tension against DP1–DP3. *If the 1–5 MHz raw-RF requirement were relaxed to
-> ≤~1 MHz envelope/ToF, the internal ADC could be used and the board gets much
-> simpler — that is the alternative, flagged as ADEC below, not the current baseline.*
+> 500 kSps** — far too slow for **3–4 MHz** raw RF (P3 needs ≥ ~16–30 MSps). So minus
+> uses **RP2350 + one external high-speed ADC** clocked into the RP2350 **PIO** (the
+> pic0rick pattern on RP2350). At 3–4 MHz a ~20–30 MSps 10–12-bit ADC is enough —
+> cheaper and smaller than pic0rick's 65 MSps part, which helps DP1–DP3/BOM. *If the
+> raw-RF requirement were relaxed to ≤~1 MHz envelope/ToF, the internal ADC could be
+> used and the board gets much simpler — the alternative, not the current baseline.*
 
 ---
 
 ## 1. Purpose & scope
 
 **minus** is a **minimal, single-channel, low-cost, open** ultrasound pulse-echo
-platform. It generates a high-voltage excitation on one piezo transducer, amplifies
-and digitizes the returning echo, and delivers raw data to a host for processing.
+platform, built as a **conference-workshop badge**. It generates a high-voltage
+excitation on one (provided) piezo transducer, amplifies and digitizes the returning
+echo, and delivers raw data to a host for processing. The workshop lets attendees
+learn and experiment — e.g. **muscle-contraction monitoring** (A-/M-mode) and **coded
+excitation**.
 
-**In scope:** single-element A-mode acquisition (raw RF), 1–5 MHz transducers,
-depth-variable gain, host-side processing.
+**In scope:** single-element A-/M-mode acquisition (raw RF) with a provided ~3–4 MHz
+piezo; depth-variable gain; programmable/coded excitation; host-side processing;
+badge form factor; low, workshop-scalable BOM.
 **Out of scope (this version):** multi-element phased-array beamforming, on-board
-real-time B-mode reconstruction, clinical certification (see §16).
+real-time B-mode reconstruction, clinical use/certification (see §16).
 
 ## 2. Intended use & users
 
 - **Primary use:** research, education, experimentation, and NDT — a hackable,
   reproducible single-channel ultrasound front-end (in the un0rick/pic0rick lineage).
-- **Assumed classification:** **non-clinical** research/lab instrument. *(TBD-1 — if
-  any clinical intent, §16 requirements change substantially.)*
-- **Users:** makers, students, researchers; able to solder/assemble a PCB and script
-  a host in Python.
+- **Classification:** **non-clinical** — **NDT (non-destructive testing)**,
+  research and education. Not a medical device (§16).
+- **Users:** **ultrasound-conference workshop attendees** (and afterwards makers,
+  students, researchers, NDT experimenters). Assume a range of skill; the device and
+  its host software must be approachable for a guided workshop yet hackable for
+  experimentation.
 
 ## 3. Definitions & references
 
@@ -61,20 +84,21 @@ real-time B-mode reconstruction, clinical certification (see §16).
 ## 4. Assumptions & open decisions (must be resolved to freeze v1.0)
 
 **Resolved (owner decisions):**
-- **TBD-4 → RESOLVED:** host link is **USB**, via an **on-board USB connector,
-  USB-C preferred**; the board is **USB bus-powered** (§10, §11).
+- **TBD-1 → RESOLVED:** **non-clinical / NDT** (§2, §16).
+- **TBD-2 → RESOLVED:** target transducer **3–4 MHz** (design with margin ~2–5 MHz).
+- **TBD-3 → RESOLVED:** **unipolar** pulser (simplicity, DP3) — see §8.
+- **TBD-4 → RESOLVED:** host link is **USB**, via an **on-board USB-C** connector;
+  **USB bus-powered** (§10, §11).
+- **TBD-5 → RESOLVED:** **A-mode** core; **M-mode** optional [S] (host-side, no extra
+  HW); B-mode deferred [W].
 - **TBD-7 → RESOLVED:** controller is the **RP2350** MCU (§10, DP4).
 
 **Still open:**
 
 | ID | Open decision | Working assumption in this draft |
 |----|---------------|----------------------------------|
-| TBD-1 | Clinical vs non-clinical | **non-clinical** research/education |
-| TBD-2 | Target centre frequency within 1–5 MHz | design for the **full 1–5 MHz** band |
-| TBD-3 | Transmit polarity | **bipolar** preferred; unipolar allowed if it wins on BOM (DP2/DP3) |
-| TBD-5 | Imaging mode beyond A-mode | A-mode core; single-element scanned B-mode is [C] |
-| TBD-6 | Target unit BOM cost | **≤ USD 150** target (to confirm) |
-| ADEC | ADC architecture | **external high-speed ADC** on RP2350 PIO (keeps 1–5 MHz raw RF). Alt: internal 500 kSps ADC only if band relaxed to ≤~1 MHz envelope |
+| TBD-6 | Unit BOM cost | **drive as low as possible**; explore cheap options (no fixed cap yet) |
+| ADEC | External ADC choice | **external high-speed ADC** on RP2350 PIO; at 3–4 MHz a **~20–30 MSps, 10–12-bit** part suffices (cheaper/smaller than 65 MSps) — pick the lowest-cost part that meets P3 |
 
 ---
 
@@ -82,8 +106,14 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 - **F1 [M]** The system shall drive a single piezo transducer with a configurable
   high-voltage pulse and receive the echo on the same or a paired element.
-- **F2 [M]** The system shall support **single-element transducers in 1–5 MHz**
-  (TBD-2), connected via a standard coax/SMA interface.
+- **F2 [M]** The system shall drive the **provided single-element piezo (~3–4 MHz)**;
+  the front-end may be tuned to that known element. Design margin ~2–5 MHz.
+- **F2c [M]** The board shall offer **multiple transducer-connector footprints**:
+  **SMA/coax**, a classical **2×1 2.54 mm header**, and a **uFL** (u.FL) connector
+  (uFL for easy plug-in). Populating at least one is required; providing all footprints
+  lets users pick per their transducer/lead.
+- **F2a [S]** Suitable for **muscle-contraction monitoring** on superficial muscle
+  (~1–4 cm depth) — the reference workshop application.
 - **F3 [M]** The system shall acquire **raw RF** echo data (not envelope-only) for
   host-side processing.
 - **F4 [M]** Acquisition parameters — pulse width, number of cycles, PRF, TGC curve,
@@ -93,18 +123,24 @@ real-time B-mode reconstruction, clinical certification (see §16).
 - **F6 [S]** The system shall provide **depth-variable gain (TGC)**, host-programmable.
 - **F7 [C]** The system should support a **dual-element** (separate TX/RX) mode via a
   second connector (cf. lit3rick).
-- **F8 [C]** The system could support **single-element B-mode** via an external
-  mechanical/scanning fixture (host-side reconstruction).
-- **F9 [W]** Multi-channel / array beamforming is deferred to a later version.
+- **F8 [S]** The system shall support **M-mode** (repeated A-lines over time,
+  host-side; no extra hardware).
+- **F9 [W]** Single-element B-mode (via an external scanning fixture) and
+  multi-channel / array beamforming are deferred to a later version.
+- **F10 [M]** The device shall be **hackable for workshop experimentation**: coded/
+  encoded excitation (T4), adjustable acquisition parameters (F4), and open host
+  processing (S2–S3) shall be exposed so attendees can try coded excitation, pulse
+  compression, filtering, and M-mode of muscle contraction.
 
 ## 6. Performance requirements (P)
 
-- **P1 [M]** Excitation frequency range: **1–5 MHz** (TBD-2), transducer-dependent.
+- **P1 [M]** Excitation frequency: **3–4 MHz** target (support ~2–5 MHz),
+  transducer-dependent.
 - **P2 [M]** Acquisition bandwidth (−3 dB): shall pass the transducer band up to
-  **≥ 5 MHz** end-to-end (i.e., **not** bandwidth-capped below the target fc — this
-  is the key differentiator from the MSP430 integrated route, see analysis §2).
-- **P3 [M]** ADC sample rate: **≥ 4× fc** for the top of the band ⇒ **≥ 20 MSps**;
-  **target ≥ 30–40 MSps** to preserve RF at 5 MHz.
+  **≥ 5 MHz** end-to-end (i.e., **not** bandwidth-capped below fc — the key
+  differentiator from the MSP430 integrated route, see analysis §2).
+- **P3 [M]** ADC sample rate: **≥ 4× fc** ⇒ **≥ 16 MSps** at 4 MHz; **target
+  ≥ 20–30 MSps** (enough for 3–4 MHz RF; lets us pick a cheaper part than 65 MSps).
 - **P4 [M]** ADC resolution: **≥ 10-bit** (≥ 9-bit gives ~50 dB SNR per the
   literature; 12-bit [S] for dynamic range).
 - **P5 [S]** System SNR: **≥ 50 dB** on a reference reflector/phantom.
@@ -125,15 +161,20 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 8. Transmit / pulser (T)
 
-- **T1 [M]** Generate a configurable HV pulse suitable for 1–5 MHz excitation.
-- **T2 [M]** Pulse amplitude: **configurable**, baseline **±24 V**, target range up
-  to **±50–100 V** capability (TBD-3). Unipolar +15–30 V acceptable if it meets the
-  BOM goal.
-- **T3 [M]** The pulser BOM shall be **as light as practical** — prefer an integrated
-  pulser+T/R (STHV748-class) or the proven 2-IC MD1213+TC6320, per analysis §3.
-- **T4 [S]** Pulse shape (single-cycle / N-cycle) host-configurable.
-- **T5 [C]** Support multi-level / arbitrary excitation (coded pulses) if the chosen
-  pulser allows (e.g., STHV748 3/5-level).
+- **T1 [M]** Generate a configurable **unipolar** HV pulse for ~3–4 MHz excitation.
+- **T2 [M]** Pulse amplitude: unipolar, **configurable**, baseline **~+20–30 V**,
+  capability up to **~+50 V** if cheap to do; single minimal HV rail (DP2/DP3).
+- **T3 [M]** Simplest unipolar transmit: **single HV MOSFET + gate driver + small
+  boost rail** (WULPUS-style) — lowest part count; plus a T/R switch/clamp to protect
+  RX (MD0100/MMBD-class).
+- **T4 [M]** **Programmable / arbitrary excitation** — the pulser gate is driven by
+  the **RP2350 PIO**, so workshop users can generate multi-cycle bursts, swept-
+  frequency (chirp), pulse-position and on-off-keyed (OOK) **coded excitation** and
+  experiment with pulse compression. This is a core workshop feature.
+- **T5 [note]** True **bipolar phase codes** (e.g., ±1 Barker) need a *bipolar*
+  pulser; the unipolar baseline supports frequency/pulse-train/OOK coding only. A
+  bipolar pulser (STHV748 / MD1213+TC6320) is a possible expansion if bipolar
+  phase-coding becomes a workshop goal — trade-off vs DP2/DP3.
 
 ## 9. Digitization & data (D)
 
@@ -147,10 +188,15 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 10. Control, connectivity & host (C)
 
-- **C1 [M]** The controller shall be the **Raspberry Pi RP2350** (DP4). It shall
-  sequence TX/RX with **cycle-accurate timing** using **PIO**, and capture the
-  external ADC (ADEC) into RAM via PIO/DMA. *(RP2350B preferred for the extra GPIO
-  needed by a parallel ADC bus + control lines.)*
+- **C1 [M]** The controller shall be the **Raspberry Pi RP2350** (DP4), with
+  RP2350B preferred for the extra GPIO (parallel ADC bus + control lines).
+- **C1a [M]** **Precise pulse-sequence timing:** the controller shall generate the
+  TX pulse-sequence logic with **cycle-accurate, ~ns-resolution deterministic timing**
+  (via **PIO**), enough to define pulse width, count, delays, and coded/chirp
+  sequences (T4).
+- **C1b [M]** **Fast, steady acquisition:** the controller shall capture the external
+  ADC (ADEC) as a **continuous, gap-free** stream at the full P3 sample rate into RAM
+  (**PIO + DMA**), sustaining one full acquisition line (D2) without dropped samples.
 - **C2 [M]** Host interface: **USB** on the RP2350's native USB, via an **on-board
   USB connector (USB-C preferred)**, presenting a documented command/data protocol.
 - **C3 [M]** A **Python** host API/reference client shall configure acquisitions and
@@ -170,20 +216,29 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 12. Mechanical / form factor (M)
 
-- **M1 [M]** **Single small PCB** (DP1), fabricable by a standard low-cost house
-  (e.g., JLCPCB) from the published files.
-- **M2 [M]** On-board **USB-C** connector (host + power). Transducer via SMA/coax.
-- **M3 [S]** Compact benchtop form factor; minimise board area.
-- **M4 [C]** Wearable/handheld form factor is out of scope for v1.0.
+- **M1 [M]** **Single small PCB** in a **conference-badge form factor** — flat,
+  badge-sized, with a **lanyard hole** and room for **silkscreen artwork** — fabricable
+  by a standard low-cost house (e.g., JLCPCB) from the published files (DP1).
+- **M2 [M]** On-board **USB-C** connector (host + power). Transducer footprints per
+  F2c: SMA/coax **+** 2×1 2.54 mm header **+** uFL.
+- **M3 [S]** Minimise board area and component height so it wears as a badge.
+- **M4 [C]** A handheld/on-body probe enclosure is out of scope for v1.0 (the piezo is
+  applied by hand during the workshop).
 
 ## 13. Cost & BOM (B)
 
-- **B1 [M]** Target unit BOM cost **≤ USD 150** (TBD-6) at low volume; minimise part
-  count, especially the pulser/HV section (T3).
-- **B2 [M]** Use **jelly-bean / widely-available** parts; avoid single-source or EOL
-  ICs where possible; document alternates.
-- **B3 [S]** Prefer parts already validated in the reference designs on disk
-  (pic0rick, un0rick, IUP) to de-risk.
+- **B1 [M]** Drive unit BOM cost **as low as possible** (TBD-6, DP2) — it must be
+  affordable to build **many badges** for a workshop on **limited funding**. Minimise
+  part count, especially the pulser/HV section (T3). A costed BOM is a deliverable
+  (explore cheap ADC + minimal unipolar HV; see analysis TODO).
+- **B2 [M]** Use **jelly-bean / widely-available** parts (JLCPCB-assemblable);
+  avoid single-source or EOL ICs where possible; document alternates.
+- **B3 [M]** **Derisk by reuse (DP5):** use parts and sub-circuits already validated
+  in the owner's designs — **pic0rick / un0rick / lit3rick / Murgen** (e.g. the
+  un0rick-style **unipolar HV pulser** at 25–75 V, the **AD8331** VGA/TGC, a
+  PIO-clocked external ADC). un0rick already runs a unipolar HV pulser, matching T1–T3.
+- **B4 [note]** The **piezo is provided** with the kit and is **not** counted in the
+  board BOM; the board is designed for that known element.
 
 ## 14. Software / firmware (S)
 
@@ -192,7 +247,11 @@ real-time B-mode reconstruction, clinical certification (see §16).
   export in a documented, versioned format.
 - **S3 [S]** Host-side reference processing: filtering + envelope (Hilbert) → A-line;
   optional M-mode.
-- **S4 [C]** Reproducible build + flashing instructions (CMake/UF2 or FPGA toolchain).
+- **S4 [S]** Reproducible build + easy flashing (RP2350 UF2 drag-and-drop) so
+  workshop attendees can reflash without a toolchain.
+- **S5 [S]** **Workshop material:** approachable host UI / example notebooks — live
+  A-line + **M-mode of muscle contraction**, and a **coded-excitation** demo — so
+  attendees get results quickly, then can experiment.
 
 ## 15. Openness & licensing (O)
 
@@ -204,13 +263,15 @@ real-time B-mode reconstruction, clinical certification (see §16).
 
 ## 16. Safety & compliance (SF)
 
-- **SF1 [M]** As a **non-clinical** device (TBD-1), it shall carry a clear "research/
-  education use only, not a medical device" notice.
+- **SF1 [M]** As a **non-clinical NDT/education** device, it shall carry a clear
+  "research/education use only, not a medical device, not for diagnosis" notice.
 - **SF2 [M]** HV section shall be documented with safe-handling notes; exposed HV
-  minimised and labelled.
-- **SF3 [S]** Acoustic output kept to conservative, documented levels; if ever used
-  on people, follow MI/TI guidance (IEC 62359 / IEC 60601-2-37) — **triggers a
-  clinical re-scope**.
+  minimised and labelled (unipolar ≤ ~+50 V keeps this modest — cf. T2).
+- **SF3 [M]** The workshop applies the transducer to attendees' own muscle
+  (non-diagnostic demo). Acoustic output shall be kept to **conservative, documented
+  levels** (brief exposure; low MI/TI, per IEC 62359 guidance) and framed as a
+  self-applied demonstration — **not** medical diagnosis. Any diagnostic intent would
+  trigger a clinical re-scope (out of scope).
 - **SF4 [S]** Materials/connectors rated for the selected HV.
 
 ## 17. Verification & acceptance (how each is checked)
@@ -232,6 +293,9 @@ real-time B-mode reconstruction, clinical certification (see §16).
 - Comparable systems and their measured values: [`systems/`](systems/README.md)
   (esp. [pic0rick](systems/pic0rick/pic0rick.md), [un0rick](systems/un0rick/un0rick.md),
   [IUP](systems/iup/iup.md)); IC choices: [`systems/by-ic.md`](systems/by-ic.md).
+- **Owner-built, trusted lineage (DP5):** Murgen/echomods, un0rick, lit3rick,
+  pic0rick — the owner has built these and is happy with their performance, so their
+  blocks are the derisked starting point.
 - Design starting point: [`design/pic0rick/panel_adc_pulser_hv/`](design/).
 
 ---

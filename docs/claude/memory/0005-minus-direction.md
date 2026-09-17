@@ -23,9 +23,24 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
 - Design principles: **smallest board, cheapest BOM, simplest design** (DP1–DP3).
 - ⇒ minus ≈ a trimmed **pic0rick on RP2350** (RP2350 + external ADC via PIO).
 
-**Still open (req §4):** clinical? (TBD-1), exact target freq within 1–5 MHz (TBD-2),
-TX polarity (TBD-3), imaging mode beyond A-mode (TBD-5), BOM cost target (TBD-6),
-ADC choice (ADEC).
+**Owner decisions locked (req v0.3):**
+- Non-clinical **NDT/education**; **workshop badge** for an ultrasound conference
+  (many units, limited budget). Example topic: **muscle-contraction monitoring**
+  (A-/M-mode). **Piezo provided** with the kit (~3–4 MHz), not in board BOM.
+- Target **3–4 MHz**; **unipolar** pulser (simplest); **A-mode + M-mode** (B-mode deferred).
+- **Programmable/coded excitation** required (workshop feature) via RP2350 PIO —
+  unipolar supports chirp/pulse-train/OOK; true bipolar phase codes need a bipolar
+  pulser (possible expansion).
+- Transducer connectors: **SMA/coax + 2×1 2.54 mm header + uFL** (multiple footprints).
+- Controller (RP2350) must do **precise ns pulse-sequence timing (PIO)** + **fast
+  gap-free ADC streaming (PIO+DMA)**.
+- **DP5 Derisk by reuse:** reuse proven blocks from the owner's own designs
+  (Murgen/un0rick/lit3rick/pic0rick — owner is happy with them; un0rick already has a
+  unipolar HV pulser). Design files in `design/`.
+- **BOM: as low as possible** (no fixed cap); costed BOM is a deliverable.
+
+**Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
+part; exact HV level; then draft the costed BOM + block diagram.
 
 **Not yet decided (open):** exact target frequency (≤3 MHz would reopen Route A),
 unipolar vs bipolar, ADC (speed/bits), controller (RP2040/RP2350 vs iCE40), plus the
