@@ -8,10 +8,14 @@ the sha.
 
 ## Pending
 
-- Add `options.md` (filtered pulser/gain/ADC shortlist + priced builds) +
-  `options_prices.csv` (LCSC qty 20–50); analysis §3b gain options; requirements
-  RF-ACCESS + 5V/±5V HV options; memory 0006 (pricing basis); earlier bd81776..
-  requirements bits (OLED/RPi header/silkscreen/etc. already committed).
+- CSV real LCSC prices + source URLs + stock; options.md availability reality-check
+  (~$33 in-stock front-end, ADC bottleneck); requirements TXRX-LINK open question
+  (+ F5 jumper); memory 0006 availability findings.
+
+## Committed
+
+- 2026-09-17  bc967b2  options.md trade study + options_prices.csv; analysis §3b gain
+  options; 5V/±5V HV options; requirements RF-ACCESS; memory 0006. **Pushed.**
 
 ## Committed
 

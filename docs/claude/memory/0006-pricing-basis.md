@@ -13,4 +13,11 @@ badges.
 - Design for **JLCPCB assembly** ⇒ prefer LCSC/JLCPCB-stocked ("basic"/in-stock) parts
   (ties to req B2).
 
+**LCSC availability findings (2026-09-17):** the cheap parts are OOS — **AD8338**
+(gain) and **AD9200** (ADC) out of stock; **MD1213** (reuse pulser) not on LCSC.
+In-stock picks: **AD8331 ~$10**, **AD9235-20 ~$17.9** (the ADC dominates BOM),
+**TC6320 ~$2.03**, **LM2776 ~$0.48**, **RP2350B ~$1.06**. Realistic in-stock active-IC
+front-end ≈ **$33** (ADC is the cost + availability bottleneck). Source URLs in
+`options_prices.csv`.
+
 Related: [[0005-minus-direction]].

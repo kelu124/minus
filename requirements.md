@@ -101,6 +101,7 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 | TBD-6 | Unit BOM cost | **drive as low as possible**; explore cheap options (no fixed cap yet) |
 | ADEC | External ADC choice | **external high-speed ADC** on RP2350 PIO; at 3–4 MHz a **~20–30 MSps, 10–12-bit** part suffices (cheaper/smaller than 65 MSps) — pick the lowest-cost part that meets P3. See [`options.md`](options.md) §3 |
 | RF-ACCESS | **Raw RF vs envelope?** | **Working assumption: raw RF** (F3). Key question: do we want users to access the **raw RF signal, not just the envelope?** Raw RF is what justifies the on-device **DSP** (S6), **coded excitation** + matched filtering (T4), and the external high-speed ADC. **Envelope-only would be simpler/cheaper but would not justify the DSP** and would collapse the external-ADC route (an internal 500 kSps ADC would do). **Decision pending** — if confirmed raw-RF, ADEC stands; if envelope-only, re-scope §0/§9 |
+| TXRX-LINK | **TX & RX path linked by default?** | Single-element ⇒ TX and RX **share the element** through the T/R switch (F5) — **linked by default**. Question: keep them linked by default, and add a **jumper / solder-bridge** so users can **separate TX and RX** (e.g. for a dual-element / separate TX-RX transducer, F7)? Working assumption: **linked by default + a jumper to split** |
 
 ---
 
@@ -121,7 +122,9 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **F4 [M]** Acquisition parameters — pulse width, number of cycles, PRF, TGC curve,
   acquisition depth/length — shall be **host-configurable**.
 - **F5 [S]** The system shall support a **T/R switch** so one element can transmit
-  and receive.
+  and receive. TX and RX are **linked by default** (shared element); a **jumper /
+  solder-bridge** shall allow **splitting TX and RX** for a dual-element / separate
+  TX-RX transducer (F7). See open item TXRX-LINK.
 - **F6 [S]** The system shall provide **depth-variable gain (TGC)**, host-programmable.
 - **F7 [C]** The system should support a **dual-element** (separate TX/RX) mode via a
   second connector (cf. lit3rick).

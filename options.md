@@ -10,9 +10,17 @@ rationale live in `analysis.md`; the requirements in [`requirements.md`](require
 blocks (DP5).
 
 **Prices:** from [`options_prices.csv`](options_prices.csv) — **reference is LCSC at
-low-quantity (~20–50 unit, i.e. workshop-batch) pricing**, active parts only (passives
-ignored); values are indicative, refresh against live LCSC. Totals are active-IC only
-and exclude passives, connectors, PCB, and the badge peripherals (OLED/LED/USB-C).
+low-quantity (~20–50 unit, workshop-batch) pricing**, active parts only (passives
+ignored), each with a **source URL** in the CSV. Totals are active-IC only (exclude
+passives, connectors, PCB, and badge peripherals).
+
+> **⚠ Availability reality-check (LCSC, 2026-09-17).** The *theoretically cheapest*
+> parts are **out of stock**: **AD8338** (gain) and **AD9200** (ADC) are OOS at LCSC,
+> and **MD1213** (reuse pulser driver) is **not listed** on LCSC. The in-stock picks
+> are pricier: **AD8331 ~$10**, **AD9235-20 ~$17.88** (not the ~$10 first estimated),
+> **TC6320 ~$2.03**, **LM2776 ~$0.48**, **RP2350B ~$1.06**. **The high-speed ADC is
+> the cost + availability bottleneck** (a known pain for DIY ultrasound). So the
+> realistic in-stock BOM is dearer than the theoretical floor — see build table §4.
 
 ---
 
@@ -43,15 +51,15 @@ amplitude. B1/B2 are for higher-voltage bipolar.
 Excluded by filter: integrated multichannel AFEs (AFE58xx / AD927x — over-spec,
 pricey, power-hungry for one channel); log-amp/envelope (no linear RF TGC).
 
-| Option | Part(s) | Gain | $ (incl gain-ctrl) | Notes |
-|--------|---------|------|:------------------:|-------|
-| **G1 — AD8338** *(front-runner)* | AD8338 (+ RP2350 PWM ramp) | 0–80 dB | **~$4.0** | low-power, cheap, proven in WULPUS PRO/BioGAP |
-| **G2 — AD8331** *(derisked, DP5)* | AD8331 (+ PWM, or MCP4812 +$1.5) | 48 dB | **~$10.0** | your un0rick/pic0rick VGA; ultrasound-grade |
-| G3 — AD603 + LNA | AD603 + LNA op-amp (+ PWM) | ~40 dB | ~$5.0 | BOM-floor; lower dynamic range |
+| Option | Part(s) | Gain | $ (incl gain-ctrl) | Stock | Notes |
+|--------|---------|------|:------------------:|:-----:|-------|
+| **G2 — AD8331** *(derisked, DP5)* | AD8331 (+ PWM) | 48 dB | **~$10.0** | **in stock** | un0rick/pic0rick VGA; ultrasound-grade |
+| G1 — AD8338 | AD8338 (+ PWM ramp) | 0–80 dB | ~$4.0 | **OOS** | cheaper/low-power (WULPUS PRO) but **out of stock at LCSC** |
+| G3 — AD603 + LNA | AD603 + LNA op-amp | ~40 dB | ~$5.0 | check | BOM-floor; lower dynamic range |
 
-**Lean pick:** **G1 (AD8338)** — cheaper, lower power than AD8331, field-proven.
-**G2 (AD8331)** is the derisked fallback. **BOM saver:** set the gain-control voltage
-from **RP2350 PWM + RC** (no DAC IC).
+**Lean pick:** **G2 (AD8331)** is now the pragmatic choice — **in stock**, proven
+(DP5), ~$10. G1 (AD8338) would be cheaper/lower-power **if** back in stock. **BOM
+saver:** set the gain-control voltage from **RP2350 PWM + RC** (no DAC IC).
 
 ## 3. ADC — shortlist
 
@@ -59,32 +67,36 @@ Applies only if **RF-ACCESS = raw RF** (else the RP2350 internal 500 kSps ADC an
 external ADC). Need ≥16 MSps (4× 4 MHz), target 20–30 MSps, ≥10-bit, parallel output
 for PIO capture. Excluded: LTC2203 (16-bit, ~$25 — over-spec/large).
 
-| Option | Part | Spec | $ | Notes |
-|--------|------|------|:--:|-------|
-| **A1 — AD9235-20** *(front-runner)* | AD9235BRUZ-20 | 12-bit 20 MSps || **~$10** | LCSC-stocked (C514274); ultrasound-suited; -40 (~$13) if margin wanted |
-| **A2 — AD9200** | AD9200 | 10-bit 20 MSps | ~$6 | cheaper, 10-bit is enough (P4) |
-| **A3 — ADC10065** *(derisked, DP5)* | ADC10065 | 10-bit 65 MSps | ~$10 | un0rick/pic0rick part; faster/costlier than needed at 3–4 MHz |
-| A4 — AD9280 | AD9280 | 8-bit 32 MSps | ~$4 | cheapest, but ~48 dB only — marginal vs P5 (≥50 dB SNR) |
+| Option | Part | Spec | $ | Stock | Notes |
+|--------|------|------|:--:|:-----:|-------|
+| **A1 — AD9235-20** | AD9235BRUZ-20 | 12-bit 20 MSps | **~$17.9** | **in stock** | LCSC C514274; pricey but available; the ADC dominates the BOM |
+| A2 — AD9200 | AD9200ARSZRL | 10-bit 20 MSps | ~$4.7 | **OOS** | cheap + enough (P4) but **out of stock at LCSC** |
+| A3 — ADC10065 *(DP5)* | ADC10065 | 10-bit 65 MSps | ~$10 | check | un0rick/pic0rick part; verify LCSC stock |
+| A4 — AD9280 | AD9280 | 8-bit 32 MSps | ~$4 | check | cheapest, but ~48 dB only — marginal vs P5 |
 
-**Lean pick:** **A2 (AD9200, 10-bit)** for lowest cost that meets P3/P4/P5, or
-**A1 (AD9235-20, 12-bit)** for headroom + confirmed LCSC stock. Reuse fallback: A3.
+**Lean pick:** **A1 (AD9235-20)** is the only confirmed in-stock option, but at
+~$18 it **dominates the BOM**. Worth checking A3 (ADC10065) LCSC stock, watching for
+A2 (AD9200) restock, or hunting a cheaper in-stock parallel 10-bit ≥20 MSps part —
+**this is the open cost driver (ADEC).**
 
 ---
 
 ## 4. Candidate builds (active-IC BOM only, excl. passives/connectors/PCB)
 
-| Build | Pulser | Gain | ADC | MCU | ~Active-IC $ |
-|-------|--------|------|-----|-----|:------------:|
-| **Cheapest** | U0 5V-only (~4.5) | G1 AD8338 (4.0) | A2 AD9200 (6.0) | RP2350 (1.1) | **~$16** |
-| **Balanced** | U1 (~6.0) | G1 AD8338 (4.0) | A1 AD9235-20 (10.0) | RP2350 (1.1) | **~$21** |
-| **Derisked (DP5 reuse)** | U2 (~11.5) | G2 AD8331 (10.0)+DAC(1.5) | A3 ADC10065 (10.0) | RP2350 (1.1) | **~$44** |
+| Build | Pulser | Gain | ADC | MCU | ~Active-IC $ | All in stock? |
+|-------|--------|------|-----|-----|:------------:|:-------------:|
+| **In-stock realistic** | U0 5V-only (~4.5) | G2 AD8331 (10.0) | A1 AD9235-20 (17.9) | RP2350B (1.06) | **~$33** | ✅ (verify T/R) |
+| **Theoretical floor** *(if restocked)* | U0 (~4.5) | G1 AD8338 (4.0) | A2 AD9200 (4.7) | RP2350B (1.06) | **~$14** | ❌ AD8338+AD9200 OOS |
+| **Derisked (DP5 reuse)** | U2 MD1213+TC6320 (~11.5) | G2 AD8331 (10.0) | A3 ADC10065 (10.0) | RP2350B (1.06) | **~$33** | ⚠ MD1213 not on LCSC; ADC10065 verify |
 
 Badge peripherals add ~a few $ (OLED ~$1.5, RGB LED ~$0.1, USB-C ~$0.3, RPi header,
 SMA/uFL) — outside this options pricing (passives/connectors ignored per scope).
 
-**Reading:** a coherent minus front-end is **~$17–21 in active ICs** with the
-cheap/low-power parts (AD8338 + AD9200/AD9235 + unipolar pulser + RP2350), or **~$44**
-if we maximise derisking by reusing the exact un0rick/pic0rick blocks. The lean build
-still meets 3–4 MHz raw-RF, coded excitation, and on-device DSP.
+**Reading:** with **in-stock LCSC parts today**, a coherent minus front-end is
+**~$33 in active ICs**, and the **AD9235-20 ADC (~$18) is over half of it** — the
+ADC is the cost + availability bottleneck. The theoretical floor (~$14) needs AD8338
+and AD9200 back in stock. Reusing the exact un0rick pulser (MD1213) is blocked by LCSC
+availability, nudging toward the discrete U0/U1 unipolar path for a JLCPCB-buildable
+badge. All still meet 3–4 MHz raw-RF, coded excitation, and on-device DSP.
 
-_Prices indicative — refresh from `options_prices.csv` against live LCSC/Digikey._
+_Prices from `options_prices.csv` (LCSC, qty ~20–50, with source URLs); refresh live._
