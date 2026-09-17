@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- CSV real LCSC prices + source URLs + stock; options.md availability reality-check
-  (~$33 in-stock front-end, ADC bottleneck); requirements TXRX-LINK open question
-  (+ F5 jumper); memory 0006 availability findings.
+- Session-close log note; global memory persisted (outside repo).
 
 ## Committed
 
+- 2026-09-17  828d364  Record cheaper 8-bit ADC candidates (TLC5540/ADS830/AD9280) to
+  verify on LCSC; ADEC remains the open cost driver. **Pushed.**
+- 2026-09-17  4c6f5cb  Real LCSC prices+URLs+stock in options; ADC bottleneck (~$33
+  in-stock front-end); TXRX-LINK open question. **Pushed.**
 - 2026-09-17  bc967b2  options.md trade study + options_prices.csv; analysis §3b gain
   options; 5V/±5V HV options; requirements RF-ACCESS; memory 0006. **Pushed.**
 
