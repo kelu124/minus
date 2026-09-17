@@ -5,9 +5,13 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- _(nothing in progress yet)_
+- _(nothing in progress)_
 
 ## Next
+
+- Fill survey gaps: confirm EchoLite (await IEEE IUS 2025 paper), PuLsE/USoP MCU
+  parts & TX voltages, pic0rick dimensions/SNR. Refresh `systems/` sheets.
+- Decide which reference systems `minus` derives from (pic0rick / WULPUS / PuLsE).
 
 - Define target application, imaging depth, and centre frequency.
 - Choose the single-element transducer and how (or whether) it scans.
