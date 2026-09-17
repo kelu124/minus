@@ -9,8 +9,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Next
 
-- Retry the SIG-WUS OXP live catalog (data failed to load); pull the underlying data
-  file from the `sig-wus` GitHub org and cross-check against our sheets.
+- Collect BioGAP WULPUS-pro design files (`pulp-bio/sensei-us-shield`, open HW) into
+  `design/biogap-wulpus-pro/`.
 - Sheet remaining leads: Measurement-2024 compact modular platform (32 el., get PDF
   → `pdfs/`), rtl-ultrasound (Meng 2019, SDR), compressive single-sensor 3D
   (Kruizinga 2017); optionally Bashatah (chirp) + Wang (Barker) from Weik Table I.

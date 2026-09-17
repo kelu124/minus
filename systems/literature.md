@@ -165,6 +165,13 @@ power).
 (sheeted where notable; the rest captured here). Note: this table's WULPUS/PuLsE/
 USoP/TinyProbe rows corroborate their own datasheets.
 
+The **SIG-WUS OXP catalog** was retrieved from its repo JSON (the live site failed
+to load) — snapshot in [`_sig-wus-oxp/`](_sig-wus-oxp/README.md). It lists 14
+platforms; beyond Weik Table I it adds **BioGAP WULPUS-pro** (ETH open shield,
+`pulp-bio/sensei-us-shield` — sheeted) and corrects SENS-U → **TENA SmartCare
+(Essity)**. FloPatch confirmed as **model FP120, continuous-wave 4 MHz**, FDA
+K200337 (2020), validated in Kenny et al. *Sci. Reports* 2021.
+
 ### New in-scope systems from Weik Table I
 
 - **SENS-U** — commercial 4-ch bladder-volume monitor; wearable, BT, 36 h. → sheeted.

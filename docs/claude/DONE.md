@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Retrieved the SIG-WUS OXP catalog from its repo JSON (live site
+  broken); snapshot → `systems/_sig-wus-oxp/` (14 platforms). Enriched FloPatch
+  (FP120, CW 4 MHz, FDA K200337, Kenny 2021), corrected SENS-U (TENA/Essity), added
+  BioGAP WULPUS-pro sheet (systems/ = 18). Added the 45 MB per-file cap rule.
 - 2026-09-17 — Pulled design files (schematics/KiCad/gerbers/BOMs) into
   `design/{un0rick,lit3rick,pic0rick}/` with `SOURCE.md` + commit SHAs; cross-linked
   from datasheets; pic0rick article → `pdfs/`.

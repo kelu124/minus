@@ -8,12 +8,16 @@ the sha.
 
 ## Pending
 
-- Pull reference design files into `design/{un0rick,lit3rick,pic0rick}/` (+SOURCE.md);
-  process Weik et al. 2026 wearables review + SIG-WUS: capture Table I in
-  `systems/literature.md`, add SENS-U/WMAUS/MoUsE/Flopatch datasheets, memory 0004.
+- Retrieve SIG-WUS OXP catalog (repo JSON) → `systems/_sig-wus-oxp/`; enrich FloPatch
+  (FP120, CW 4 MHz, FDA/CE, Kenny 2021), correct SENS-U (TENA/Essity), add BioGAP
+  WULPUS-pro sheet; add 45 MB per-file cap rule.
 
 ## Committed
 
+- 2026-09-17  25b8e55  Pull reference design files (`design/{un0rick,lit3rick,
+  pic0rick}/` + SOURCE.md); process Weik et al. 2026 wearables review + SIG-WUS
+  (Table I → `systems/literature.md`); add SENS-U/WMAUS/MoUsE/Flopatch sheets +
+  memory 0004.
 - 2026-09-17  0dd9e66  Add IUP + MEMS-US datasheets, `systems/literature.md` (from
   Jonveaux et al. 2022 review), and `pdfs/` + `design/` folders with store
   conventions; RP2350 datasheet added to `pdfs/`.

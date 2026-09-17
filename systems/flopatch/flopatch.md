@@ -1,13 +1,14 @@
 # Flopatch
 
-**Full name:** FloPatch — wearable continuous-wave Doppler blood-flow patch
-**Year:** ~2023 (commercial; Flosonics Medical)
-**Origin:** Flosonics Medical (commercial)
-**Status:** commercial (closed); TRL 8 per Weik et al.
-**References:** Weik et al. 2026 (IEEE RBME) Table I, ref [35]; refs [47,111,112]
-**Repository:** —
+**Full name:** FloPatch (model **FP120**) — wearable continuous-wave Doppler blood-flow patch
+**Year:** 2020 FDA clearance (K200337); validated Kenny et al. 2021; commercial
+**Origin:** Flosonics Medical (Toronto, Canada) — commercial
+**Status:** commercial (closed hardware/firmware); **FDA-cleared Class II** (K200337) + **CE-marked**; TRL 8 per Weik et al.
+**References:** Kenny et al., *Scientific Reports* 11, 2021, DOI 10.1038/s41598-021-87116-y; Weik et al. 2026 (IEEE RBME) Table I ref [35]; FDA 510(k) K200337 (2020); SIG-WUS OXP `flopatch`
+**Repository:** — (closed)
 **License:** — (commercial)
-**One-line summary:** Wearable continuous-wave Doppler patch for real-time carotid blood-flow velocity — 2-element integrated transducer (separate TX/RX), analog homodyne demodulation to an audio-band signal, Bluetooth.
+**Website:** https://flosonicsmedical.com
+**One-line summary:** FDA-cleared wearable continuous-wave 4 MHz Doppler patch worn over the carotid/jugular — outputs max-velocity trace, velocity–time integral (VTI) and corrected flow time (ccFT) to an iOS app over Bluetooth, to guide fluid resuscitation.
 
 > The archetype **non-pulse-echo** wearable: CW Doppler, not imaging. Very low data
 > rate (audio band) — a distinct minimal architecture worth contrasting with A-mode.
@@ -19,11 +20,11 @@
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | integrated (closed), CW Doppler | [P] |
-| Intended application | Continuous carotid blood-flow velocity | [P] |
-| Imaging modes | Continuous-wave Doppler (non-imaging) | [P] |
+| Intended application | Carotid/jugular blood-flow (fluid resuscitation, sepsis, ICU) | [P] |
+| Imaging modes | Continuous-wave Doppler (non-imaging); metrics: max-velocity, VTI, ccFT | [P] |
 | Single-channel only? | no — 2 elements (1 TX + 1 RX), continuous | [P] |
 | Wireless? | Bluetooth | [P] |
-| Open source? | no | [P] |
+| Open source? | no (closed HW + firmware) | [P] |
 
 ## 2. Form factor
 
@@ -89,11 +90,11 @@
 
 | Field | Value | Src |
 |-------|-------|-----|
-| Wireless link | Bluetooth | [P] |
+| Wireless link | Bluetooth (raw Doppler) | [P] |
 | Wireless throughput | low (audio-band Doppler) | [P] |
 | Wired interface | — | |
 | Wired throughput | — | |
-| Host interface / handshake | app / host | [E] |
+| Host interface / handshake | secure iOS app (displays velocity trace, VTI, ccFT) | [P] |
 
 ## 8. Performance
 

@@ -1,13 +1,13 @@
 # SENS-U
 
-**Full name:** SENS-U Bladder Sensor — wearable bladder-volume monitor
-**Year:** ~2019 (commercial)
-**Origin:** Novioscan (NL) — commercial product
+**Full name:** SENS-U Bladder Sensor — now **TENA SmartCare Bladder Sensor**
+**Year:** 2021 (SENS-U orig. Novioscan; now TENA/Essity)
+**Origin:** TENA (Essity); originally Novioscan (NL)
 **Status:** commercial (closed hardware)
-**References:** Weik et al. 2026 (IEEE RBME) Table I, ref [36]
+**References:** Weik et al. 2026 (IEEE RBME) Table I, ref [36]; SIG-WUS OXP `sense-u`; bladdersensor.tena.com
 **Repository:** —
 **License:** — (commercial)
-**One-line summary:** Fully wearable, closed, non-imaging A-mode bladder-fullness monitor — 4-element transducer muxed to one RX channel, Bluetooth alert to a phone.
+**One-line summary:** Fully wearable, closed, non-imaging A-mode pediatric bladder-fullness monitor (enuresis/incontinence) — 4-element transducer muxed to one RX channel, Bluetooth alert to a phone.
 
 > Cited by the Weik review as the archetypal *closed* wearable non-imaging system:
 > mature and market-available, but not usable as a generic platform.
@@ -19,7 +19,7 @@
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | integrated (closed) | [P] |
-| Intended application | Bladder-fullness monitoring (incontinence) | [P] |
+| Intended application | Pediatric bladder-fullness monitoring (enuresis/incontinence) | [P] |
 | Imaging modes | A-mode (wall tracking / fill level) | [P] |
 | Single-channel only? | no — 4 elements, muxed to 1 RX | [P] |
 | Wireless? | Bluetooth | [P] |

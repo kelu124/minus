@@ -51,6 +51,8 @@ When a discussion settles something that should outlive the session:
   the upstream source (repo URL + version) in a short `SOURCE.md`.
 - Survey/datasheet work lives in `systems/` (one subfolder per design, `TEMPLATE.md`
   at root, `literature.md` for the broad review).
+- **File-size cap:** never commit a single file larger than **45 MB** (repo total
+  size is otherwise fine). Trim/skip oversized files and link to the source instead.
 
 ## 5. On every commit
 

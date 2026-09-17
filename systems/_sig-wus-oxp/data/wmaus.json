@@ -1,0 +1,75 @@
+{
+  "id": "wmaus",
+  "platform": "WMAUS",
+  "manufacturer": "University of Minnesota",
+  "affiliation": "Yang et al., UMN — commercialized by Elonxi",
+  "reference": "yang_wearable_2021-1",
+  "category": "Pulse-echo non-imaging",
+  "year": 2021,
+  "transducer": {
+    "channels": 8,
+    "config": "Wristband A-mode array",
+    "field_of_view": "n/a"
+  },
+  "depth": "n/a",
+  "resolution": "n/a",
+  "tx": {
+    "voltage": "±15 V",
+    "frequency": "5 MHz (77% bandwidth)"
+  },
+  "rx": {
+    "channels": 1,
+    "sample_rate": "40 MS/s",
+    "topology": "8-to-1 MUX"
+  },
+  "controller": "dsPIC33 (DSP) — sequencer + computation",
+  "data_link": "Ethernet / Wi-Fi (raw, 0.1 Mbit/s)",
+  "specs": {
+    "framerate": "10 Hz",
+    "weight": "190 g",
+    "size": "132 × 90 × 30 mm",
+    "power": "3.5 W",
+    "operation": "10 h"
+  },
+  "application": "Human-machine interface, surface-EMG hybrid control",
+  "description": "Wristband with eight individual ultrasound transducers driven by a dsPIC33 DSP. One of the earliest A-mode HMI platforms, demonstrating continuous hand-gesture recognition from forearm muscle activity.",
+  "access": "commercial",
+  "access_detail": "Commercial API access via Elonxi",
+  "paper": "https://doi.org/10.1109/TSMC.2019.2924984",
+  "github": null,
+  "website": null,
+  "image": "assets/wmaus_tnsre2022_fig3.jpg",
+  "image_attribution": {
+    "credit": "Yang et al., IEEE TNSRE 2022 (CC BY 4.0) — Fig. 3",
+    "source_url": "https://doi.org/10.1109/TNSRE.2022.3197875",
+    "license": "CC BY 4.0 (open-access companion paper by the same group; shows the 8-channel wearable ultrasound armband)",
+    "retrieved": "2026-09"
+  },
+  "availability": {
+    "hw": {
+      "open_source": false,
+      "schematics": "closed",
+      "gerber": "closed",
+      "bom": "closed",
+      "license": null,
+      "reference": null,
+      "notes": "Closed commercial hardware owned by Elonxi."
+    },
+    "sw": {
+      "open_source": false,
+      "firmware": "closed",
+      "host_software": "closed",
+      "license": null,
+      "reference": null,
+      "notes": "Closed commercial firmware; API available for research partners."
+    },
+    "purchase": {
+      "available": true,
+      "channel": "Elonxi (commercial spinoff)",
+      "url": null,
+      "price_usd": null,
+      "price_eur": null,
+      "price_note": "Contact Elonxi for research-purchase pricing."
+    }
+  }
+}

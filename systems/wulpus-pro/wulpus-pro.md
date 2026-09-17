@@ -6,6 +6,7 @@
 **Status:** open-source
 **References:** arXiv 2607.12137v1 (Vostrikov, Villani, Hirschi, Lu, Welsch, Angerer, Cretu, Rohling, Cossettini, Benini)
 **Repository:** https://github.com/pulp-bio/wulpus-pro
+**Related:** the open BioGAP-shield productization is [[biogap-wulpus-pro]] (repo `pulp-bio/sensei-us-shield`)
 **License:** open hardware/software
 **One-line summary:** Second-gen WULPUS adding analog TGC, CMUT support, 16-channel B-mode synthetic aperture — same MSP430 core, 5 g.
 

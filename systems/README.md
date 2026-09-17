@@ -33,6 +33,7 @@ out of scope** (listed at the bottom for context only).
 | USoP | 2023 | MCU (flex) | 1 | ~10–30 V | integ. | ? | BT | 614 mW | [usop](usop/usop.md) |
 | WULPUS | 2022 | MCU (MSP430) | 8 mux | +15 V unipolar | 8 Msps integ. (12-bit) | fixed PGA | BLE 320 kbps | 22 mW | [wulpus](wulpus/wulpus.md) |
 | WULPUS PRO | 2026 | MCU (MSP430) | 16 mux | ±30 V | 8 Msps integ. (12-bit) | VGA + TGC (AD8338) | BLE/Wi-Fi | 35–58 mW | [wulpus-pro](wulpus-pro/wulpus-pro.md) |
+| **BioGAP WULPUS-pro** | 2026 | MCU (MSP430) + BioGAP | 16 mux | 30 V | 8 Msps integ. | prog. VGA/TGC | BLE 1.4 Mb/s | ~tens mW | [biogap-wulpus-pro](biogap-wulpus-pro/biogap-wulpus-pro.md) |
 | TinyProbe | 2025 | FPGA | 32 parallel | 64 Vpp (±32 V) | 30 Msps ext. (10-bit) | programmable TGC | Wi-Fi 21.6 Mb/s | <1 W | [tinyprobe](tinyprobe/tinyprobe.md) |
 | TUSS4470 (IC route) | 2021 | AFE IC + MCU | 1 | bipolar H-bridge | external (envelope) | log-amp (not TGC) | SPI + VOUT | low | [tuss4470](tuss4470/tuss4470.md) |
 | **SENS-U** (commercial) | ~2019 | integrated (closed) | 4 mux→1 | ? | ? (integ.) | ? | BT | ? (36 h) | [sens-u](sens-u/sens-u.md) |
@@ -109,6 +110,9 @@ they were reviewed and set aside:
     Table I comparison. Peer-reviewed basis of the **SIG-WUS OXP** catalog
     (<https://sig-wus.org>, GitHub `sig-wus`; live catalog data didn't load — revisit).
   - Both distilled in [`literature.md`](literature.md).
+- **SIG-WUS OXP catalog snapshot:** [`_sig-wus-oxp/`](_sig-wus-oxp/README.md) — the
+  live web catalog's underlying JSON (14 platforms), pulled from the `sig-wus` repo,
+  with a catalog-vs-datasheet reconciliation table.
 - Device papers: IUP (`pdfs/ssrn-6946751.pdf`), MEMS-US (`pdfs/s41598-020-63529-z.pdf`);
   pic0rick article (`pdfs/pic0rick_full.pdf`).
 - New PDFs (datasheets, reference designs) go in [`../pdfs/`](../pdfs/); any

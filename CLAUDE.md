@@ -27,6 +27,8 @@ Then you are "up and running" with the past discussions and discoveries.
   `pdfs/` (not a temp dir) with a descriptive name; index them in `pdfs/README.md`.
 - **Schematics / design files** (KiCad, Gerbers, PDF schematics, BOMs) → save into
   `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`).
+- **Repo size:** overall size is fine, but **never commit a single file larger than
+  45 MB**. Skip/trim oversized files (or note them and link instead).
 
 ## Project layout
 

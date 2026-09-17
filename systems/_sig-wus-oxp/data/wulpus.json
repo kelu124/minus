@@ -1,0 +1,76 @@
+{
+  "platform": "WULPUS",
+  "id": "wulpus",
+  "manufacturer": "ETH Zürich",
+  "affiliation": "Integrated Systems Laboratory (IIS)",
+  "year": 2022,
+  "category": "Pulse-echo non-imaging",
+  "application": "Hand-gesture HMI, carotid monitoring, EMG fusion, respiration, non destructive testing",
+  "reference": "frey_wulpus_2022",
+  "verified_at": "2026-09-14",
+  "paper": "https://doi.org/10.1109/IUS54386.2022.9958156",
+  "github": "https://github.com/pulp-bio/wulpus",
+  "website": null,
+  "image": "assets/wulpus_main.png",
+  "transducer": {
+    "channels": 8,
+    "config": "Wristband A-mode, linear array",
+    "field_of_view": "n/a"
+  },
+  "tx": {
+    "voltage": "15 V",
+    "frequency": "up to 10 MHz"
+  },
+  "rx": {
+    "channels": 1,
+    "sample_rate": "8 MS/s",
+    "topology": "8-to-1 MUX"
+  },
+  "controller": "MSP430FR5043 (SoC) — sequencer + on-device ML",
+  "data_link": "Bluetooth LE (gestures + raw, 300 kbit/s)",
+  "depth": "n/a",
+  "resolution": "n/a",
+  "specs": {
+    "framerate": "50 Hz",
+    "power": "0.022 W (22 mW)",
+    "weight": "13 g",
+    "size": "46 × 25 mm",
+    "operation": "3 days"
+  },
+  "access": "open-source",
+  "access_detail": "Hardware (Solderpad v0.51) + firmware (BSD and Apache 2.0) + host software (Apache-2.0)",
+  "description": "WULPUS is an open, ultra-low-power wearable ultrasound research platform for A-mode sensing, first presented at IUS 2022. Its modular architecture comprises two compact stacked PCBs - an acquisition board and a high-voltage board - with an overall footprint of 46 × 25 mm, supporting eight ultrasound channels while consuming only 22 mW during raw-data streaming at 50 acquisitions/s. The platform has been used for carotid artery monitoring, muscle-thickness tracking, concurrent heart and respiration monitoring, hand-gesture recognition, and multimodal acquisition with wearable EMG sensors. The repository provides the complete hardware design, including Altium schematics, PCB layouts, and component information, together with firmware and programming examples for the MSP430 and nRF52832 microcontrollers, enabling other research groups to reproduce, adapt, and extend the system.",
+  "availability": {
+    "hw": {
+      "open_source": true,
+      "schematics": "open",
+      "gerber": "open",
+      "bom": "open",
+      "license": "Solderpad v0.51",
+      "notes": null,
+      "reference": "https://github.com/pulp-bio/wulpus/tree/main/hw"
+    },
+    "sw": {
+      "open_source": true,
+      "firmware": "open",
+      "host_software": "open",
+      "license": "BSD and Apache 2.0",
+      "notes": null,
+      "reference": "https://github.com/pulp-bio/wulpus/tree/main/fw"
+    },
+    "purchase": {
+      "available": false,
+      "channel": "Self-build only (no commercial vendor)",
+      "url": null,
+      "price_usd": 175,
+      "price_eur": 165,
+      "price_note": "Build cost per probe: ~150–200 USD in batches of 10–20, per the WULPUS user manual (BOM + PCB + assembly). User assembles from open-source design files."
+    }
+  },
+  "image_attribution": {
+    "credit": "ETH Zürich — IIS (Vostrikov)",
+    "license": "CC-BY-4.0",
+    "retrieved": "2026-08",
+    "source_url": "https://github.com/pulp-bio/wulpus/blob/main/docs/images/wulpus_main.png"
+  }
+}

@@ -16,10 +16,11 @@ Anchor sources for the *minus* survey (PDFs in `pdfs/`, distilled in
   system-architecture review + Table I comparison.
 
 - **SIG-WUS** — Special Interest Group on Wearable UltraSound; runs the **OXP**
-  (Open eXperimentation/Exchange Platform) catalog of wearable US platforms at
+  (Open eXperimentation Platform) catalog of wearable US platforms at
   <https://sig-wus.org> (GitHub org `sig-wus`). Peer-reviewed basis = the Weik
-  review. *Note:* on 2026-09-17 the live catalog data on the site failed to load —
-  revisit / try the underlying data file in the `sig-wus` repo.
+  review. The live site's catalog failed to load, but the data is in
+  `github.com/sig-wus/sig-wus-oxp.github.io` under `platforms/<id>/index.json` —
+  snapshot committed at `systems/_sig-wus-oxp/` (14 platforms), retrieved 2026-09-17.
 
 - **un0rick.cc** — hub for the kelu124 open-hardware family (un0rick, lit3rick,
   pic0rick, echomods/Murgen, pyusbus). Design files mirrored in `design/`.

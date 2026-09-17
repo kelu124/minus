@@ -35,7 +35,18 @@ Source: wulrick "extended platform survey"
   un0rick, lit3rick, pic0rick (adc / mux / 3-in-1 adc+pulser+hv panel — KiCad +
   schematic PDFs + gerbers + BOMs). pic0rick article → `pdfs/pic0rick_full.pdf`.
 
-## Systems captured (17 sheets)
+## SIG-WUS OXP catalog retrieved (2026-09-17)
+
+Live site failed to load; pulled the repo JSON instead (`github.com/sig-wus/
+sig-wus-oxp.github.io`, `platforms/*/index.json`). Snapshot →
+`systems/_sig-wus-oxp/` (14 platforms + reconciliation table). New from it:
+**BioGAP WULPUS-pro** (ETH open shield `pulp-bio/sensei-us-shield`, 16-ch MSP430,
+BLE 1.4 Mbit/s — sheeted). Corrections: **SENS-U → TENA SmartCare (Essity)**, 2021,
+pediatric. **FloPatch** confirmed: model FP120, CW 4 MHz, FDA K200337 (2020), CE,
+Flosonics Medical (Toronto), validated Kenny et al. Sci. Reports 2021
+(10.1038/s41598-021-87116-y), iOS app (velocity/VTI/ccFT).
+
+## Systems captured (18 sheets)
 
 New since first pass: **IUP** (HZDR DRESDYN UDV node — STM32H725 + iCE40HX4K +
 MD1213/TC6320 + AD8331 + MD0100 + MAX5184 DAC + LTC2203 16-bit @16 MHz + SD/SDRAM +
