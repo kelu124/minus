@@ -38,9 +38,19 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
   (Murgen/un0rick/lit3rick/pic0rick — owner is happy with them; un0rick already has a
   unipolar HV pulser). Design files in `design/`.
 - **BOM: as low as possible** (no fixed cap); costed BOM is a deliverable.
+- **Pulser (refined):** unipolar **preferred**; **bipolar accepted iff** a cheap
+  symmetric ± rail is found (explore charge pump / SEPIC-Ćuk / dual-boost /
+  transformer). Bipolar would unlock true ±1 phase-coded excitation (synergy w/ coded
+  excitation) via a pic0rick-style MD1213+TC6320 pulser (DP5).
+- **On-device DSP [S]:** firmware should demo RP2350 (dual M33 + DSP/FPU) processing —
+  bandpass, Hilbert/envelope, decimation, matched filter for coded excitation — vs
+  host processing; modular so it never blocks raw capture.
+- **RGB LED [S]:** addressable RGB (WS2812/SK6812, PIO-driven) for **autonomous**
+  on-badge visual feedback (status; echo/M-mode → colour) without a host.
 
 **Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
-part; exact HV level; then draft the costed BOM + block diagram.
+part; exact HV level; whether a cheap ± rail makes bipolar worthwhile; then draft the
+costed BOM + block diagram.
 
 **Not yet decided (open):** exact target frequency (≤3 MHz would reopen Route A),
 unipolar vs bipolar, ADC (speed/bits), controller (RP2040/RP2350 vs iCE40), plus the

@@ -8,9 +8,8 @@ the sha.
 
 ## Pending
 
-- requirements.md v0.3: NDT/workshop-badge, 3–4 MHz, unipolar, A-/M-mode, coded
-  excitation, multi-connector (SMA/header/uFL), precise-timing + gap-free-ADC
-  controller, DP5 derisk-by-reuse, provided piezo, on-body safety; memory 0005 + docs.
+- requirements.md v0.3 refinements: pulser unipolar-preferred/bipolar-if-cheap-±rail
+  (T6), on-device DSP demo (S6), autonomous RGB LED (F11); memory 0005.
 
 ## Committed
 

@@ -86,7 +86,8 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 **Resolved (owner decisions):**
 - **TBD-1 → RESOLVED:** **non-clinical / NDT** (§2, §16).
 - **TBD-2 → RESOLVED:** target transducer **3–4 MHz** (design with margin ~2–5 MHz).
-- **TBD-3 → RESOLVED:** **unipolar** pulser (simplicity, DP3) — see §8.
+- **TBD-3 → RESOLVED (conditional):** **unipolar preferred** (simplicity, DP3);
+  **bipolar accepted iff** a **cheap symmetric ± rail** can be produced (see §8 T6).
 - **TBD-4 → RESOLVED:** host link is **USB**, via an **on-board USB-C** connector;
   **USB bus-powered** (§10, §11).
 - **TBD-5 → RESOLVED:** **A-mode** core; **M-mode** optional [S] (host-side, no extra
@@ -131,6 +132,10 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   encoded excitation (T4), adjustable acquisition parameters (F4), and open host
   processing (S2–S3) shall be exposed so attendees can try coded excitation, pulse
   compression, filtering, and M-mode of muscle contraction.
+- **F11 [S]** **Autonomous RGB display:** the board shall carry at least one
+  **addressable RGB LED** (e.g. WS2812/SK6812, RP2350 **PIO**-driven) so the badge
+  gives **standalone visual feedback without a host** — status, and a demo that maps
+  echo strength / muscle-contraction (M-mode) to colour. Reinforces the badge aspect.
 
 ## 6. Performance requirements (P)
 
@@ -172,9 +177,14 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   frequency (chirp), pulse-position and on-off-keyed (OOK) **coded excitation** and
   experiment with pulse compression. This is a core workshop feature.
 - **T5 [note]** True **bipolar phase codes** (e.g., ±1 Barker) need a *bipolar*
-  pulser; the unipolar baseline supports frequency/pulse-train/OOK coding only. A
-  bipolar pulser (STHV748 / MD1213+TC6320) is a possible expansion if bipolar
-  phase-coding becomes a workshop goal — trade-off vs DP2/DP3.
+  pulser; the unipolar baseline supports frequency/pulse-train/OOK coding only.
+- **T6 [S]** **Bipolar option (conditional):** bipolar transmit is accepted **iff** a
+  **cheap, simple symmetric ± rail** can be generated — explore low-cost options such
+  as an inverting charge pump, a dual-output / SEPIC-Ćuk converter, a single
+  transformer-coupled supply, or two small boost converters (one inverted). If found,
+  a bipolar pulser (e.g. MD1210/MD1213 + TC6320, as in pic0rick — DP5) becomes
+  viable and **unlocks true ±1 phase-coded excitation** for the workshop (synergy
+  with T4). Otherwise, stay unipolar (T1–T3).
 
 ## 9. Digitization & data (D)
 
@@ -252,6 +262,11 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **S5 [S]** **Workshop material:** approachable host UI / example notebooks — live
   A-line + **M-mode of muscle contraction**, and a **coded-excitation** demo — so
   attendees get results quickly, then can experiment.
+- **S6 [S]** **On-device DSP (demonstrable):** the firmware should showcase on-badge
+  signal processing on the RP2350 (dual Cortex-M33 + DSP/FPU) — e.g. bandpass
+  filtering, Hilbert/envelope detection, decimation, and a **matched filter** for
+  coded excitation — so attendees see what is feasible on-device vs on the host. Kept
+  optional/modular so it never blocks raw-data capture.
 
 ## 15. Openness & licensing (O)
 
