@@ -8,11 +8,16 @@ the sha.
 
 ## Pending
 
-- requirements.md v0.3 refinements: pulser unipolar-preferred/bipolar-if-cheap-±rail
-  (T6), on-device DSP demo (S6), autonomous RGB LED (F11); memory 0005.
+- _(this changelog line only — rides to next commit)_
 
 ## Committed
 
+- 2026-09-17  1a6975b  requirements: plan OSHWA cert + reserve silkscreen for the mark/UID.
+- 2026-09-17  785d3c0  requirements v0.3 refinements: bipolar-if-cheap-±rail (T6),
+  on-device DSP demo (S6), autonomous RGB LED (F11).
+- 2026-09-17  d7f7b79  requirements.md v0.3: NDT/workshop-badge, 3–4 MHz, unipolar,
+  A-/M-mode, coded excitation, multi-connector (SMA/header/uFL), precise-timing +
+  gap-free-ADC controller, DP5 derisk-by-reuse, provided piezo, on-body safety.
 - 2026-09-17  b21abac  requirements.md v0.2: RP2350 MCU + on-board USB-C bus-powered +
   DP1–DP4 (small/cheap/simple); external-ADC note; memory 0005. **Pushed.**
 

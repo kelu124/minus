@@ -185,6 +185,10 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   a bipolar pulser (e.g. MD1210/MD1213 + TC6320, as in pic0rick — DP5) becomes
   viable and **unlocks true ±1 phase-coded excitation** for the workshop (synergy
   with T4). Otherwise, stay unipolar (T1–T3).
+- **T7 [S]** **HV rail(s) on a header (external-HV option):** bring the HV rail(s) to
+  an accessible header with a **jumper / solder-bridge** to isolate the on-board HV
+  supply, so users can **feed external HV** or replace the on-board generator entirely
+  (e.g. via an extension board, C5). Expose the relevant control PIO(s) too.
 
 ## 9. Digitization & data (D)
 
@@ -213,7 +217,10 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   read back raw data.
 - **C4 [C]** Wireless (BLE/Wi-Fi) host link for untethered use — only if it does not
   compromise DP1–DP3.
-- **C5 [S]** Standard expansion header (e.g., PMOD) for options (mux, storage).
+- **C5 [S]** **Extension headers** exposing spare **RP2350 PIO/GPIO** (plus power and
+  ground) on a 2.54 mm / PMOD-style pinout, so users can build **extension boards**
+  (e.g. channel mux, storage, alternative front-ends, external HV — see T7). Document
+  the pinout.
 
 ## 11. Power (PW)
 
@@ -235,6 +242,11 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **M3 [S]** Minimise board area and component height so it wears as a badge.
 - **M4 [C]** A handheld/on-body probe enclosure is out of scope for v1.0 (the piezo is
   applied by hand during the workshop).
+- **M5 [S]** **User-friendly silkscreen (layout, not BOM):** label the functional
+  blocks (pulser / HV / T-R / VGA-TGC / ADC / RP2350), name connectors and header
+  pins, and add brief function hints — the board should teach itself for the workshop.
+- **M6 [S]** **Test points** on key logic and analog nodes (e.g. TX gate, HV rail(s),
+  AFE output, ADC clock/data, PIO lines) so attendees can probe/learn and debug.
 
 ## 13. Cost & BOM (B)
 

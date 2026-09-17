@@ -49,6 +49,11 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
   on-badge visual feedback (status; echo/M-mode → colour) without a host.
 - **OSHWA [S]:** plan OSHWA certification (like un0rick/lit3rick/pic0rick); reserve
   silkscreen space for the OSHWA mark + UID.
+- **Layout/extensibility [S]:** user-friendly silkscreen (label blocks, pins,
+  function hints — the board teaches itself); test points on key logic/analog nodes;
+  **extension headers exposing spare RP2350 PIO/GPIO + power** for add-on boards; **HV
+  rail(s) on a header with jumper** so on-board HV can be isolated/replaced by external
+  HV (T7, C5, M5, M6).
 
 **Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
 part; exact HV level; whether a cheap ± rail makes bipolar worthwhile; then draft the
