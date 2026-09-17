@@ -17,6 +17,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** No (40 kHz–1 MHz TUSS4470 band) · **ADC sampling:** ~75 kSps (host MCU ADC, 8-bit)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | AFE IC (TUSS4470) + host MCU (Arduino UNO / Pico) | [D] |

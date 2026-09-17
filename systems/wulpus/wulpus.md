@@ -13,6 +13,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Partial (1–3 MHz only; ~1.4 MHz BW ceiling) · **ADC sampling:** 8 MSps (12-bit, integrated MSP430)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU | [D] |

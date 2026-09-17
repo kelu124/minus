@@ -18,6 +18,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Partial (≤10 MHz excitation but ~1.4 MHz BW ⇒ ≤~3 MHz effective) · **ADC sampling:** 8 MSps (integrated MSP430)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU (MSP430FR5043 SoC) on BioGAP-Ultra host | [D] |

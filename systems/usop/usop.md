@@ -13,6 +13,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (flexible PZT, ~3–5 MHz est.) · **ADC sampling:** ? (integrated MCU ADC, undisclosed)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU (custom flexible integrated electronics) | [P] |

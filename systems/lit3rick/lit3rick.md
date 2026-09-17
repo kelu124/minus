@@ -17,6 +17,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (transducer-agnostic) · **ADC sampling:** ≤65 MSps (12-bit, est.)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | FPGA (iCE40 UP5K) | [D] |

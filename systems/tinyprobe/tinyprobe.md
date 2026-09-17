@@ -13,6 +13,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (≤15 MHz; arrays used 2.25/5 MHz-class) · **ADC sampling:** 30 MSps (10-bit, external)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | FPGA (+ custom mux ASICs) | [P] |

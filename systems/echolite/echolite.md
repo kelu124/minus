@@ -16,6 +16,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** ? (unconfirmed; ~5 MHz inferred from 11 µm res / 3 cm) · **ADC sampling:** ? (undisclosed; >8 MSps inferred)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU | [S] |

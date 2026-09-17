@@ -16,6 +16,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (0.01–10 MHz range) · **ADC sampling:** 50 MSps (external)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | FPGA (Xilinx ZYNQ-7) | [P] |

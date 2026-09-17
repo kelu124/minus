@@ -17,6 +17,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (broadband pulser-receiver + 100 MSps; paper used 16.7 MHz) · **ADC sampling:** 100 MSps (12-bit)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | single-element + MEMS mirror scanner + PC/DAQ | [P] |

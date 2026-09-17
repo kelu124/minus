@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Added "Piezo 1–5 MHz" + "ADC sampling" attributes to all 19 system
+  sheets (+ template + quick-ref table). Wrote root `analysis.md` (integrated vs
+  external-ADC routes + light-BOM pulser options). Pulled pulser datasheets into
+  `pdfs/datasheets/`. Added memory 0005 (provisional direction).
 - 2026-09-17 — Identified designs by key IC (`systems/by-ic.md`): MSP430FR5043
   (WULPUS family + TI EVM) and TUSS4470 (**Open Echo** + TI EVM). Added the Open
   Echo datasheet (systems/ = 19) and pulled BioGAP + Open Echo design files into

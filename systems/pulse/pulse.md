@@ -13,6 +13,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (≤10 MHz excitation; ~5 MHz wrist) · **ADC sampling:** ~1–2 MSps (analog-envelope, >5× reduced)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU (ARM Cortex-M4 class) | [P] |

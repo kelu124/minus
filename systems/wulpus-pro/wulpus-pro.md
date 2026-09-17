@@ -14,6 +14,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Partial (drives 2.25/5 MHz arrays but ~1.4 MHz BW ⇒ ≤~3 MHz effective) · **ADC sampling:** 8 MSps (12-bit, integrated MSP430)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU | [P] |

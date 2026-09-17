@@ -16,6 +16,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (repurposed 2–5 MHz medical/scanner probes) · **ADC sampling:** external, build-dependent
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU/module-based (Arduino-like) + external ADC/host | [P] |

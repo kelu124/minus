@@ -46,6 +46,18 @@ pediatric. **FloPatch** confirmed: model FP120, CW 4 MHz, FDA K200337 (2020), CE
 Flosonics Medical (Toronto), validated Kenny et al. Sci. Reports 2021
 (10.1038/s41598-021-87116-y), iOS app (velocity/VTI/ccFT).
 
+## Per-system attributes + first analysis (2026-09-17, later)
+
+- Added two attributes to **every** system sheet (callout under §1): **"Piezo
+  1–5 MHz"** compatibility and **ADC sampling speed**; consolidated quick-reference
+  table in `systems/README.md`; fields added to `TEMPLATE.md`.
+- Root **`analysis.md`** (first pass): integrated routes (MSP430 A / TUSS4470 A2) vs
+  external-ADC route (B). For a 1–5 MHz pulse-echo *minus*, Route B fits; A is ≤3 MHz,
+  A2 is ≤1 MHz. Includes a **light-BOM pulser options** table (TUSS4470 / STHV748 /
+  MD1213+TC6320 / unipolar MOSFET+boost / TC6320+driver).
+- Pulled pulser datasheets → `pdfs/datasheets/` (MD1213, MD1213DB1 [MD1213+TC6320
+  reference], AN-H53, TUSS4470; STHV748 + TC6320 host-blocked → linked).
+
 ## By-IC cross-reference + Open Echo + more design files (2026-09-17, later)
 
 - Added `systems/by-ic.md` — designs grouped by key IC (user asked to identify

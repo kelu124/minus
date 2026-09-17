@@ -16,6 +16,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** ? (likely ~2–4 MHz for bladder depth; undisclosed) · **ADC sampling:** ? (undisclosed, integrated)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | integrated (closed) | [P] |

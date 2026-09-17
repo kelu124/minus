@@ -13,5 +13,8 @@ a descriptive name.
 | `pic0rick_full.pdf` | pic0rick article (full version), from the kelu124/pic0rick repo. → `systems/pic0rick/`; design files in `design/pic0rick/`. |
 | `Current_Trends_in_Ultrasound_Wearables_Spotlight_on_System_Architecture_early_access.pdf` | Weik et al., *Current Trends in Ultrasound Wearables: Spotlight on System Architecture*, IEEE Reviews in Biomedical Engineering (early access, 2026). Peer-reviewed basis of the SIG-WUS catalog. |
 
+Component **datasheets** live in [`datasheets/`](datasheets/README.md) (pulser ICs
+etc. — see `analysis.md`).
+
 Related: schematics and design files (KiCad/Gerber/PDF schematics) go in
 [`../design/<name>/`](../design/), one subfolder per design.

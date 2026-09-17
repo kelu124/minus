@@ -48,6 +48,38 @@ out of scope** (listed at the bottom for context only).
 Broader ≤32-element literature (incl. Weik et al. 2026 Table I: Yin, Bashatah,
 Wang, …) is tabulated in [`literature.md`](literature.md).*
 
+### Piezo 1–5 MHz compatibility & sampling (quick reference)
+
+Whether the front-end/ADC suits a **1–5 MHz piezo** (the *minus* target band), and
+the ADC sampling speed. `Partial` = drives the band but bandwidth-limited.
+
+| System | 1–5 MHz piezo? | Sampling |
+|--------|:--------------:|----------|
+| Murgen | Yes | external, build-dependent |
+| un0rick | **Yes** | 65 MSps (10-bit) |
+| lit3rick | **Yes** | ≤65 MSps (12-bit) |
+| pic0rick | **Yes** | 65 MSps (10-bit) |
+| IUP | Partial (≤~4 MHz) | 16 MSps (16-bit) |
+| MEMS-US | Yes | 100 MSps (12-bit) |
+| EchoLite | ? | ? |
+| PuLsE | Yes | ~1–2 MSps (analog-envelope) |
+| USoP | Yes (est.) | ? |
+| WULPUS | Partial (1–3 MHz) | 8 MSps (12-bit) |
+| WULPUS PRO | Partial (≤~3 MHz eff.) | 8 MSps (12-bit) |
+| BioGAP WULPUS-pro | Partial (≤~3 MHz eff.) | 8 MSps |
+| TinyProbe | **Yes** (≤15 MHz) | 30 MSps (10-bit) |
+| TUSS4470 | **No** (≤1 MHz) | external (envelope, low-rate) |
+| Open Echo | **No** (≤1 MHz) | ~75 kSps (8-bit) |
+| SENS-U | ? | ? |
+| WMAUS | Yes (5 MHz) | 20 MSps |
+| MoUsE | Yes | 50 MSps |
+| Flopatch | Yes (4 MHz, CW) | audio-rate (kHz) |
+
+**For minus (1–5 MHz target):** the external-ADC route (un0rick/lit3rick/pic0rick,
+30–65 MSps) covers 1–5 MHz cleanly; the MSP430 integrated route (WULPUS family,
+8 MSps) is bandwidth-capped to ≤~3 MHz; the TUSS4470/Open-Echo route (≤1 MHz) is out
+of band. See [`../analysis.md`](../analysis.md).
+
 ## Reading the design space
 
 Five architectural branches, ordered roughly minimal → capable:

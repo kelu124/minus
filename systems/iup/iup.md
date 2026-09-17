@@ -16,6 +16,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Partial (2 MHz used; 16 MSps ADC supports up to ~4 MHz RF) · **ADC sampling:** 16 MSps (16-bit)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | hybrid MCU (STM32H7) + FPGA (iCE40) | [P] |

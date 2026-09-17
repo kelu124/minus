@@ -14,6 +14,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (supports 2–30 MHz; covers 2–5 MHz) · **ADC sampling:** 65 MSps (10-bit)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU (RP2040) | [D] |

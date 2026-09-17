@@ -17,6 +17,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (4 MHz — but continuous-wave Doppler, not pulse-echo) · **ADC sampling:** audio-rate (kHz; Doppler envelope)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | integrated (closed), CW Doppler | [P] |

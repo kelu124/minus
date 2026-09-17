@@ -13,6 +13,8 @@
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes (5 MHz transducer, 77% BW) · **ADC sampling:** 20 MSps (external)
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU/DSP (dsPIC33) | [P] |

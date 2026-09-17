@@ -26,12 +26,16 @@ Conventions:
 
 ## 1. Classification
 
+**Piezo 1–5 MHz:** Yes / No / Partial / ? (short note) · **ADC sampling:** <MSps or "external/low-rate">
+
 | Field | Value | Src |
 |-------|-------|-----|
 | Architecture class | MCU / FPGA / custom silicon / hybrid | |
 | Intended application | | |
 | Imaging modes | A-mode / B-mode / M-mode / Doppler | |
 | Single-channel only? | yes / no | |
+| Works with 1–5 MHz piezo? | yes / no / partial (why) | |
+| ADC sampling speed | <MSps / low-rate / external> | |
 | Wireless? | none / BLE / Wi-Fi / other | |
 | Open source? | yes / partial / no | |
 

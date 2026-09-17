@@ -18,6 +18,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - Collect more design files (IUP if released); add `design/` subfolders as sheeted.
 - Fill survey gaps: EchoLite (await IEEE IUS 2025 paper), PuLsE/USoP MCU parts & TX
   voltages, pic0rick dimensions/SNR.
+- Advance `analysis.md`: fix minus target frequency, unipolar vs bipolar, pick
+  pulser (STHV748 vs MD1213+TC6320 vs unipolar), ADC + controller; then draft a BOM.
 - Decide which reference systems `minus` derives from (kelu124 family / IUP / WULPUS
   / PuLsE / TUSS4470 route).
 
