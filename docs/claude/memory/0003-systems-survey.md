@@ -9,7 +9,25 @@ inform *minus*. Lives in [`systems/`](../../../systems/README.md); template at
 Source: wulrick "extended platform survey"
 (github.com/kelu124/wulrick, `OtherSystems/`) + each system's primary papers/repos.
 
-## Systems captured (11 sheets)
+## Anchor literature (user-provided PDFs in `pdfs/`)
+
+- **Jonveaux, Schloh, Meng, Arija, Rintoul**, "Review of Current Simple Ultrasound
+  Hardware...", *J. Open Hardware* 6(1):3, 2022, DOI 10.5334/joh.28
+  (`pdfs/28-952-1-PB.pdf`). The user's own review — anchor for the whole survey.
+  Distilled into `systems/literature.md` (Table 2 filtered to ≤32 elements +
+  component menus: pulsers, HV sources, TGC/VGA, ADCs, AFEs, mux; single-element
+  B-mode strategies; bandwidth-reduction).
+- **IUP** (`pdfs/ssrn-6946751.pdf`) and **MEMS-US** (`pdfs/s41598-020-63529-z.pdf`)
+  — device papers, each with a datasheet in `systems/`.
+
+## Systems captured (13 sheets)
+
+New since first pass: **IUP** (HZDR DRESDYN UDV node — STM32H725 + iCE40HX4K +
+MD1213/TC6320 + AD8331 + MD0100 + MAX5184 DAC + LTC2203 16-bit @16 MHz + SD/SDRAM +
+ESP32 Wi-Fi + 18650, 2.96 W, 43 g; closest full-system template for *minus*).
+**MEMS-US** (POSTECH single-element real-time B-mode via a MEMS acoustic-mirror
+scanner; commercial Olympus 5073PR + AlazarTech ATS9350 100 MSps electronics — the
+*scanning idea* is the takeaway, not the cheap BOM).
 
 kelu124 family (the direct lineage for *minus*): **Murgen** (2016, arXiv
 1611.10174, Arduino-like modular AFE) → **un0rick** (2019, iCE40HX4K, 65 Msps

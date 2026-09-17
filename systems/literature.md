@@ -1,0 +1,137 @@
+# Literature review — simple ultrasound hardware
+
+Distilled from the anchor survey **Jonveaux, Schloh, Meng, Arija, Rintoul,
+"Review of Current Simple Ultrasound Hardware Considerations, Designs, and
+Processing Opportunities", *Journal of Open Hardware* 6(1):3, 2022,
+DOI 10.5334/joh.28** (`pdfs/28-952-1-PB.pdf`) — plus the two device papers in
+`pdfs/`. Scope filter: **single- to ≤32-element designs** (64+ omitted, per the
+project rule; a count is noted).
+
+## Design targets for a simple B-mode scanner
+
+From the minimal spec set (Kurjak & Breyer 1986) the review frames:
+- Linear/convex scan-head, **3.5–5 MHz**, depth **up to 18 cm**.
+- Image tissue at **SNR ≥ 50 dB ⇒ ADC ≥ 9-bit**.
+- **128 lines/image** (≥40° view), 512×512 display (4-bit grey), **5–10 fps**.
+- A-mode is the building block of B-mode; M-mode is A-mode over time.
+
+## Functional blocks (the reference architecture)
+
+`Sensor → Pulser → T/R switch (receiver protect) → TGC amplifier → ADC → controller (FPGA) → host`
+
+Analog parts are the hard part (low signals). A controller (usually an FPGA, for
+parallel timing) coordinates the blocks; ADC data is exported to a host.
+
+## Table 2 (filtered) — single / few-element designs
+
+Columns from the review: Elements · TX Voltage · MSPS · Res(bit) · AFE/TGC · Year.
+`NA` = not stated. (64/128-element rows omitted — see count below.)
+
+| Reference | El. | Voltage | MSPS | Res | AFE/TGC | Year |
+|-----------|-----|---------|------|-----|---------|------|
+| Chang-hong Hu, Zhou, Shung | 1 | 15 V | 120 | 12 | — | 2008 |
+| Ricci et al. | 1 | 100 V | 64 | 14 | MAX4107 | 2006 |
+| FRITSCH (NDE, full FPGA) | 1 | 50–400 V | 80 | — | NA | n.d. |
+| Y. Qiu et al. | 1 | 60 V | 250 | — | TC6320 | 2020 |
+| Jonveaux (Murgen) | Single | 100 Vpp | 22 | 9 | AD8331 | 2017/18 |
+| H. Li et al. | Single | 80 V | 40 | 12 | AD9276 | 2014 |
+| Kushi & Suresh Babu | Single | NA | 100 | 14 | NA | 2017 |
+| Weibao Qiu, J. Xia, et al. | Single | +48 V | 160 | — | AD8331 | 2018 |
+| Kruizinga et al. (compressive 3D, 1 sensor) | Single | 100 Vpp | 200 | 12 | NA | 2017 |
+| Vasudevan, Govindan, Saniie | Single | 100 Vpp | 250 | 12 | VCA8500 | 2014 |
+| Nguyen et al. | 2 | 18 V | 40 | 10 | — | 2019 |
+| R. Bharath, Reddy, et al. | 8 | ±50 V | 40 | 12 | AFE5808 | 2016 |
+| Dusa et al. | 8 | 100 Vpp | 65 | 12 | AFE5809 | 2014 |
+| Bharath et al. | 8 | 105 V | 50 | 16 | AFE5809 | 2018 |
+| Pramod Govindan et al. | 8 | NA | 250 | 8 | VCA8500 | 2015 |
+| Matera et al. | 8 | 6 V | 75 | 14 | AFE5809 | 2018 |
+| Pashaei, Dehghanzadeh, et al. | 8 | 10 V | 80 | 12 | AD9276 | 2020 |
+| D.-l. Zhang et al. | 8 | 70 V | 250 | 16 | QT1138 | 2017 |
+| Ahn et al. | 16 | 70 V | 40 | 10 | AFE5808 | 2015 |
+| Y. Lee et al. | 16 | NA | 40 | — | AFE5808 | 2014 |
+| Weng, Chen, Huang | 16 | 100 V | 150 | 10 | MAX2077 | 2015 |
+| Chatar & George | 16 | NA | 150 | 14 | NA | 2016 |
+| Fournelle et al. | 32 | ±100 V | 40 | — | NA | 2020 |
+| Peyton, Boutelle, Drakakis | 32 | NA | 20 | — | Custom | 2018 |
+| Amauri Amorin Assef | NA | 100 Vpp | 40 | 12 | AFE5805 | 2015 |
+| Wall | NA | 12 V | 65 | — | NA | 2010 |
+| R. Bharath, Chandrashekar | NA | NA | NA | — | NA | 2015 |
+
+*Omitted as out of scope (64+ elements): ~9 rows — A.A. Assef & Maia 2014 (128),
+Amauri A. Assef 2012 (128), Cheung 2012 (128, AD9272), Hager 2017 (64, AFE5851),
+Hewener 2012 (128, AD9273), Ibrahim & Zhang 2018 (64), J.H. Kim 2017 (128/32-ch),
+Roman 2018 (64, AD9276), Q. Zhang 2019 (64). Batbayar 2018 "4×32" is borderline
+multichannel.*
+
+Read of the table: single-element designs cluster at **1–15 MHz, 40–250 MSps,
+10–14 bit**, with discrete VGAs (AD8331/VCA8500/MAX4107); 8–16-element designs
+lean on integrated AFEs (**AFE58xx**, **AD927x**).
+
+## Component menus (for a minus BOM)
+
+**Pulsers (Table 3 typology):**
+- Discrete driver + HV FETs: MD1213+MD1711, TC7320+MD1810, EL7158+TC6320,
+  MD1210+TC6320, MD1812/MD1813 composite. (kelu124 family + IUP use MD121x+TC6320.)
+- Integrated pulser ICs: HV7361, **HV7351** (8-ch, predetermined TX patterns),
+  HV748, STHV800, STHV748, LM96551.
+- Mux / switches: MAX14808, **MAX14866**, LM96530, HV2605, HV2201, HV20220.
+- T/R protect / clipping: **MD0100/MD0101**, MMBD4148/MMBD3004.
+- Signal gen + power amp: THS5651A+LT1210CS, TCA0372.
+
+**HV supply sources:** RECOM 0–120 V, NMT0572SC (24/48/72 V), LT3494 (≤39 V),
+MAX668 (0–150 V), MAX1856 (−80…−24 V), MIC3172/HV9150 (≤200 V), MAX15031 (≤80 V),
+DRV8662/DRV2700 (≤105 V), PICO 5SM250S, **LT8582** (bipolar ±32 V, per IUP), SEPIC
+bipolar (Granata 2020). Impedance matching (low-cost VNA / NanoVNA) improves SNR.
+
+**TGC / VGA amps:** AD8331 family (0–40/80 dB), AD8335 (80 dB), AD604 (dual, 48 dB),
+MAX4107, VCA8500, MAX2077. Gain typically 0–40/80 dB, DAC-ramped for depth.
+
+**ADCs:** single-frequency 1–15 MHz sensors ⇒ **40–150 MSps, 10–14 bit**; FIFO
+(e.g. AL422B) between ADC and controller. IUP uses a 16-bit LTC2203 at 16 MHz.
+
+**Integrated AFEs (multi-channel; for ≤8-ch, not single-element):**
+- **AD927x** — 8-ch, 12-bit, 10–80 MHz, integrated TGC.
+- **AFE58xx** — 8–32-ch, 50–65 MSps, LNA+VCAT+PGA+LPF+ADC (+optional CW).
+- **MAX2082/MAX2077** — 8-ch, HV pulser + T/R switch, **no digitizer**.
+
+**Controllers:** FPGA preferred (parallel timing, DMA); often + MCU/USB bridge
+(Cypress USB2/3), Ethernet (CP2200), or Wi-Fi. Open FPGA toolchains (icestorm) make
+iCE40 attractive. Jonveaux 2019b used the Raspberry Pi 40-pin header as a standard
+extension bus.
+
+## Getting B-mode from a single element (no array)
+
+- **Mechanical sweeping** — motorized / voice-coil scan of one element (Smith 2015
+  reports ~95% cost saving vs array; Lei 2018 single-element at 130 fps). Common in
+  intra-cavity probes.
+- **MEMS acoustic-mirror steering** — Choi et al. 2020 (see [[mems-us]]), real-time
+  B-mode at 40 Hz from one element.
+- **Synthetic aperture** — SAF, monostatic SA scanners (MSAS), monostatic fixed-
+  focus (MFFS); Kruizinga 2017 does **compressive 3D imaging with a single sensor**
+  via a coded aperture mask.
+
+## Bandwidth-reduction strategies (lean data path)
+
+- Hardware **envelope detector** before ADC (fixed cutoff = per-transducer limit) —
+  cf. [[pulse]], [[tuss4470]].
+- **Quadrature sampling + frequency downconversion** — preserves amplitude+phase at
+  reduced rate.
+- **SDR-based capture** — "rtl-ultrasound" (Meng 2019, a review co-author) uses SDR
+  quadrature hardware as a drop-in acquisition path.
+
+## Signal-processing opportunities (host side)
+
+General filtering (near ADC on DSP/FPGA) → envelope detection (Hilbert) →
+deconvolution with a measured PSF (sharpen) → amplitude compression (ITU-T G.711
+a-law, 12→8-bit) → scan conversion (polar→Cartesian). Advanced: synthetic-aperture
+focusing, Barker/chirp coded excitation, compressed sensing (fewer samples than
+Nyquist; enables single-element volumetric), and machine learning (image quality,
+A-mode interpretation).
+
+## Related open designs by the review authors (kelu124 / co-authors)
+
+- Murgen / Arduino-like AFE (Jonveaux 2017) — see [[murgen]].
+- un0rick (2019b), lit3rick (2021b), pyusbus "opening USB ultrasound probes"
+  (2021c), a MAX14866 dev board (2021a) — see [[un0rick]], [[lit3rick]].
+- rtl-ultrasound (Meng 2019) — SDR acquisition; **lead to sheet**.
+- Compressive single-sensor 3D (Kruizinga 2017) — **lead to sheet**.

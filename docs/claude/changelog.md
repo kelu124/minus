@@ -8,13 +8,16 @@ the sha.
 
 ## Pending
 
-- Extend `systems/` survey via online research: add Murgen, un0rick, lit3rick,
-  TUSS4470 sheets; reframe README into 5 design branches; add out-of-scope (64+
-  element) and leads-to-review sections. Update memory/0003, TODO/DONE/log.
-- Record commit 82c24e3 in changelog (from previous step).
+- Process 3 user-provided PDFs: add IUP + MEMS-US datasheets and
+  `systems/literature.md` (from the Jonveaux et al. 2022 review). Add `pdfs/` (with
+  RP2350 datasheet) and `design/` folders + conventions in CLAUDE.md / minus-docs
+  skill / memory. Update systems/README, memory/0003, TODO/DONE/log.
 
 ## Committed
 
+- 2026-09-17  bab55c6  Extend `systems/` survey (online research): Murgen, un0rick,
+  lit3rick, TUSS4470 sheets; 5-branch README framing; out-of-scope (64+ elements)
+  + leads-to-review sections.
 - 2026-09-17  82c24e3  Add `systems/` lightweight-ultrasound survey: datasheet
   TEMPLATE.md, index README, and 7 populated sheets (EchoLite, PuLsE, USoP,
   WULPUS, WULPUS PRO, pic0rick, TinyProbe).

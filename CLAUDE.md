@@ -23,6 +23,17 @@ Then you are "up and running" with the past discussions and discoveries.
   and add its pointer to `docs/claude/memory/INDEX.md`.
 - **Work items** → keep `docs/claude/TODO.md` current; when done, move the item
   to `docs/claude/DONE.md` with the date.
+- **Downloaded PDFs** (papers, datasheets, reference-design docs) → save into
+  `pdfs/` (not a temp dir) with a descriptive name; index them in `pdfs/README.md`.
+- **Schematics / design files** (KiCad, Gerbers, PDF schematics, BOMs) → save into
+  `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`).
+
+## Project layout
+
+- `systems/` — device datasheets (one subfolder per design) + `TEMPLATE.md` +
+  `literature.md`. See `systems/README.md`.
+- `pdfs/` — source PDFs (papers, datasheets, reference designs).
+- `design/` — schematics & design files, one subfolder per design.
 
 ## On every commit
 

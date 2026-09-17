@@ -42,6 +42,16 @@ When a discussion settles something that should outlive the session:
 - When an item is finished, move it to `docs/claude/DONE.md` with the date
   (`YYYY-MM-DD — what was done`, newest first).
 
+## 4b. Store artifacts (PDFs & design files)
+
+- Downloaded PDFs (papers, datasheets, reference-design docs) → `pdfs/` with a
+  descriptive name; index them in `pdfs/README.md`. Never leave them in a temp dir.
+- Schematics / design files (KiCad, Gerbers, PDF schematics, BOMs) →
+  `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`); note
+  the upstream source (repo URL + version) in a short `SOURCE.md`.
+- Survey/datasheet work lives in `systems/` (one subfolder per design, `TEMPLATE.md`
+  at root, `literature.md` for the broad review).
+
 ## 5. On every commit
 
 - Add at least a one-line summary to `docs/claude/changelog.md`

@@ -15,6 +15,13 @@ knowing the past discussions/discoveries.
 - `changelog.md` — summary of every commit, newest first.
 - `.claude/` (repo root) — repo-local Claude Code config/notes.
 
+Repo (outside `docs/claude/`):
+- `systems/` — device datasheets (subfolder per design) + `TEMPLATE.md` + `literature.md`.
+- `pdfs/` — downloaded source PDFs (papers, datasheets, reference designs), indexed
+  in `pdfs/README.md`. Always save PDFs here, never a temp dir.
+- `design/` — schematics & design files, one subfolder per design (slug matching
+  `systems/<name>/`), each with a `SOURCE.md` noting the upstream repo + version.
+
 ## Rules (also codified in repo root `CLAUDE.md`)
 
 **Session start:** read `memory/INDEX.md` → the memory files → `TODO.md`/`DONE.md`
