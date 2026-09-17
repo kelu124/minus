@@ -136,6 +136,9 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   **addressable RGB LED** (e.g. WS2812/SK6812, RP2350 **PIO**-driven) so the badge
   gives **standalone visual feedback without a host** — status, and a demo that maps
   echo strength / muscle-contraction (M-mode) to colour. Reinforces the badge aspect.
+- **F12 [S]** **Small OLED display** (common on workshop badges) — e.g. a 0.9″/1.3″
+  **I²C SSD1306/SH1106** (128×32/128×64) — for standalone on-badge display (status, a
+  live A-line / M-mode strip, simple menus) without a host. Shares the I²C bus (C5).
 
 ## 6. Performance requirements (P)
 
@@ -217,10 +220,12 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   read back raw data.
 - **C4 [C]** Wireless (BLE/Wi-Fi) host link for untethered use — only if it does not
   compromise DP1–DP3.
-- **C5 [S]** **Extension headers** exposing spare **RP2350 PIO/GPIO** (plus power and
-  ground) on a 2.54 mm / PMOD-style pinout, so users can build **extension boards**
-  (e.g. channel mux, storage, alternative front-ends, external HV — see T7). Document
-  the pinout.
+- **C5 [S]** **Standardised extension header:** expose the RP2350 on a **Raspberry Pi
+  2×20 (40-pin) header** pinout — bringing out **UART, I²C, SPI**, GPIO/spare PIO,
+  and power/ground — so extensions communicate in a **standard, HAT-style** way (as
+  the owner's un0rick did — DP5). This carries the OLED (F12, I²C) and enables add-on
+  boards (channel mux, storage, alternative front-ends, external HV — see T7). Document
+  the pinout; note where it deviates from the RPi map (RP2350 ≠ RP1).
 
 ## 11. Power (PW)
 

@@ -51,9 +51,13 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
   silkscreen space for the OSHWA mark + UID.
 - **Layout/extensibility [S]:** user-friendly silkscreen (label blocks, pins,
   function hints — the board teaches itself); test points on key logic/analog nodes;
-  **extension headers exposing spare RP2350 PIO/GPIO + power** for add-on boards; **HV
-  rail(s) on a header with jumper** so on-board HV can be isolated/replaced by external
-  HV (T7, C5, M5, M6).
+  **HV rail(s) on a header with jumper** so on-board HV can be isolated/replaced by
+  external HV (T7, M5, M6).
+- **Standardised extension header [S]:** expose the RP2350 on a **Raspberry Pi 2×20
+  (40-pin) header** (UART/I²C/SPI/GPIO/power), HAT-style, as un0rick did (DP5) — carries
+  add-ons and the OLED (C5).
+- **Displays [S]:** addressable **RGB LED** (F11) + small **I²C OLED** (SSD1306-class,
+  F12) for autonomous on-badge display without a host.
 
 **Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
 part; exact HV level; whether a cheap ± rail makes bipolar worthwhile; then draft the
