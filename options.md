@@ -74,10 +74,12 @@ for PIO capture. Excluded: LTC2203 (16-bit, ~$25 — over-spec/large).
 | A3 — ADC10065 *(DP5)* | ADC10065 | 10-bit 65 MSps | ~$10 | check | un0rick/pic0rick part; verify LCSC stock |
 | A4 — AD9280 | AD9280 | 8-bit 32 MSps | ~$4 | check | cheapest, but ~48 dB only — marginal vs P5 |
 
-**Lean pick:** **A1 (AD9235-20)** is the only confirmed in-stock option, but at
-~$18 it **dominates the BOM**. Worth checking A3 (ADC10065) LCSC stock, watching for
-A2 (AD9200) restock, or hunting a cheaper in-stock parallel 10-bit ≥20 MSps part —
-**this is the open cost driver (ADEC).**
+**Lean pick:** **A1 (AD9235-20)** is the only *confirmed* in-stock option, but at
+~$18 it **dominates the BOM**. Cheaper 8-bit candidates to **verify directly on LCSC**
+(search was inconclusive): **TLC5540** (8-bit 40 MSps, ~$3), **ADS830** (8-bit
+60 MSps), **AD9280** (8-bit 32 MSps) — all ~$3–5 but **8-bit ≈ 48 dB (marginal vs
+P5 ≥50 dB)**. Also check **ADC10065** (DP5) stock. **This is the open cost driver
+(ADEC)** — needs a direct LCSC check.
 
 ---
 

@@ -19,6 +19,8 @@ gain,gain_ctrl,MCP4812,DAC for TGC ramp,12-bit dual SPI,1.50,check,,optional; RP
 adc,ext,AD9235-20,external ADC,12-bit 20 MSps parallel,17.88,in_stock,https://lcsc.com/product-detail/C514274.html,IN STOCK but pricier than expected; -40 (C-?) more
 adc,ext,AD9200,external ADC,10-bit 20 MSps parallel,4.72,out_of_stock,https://www.lcsc.com/product-detail/Analog-To-Digital-Converters-ADCs_Analog-Devices-AD9200ARSZRL_C653235.html,cheap BUT OUT OF STOCK at LCSC
 adc,ext,AD9280,external ADC,8-bit 32 MSps parallel,4.00,check,,indicative; ~48 dB only (marginal vs P5)
+adc,ext,TLC5540,external ADC,8-bit 40 MSps parallel,3.00,check,https://www.ti.com/product/TLC5540,cheap 8-bit; verify LCSC stock; ~48 dB (marginal vs P5)
+adc,ext,ADS830,external ADC,8-bit 60 MSps parallel,4.00,check,https://www.ti.com/product/ADS830,cheap 8-bit; verify LCSC stock
 adc,ext,ADC10065,external ADC,10-bit 65 MSps parallel,10.00,check,,un0rick/pic0rick (DP5); verify LCSC stock
 adc,ext,LTC2203,external ADC,16-bit 25 MSps parallel,25.00,check,,IUP; high DR, pricey/large
 adc,internal,RP2350_ADC,internal ADC,12-bit 500 kSps,0.00,-,-,envelope-only; too slow for 3-4 MHz raw RF
