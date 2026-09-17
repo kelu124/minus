@@ -9,8 +9,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Next
 
-- Collect BioGAP WULPUS-pro design files (`pulp-bio/sensei-us-shield`, open HW) into
-  `design/biogap-wulpus-pro/`.
+- (optional) Mirror the full BioGAP Altium source + gerbers, and the Open Echo
+  firmware/Python interface, if wanted beyond the current schematic+fab files.
 - Sheet remaining leads: Measurement-2024 compact modular platform (32 el., get PDF
   → `pdfs/`), rtl-ultrasound (Meng 2019, SDR), compressive single-sensor 3D
   (Kruizinga 2017); optionally Bashatah (chirp) + Wang (Barker) from Weik Table I.

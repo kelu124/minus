@@ -14,6 +14,8 @@ out of scope** (listed at the bottom for context only).
 - **[`literature.md`](literature.md)** — broad literature review (≤32-element
   designs) distilled from the Jonveaux et al. 2022 open-hardware survey, plus
   component menus (pulsers, HV, TGC, ADC, AFE) and single-element B-mode strategies.
+- **[`by-ic.md`](by-ic.md)** — designs grouped by key IC (MSP430FR5043, TUSS4470,
+  AD833x, MD1213/TC6320, …) so a part choice traces to working references.
 - One subfolder per design/product. Source/confidence tags in each sheet:
   `[D]` datasheet/repo · `[P]` paper · `[S]` slides/survey · `[E]` estimate · `?` unknown.
 - Source PDFs live in [`../pdfs/`](../pdfs/) (see its README).
@@ -36,6 +38,7 @@ out of scope** (listed at the bottom for context only).
 | **BioGAP WULPUS-pro** | 2026 | MCU (MSP430) + BioGAP | 16 mux | 30 V | 8 Msps integ. | prog. VGA/TGC | BLE 1.4 Mb/s | ~tens mW | [biogap-wulpus-pro](biogap-wulpus-pro/biogap-wulpus-pro.md) |
 | TinyProbe | 2025 | FPGA | 32 parallel | 64 Vpp (±32 V) | 30 Msps ext. (10-bit) | programmable TGC | Wi-Fi 21.6 Mb/s | <1 W | [tinyprobe](tinyprobe/tinyprobe.md) |
 | TUSS4470 (IC route) | 2021 | AFE IC + MCU | 1 | bipolar H-bridge | external (envelope) | log-amp (not TGC) | SPI + VOUT | low | [tuss4470](tuss4470/tuss4470.md) |
+| **Open Echo** (TUSS4470 board) | 2025 | TUSS4470 + Arduino/Pico | 1 | ~15–20 V boost | host ADC ~75 kSps/8-bit | log-amp | USB (PicoW: UDP) | USB | [open-echo](open-echo/open-echo.md) |
 | **SENS-U** (commercial) | ~2019 | integrated (closed) | 4 mux→1 | ? | ? (integ.) | ? | BT | ? (36 h) | [sens-u](sens-u/sens-u.md) |
 | **WMAUS** | ~2018 | MCU/DSP (dsPIC33) | 8 mux | ±15 V | 20 Msps ext. | VGA | BT/WiFi/Eth | 3.5 W | [wmaus](wmaus/wmaus.md) |
 | **MoUsE** | ~2023 | FPGA (ZYNQ-7) | 32 parallel | ≤±100 V bf | 50 Msps ext. | TGC | raw 500 Mb/s | 12 W | [mouse](mouse/mouse.md) |

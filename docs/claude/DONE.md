@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Identified designs by key IC (`systems/by-ic.md`): MSP430FR5043
+  (WULPUS family + TI EVM) and TUSS4470 (**Open Echo** + TI EVM). Added the Open
+  Echo datasheet (systems/ = 19) and pulled BioGAP + Open Echo design files into
+  `design/`. Checked opensourceimaging.org (only un0rick + echOpen, already covered).
 - 2026-09-17 — Retrieved the SIG-WUS OXP catalog from its repo JSON (live site
   broken); snapshot → `systems/_sig-wus-oxp/` (14 platforms). Enriched FloPatch
   (FP120, CW 4 MHz, FDA K200337, Kenny 2021), corrected SENS-U (TENA/Essity), added

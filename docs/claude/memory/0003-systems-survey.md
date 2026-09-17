@@ -46,7 +46,21 @@ pediatric. **FloPatch** confirmed: model FP120, CW 4 MHz, FDA K200337 (2020), CE
 Flosonics Medical (Toronto), validated Kenny et al. Sci. Reports 2021
 (10.1038/s41598-021-87116-y), iOS app (velocity/VTI/ccFT).
 
-## Systems captured (18 sheets)
+## By-IC cross-reference + Open Echo + more design files (2026-09-17, later)
+
+- Added `systems/by-ic.md` — designs grouped by key IC (user asked to identify
+  **MSP430FR5043**- and **TUSS4470**-based designs):
+  - MSP430FR5043: WULPUS, WULPUS PRO, BioGAP WULPUS-pro, EMG+A-mode fusion
+    (arXiv 2510.02000), TI EVM430-FR6043/FR5043. Ceiling ~1.4 MHz BW.
+  - TUSS4470: **Open Echo** (Neumi/open_echo — open Arduino shield sonar, now
+    sheeted, design files in `design/open-echo/`) + TI BOOSTXL-TUSS4470 EVM.
+- Design files pulled: `design/biogap-wulpus-pro/` (schematics/assembly PDF + BOM;
+  `pulp-bio/sensei-us-shield@238b470`) and `design/open-echo/` (KiCad + gerbers +
+  BOM; `Neumi/open_echo@cd689da`).
+- opensourceimaging.org/projects checked: only un0rick + echOpen (=Murgen), already
+  sheeted. No new designs there.
+
+## Systems captured (19 sheets)
 
 New since first pass: **IUP** (HZDR DRESDYN UDV node — STM32H725 + iCE40HX4K +
 MD1213/TC6320 + AD8331 + MD0100 + MAX5184 DAC + LTC2203 16-bit @16 MHz + SD/SDRAM +

@@ -190,3 +190,18 @@ K200337 (2020), validated in Kenny et al. *Sci. Reports* 2021.
   (2021c), a MAX14866 dev board (2021a) — see [[un0rick]], [[lit3rick]].
 - rtl-ultrasound (Meng 2019) — SDR acquisition; **lead to sheet**.
 - Compressive single-sensor 3D (Kruizinga 2017) — **lead to sheet**.
+
+## Designs grouped by key IC
+
+See [`by-ic.md`](by-ic.md) for which designs use which critical IC. Highlights:
+- **MSP430FR5043** (integrated USS_A MCU): WULPUS, WULPUS PRO, BioGAP WULPUS-pro,
+  the EMG+A-mode fusion works, TI EVM430-FR6043/FR5043. Bandwidth wall ~1.4 MHz.
+- **TUSS4470** (integrated ToF AFE, ≤1 MHz, envelope/log-amp): **Open Echo**
+  (Neumi/open_echo — open Arduino shield, sheeted, design files in `design/open-echo/`)
+  and TI's BOOSTXL-TUSS4470 EVM. PuLsE is the custom analog-envelope cousin.
+
+## Other open-source imaging catalogs checked
+
+- **opensourceimaging.org/projects** (Open Source Imaging Initiative) — its
+  ultrasound entries are only **un0rick** and **echOpen** (= Murgen), both already
+  sheeted. No new designs from there (checked 2026-09-17).

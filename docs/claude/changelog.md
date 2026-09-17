@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- Retrieve SIG-WUS OXP catalog (repo JSON) → `systems/_sig-wus-oxp/`; enrich FloPatch
-  (FP120, CW 4 MHz, FDA/CE, Kenny 2021), correct SENS-U (TENA/Essity), add BioGAP
-  WULPUS-pro sheet; add 45 MB per-file cap rule.
+- Add `systems/by-ic.md` (MSP430FR5043 + TUSS4470 design cross-reference), Open Echo
+  datasheet, and `design/{biogap-wulpus-pro,open-echo}/` files.
 
 ## Committed
 
+- 2026-09-17  6e0b07f  SIG-WUS OXP catalog snapshot (`systems/_sig-wus-oxp/`);
+  FloPatch detail (FP120, CW 4 MHz, FDA/CE, Kenny 2021); SENS-U → TENA/Essity;
+  BioGAP WULPUS-pro sheet; 45 MB per-file cap. **Pushed to origin/main.**
 - 2026-09-17  25b8e55  Pull reference design files (`design/{un0rick,lit3rick,
   pic0rick}/` + SOURCE.md); process Weik et al. 2026 wearables review + SIG-WUS
   (Table I → `systems/literature.md`); add SENS-U/WMAUS/MoUsE/Flopatch sheets +

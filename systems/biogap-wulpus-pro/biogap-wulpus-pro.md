@@ -7,7 +7,7 @@
 **References:** SIG-WUS OXP `biogap-wulpus-pro` (verified 2026-09-14); successor to WULPUS / WULPUS PRO
 **Repository:** https://github.com/pulp-bio/sensei-us-shield (host SW: https://github.com/pulp-bio/biogui)
 **License:** Solderpad v0.51 (HW) / BSD + Apache-2.0 (FW) / Apache-2.0 (SW)
-**Design files:** open (schematics/gerber/BOM in the repo) — mirror into `design/biogap-wulpus-pro/` when collected
+**Design files:** `design/biogap-wulpus-pro/` (schematics PDF, assembly PDF, BOM; full Altium source + gerbers upstream)
 **One-line summary:** WULPUS-PRO as a compact open shield for the BioGAP-Ultra wearable edge-AI platform — 16-channel time-muxed ultrasound front-end (HV pulse gen + T/R select + programmable RX + MSP430FR5043 controller) with on-device ML and BLE.
 
 > Distinct from the WULPUS PRO *paper* platform ([[wulpus-pro]], arXiv 2607.12137):
