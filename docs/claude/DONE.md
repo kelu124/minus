@@ -2,6 +2,13 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Pulled design files (schematics/KiCad/gerbers/BOMs) into
+  `design/{un0rick,lit3rick,pic0rick}/` with `SOURCE.md` + commit SHAs; cross-linked
+  from datasheets; pic0rick article → `pdfs/`.
+- 2026-09-17 — Processed the Weik et al. 2026 wearables system-architecture review
+  (IEEE RBME) + SIG-WUS OXP: captured its Table I in `systems/literature.md`; added
+  datasheets SENS-U, WMAUS, MoUsE, Flopatch (systems/ now 17 sheets); added
+  reference memory 0004.
 - 2026-09-17 — Processed 3 user-provided PDFs: added IUP and MEMS-US datasheets;
   built `systems/literature.md` from the Jonveaux et al. 2022 open-hardware review
   (Table 2 filtered to ≤32 el. + component menus). Set up `pdfs/` (indexed) and

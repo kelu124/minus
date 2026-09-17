@@ -6,6 +6,7 @@
 **Status:** open-source (OSHWA FR000005; TAPR/GPLv3); on Tindie ~$489
 **References:** ResearchGate "un0rick: open-source FPGA board for single element ultrasound imaging"; un0rick.cc
 **Repository:** https://github.com/kelu124/un0rick
+**Design files:** `design/un0rick/` (schematic PDF, BOM, gerbers, drills)
 **License:** open hardware (TAPR) / GPLv3 software
 **One-line summary:** Single-channel iCE40 FPGA pulse-echo board with a 65 Msps ADC and DAC-controlled TGC, controlled over SPI from USB / Raspberry Pi / Arduino.
 

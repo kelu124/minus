@@ -35,8 +35,14 @@ out of scope** (listed at the bottom for context only).
 | WULPUS PRO | 2026 | MCU (MSP430) | 16 mux | ±30 V | 8 Msps integ. (12-bit) | VGA + TGC (AD8338) | BLE/Wi-Fi | 35–58 mW | [wulpus-pro](wulpus-pro/wulpus-pro.md) |
 | TinyProbe | 2025 | FPGA | 32 parallel | 64 Vpp (±32 V) | 30 Msps ext. (10-bit) | programmable TGC | Wi-Fi 21.6 Mb/s | <1 W | [tinyprobe](tinyprobe/tinyprobe.md) |
 | TUSS4470 (IC route) | 2021 | AFE IC + MCU | 1 | bipolar H-bridge | external (envelope) | log-amp (not TGC) | SPI + VOUT | low | [tuss4470](tuss4470/tuss4470.md) |
+| **SENS-U** (commercial) | ~2019 | integrated (closed) | 4 mux→1 | ? | ? (integ.) | ? | BT | ? (36 h) | [sens-u](sens-u/sens-u.md) |
+| **WMAUS** | ~2018 | MCU/DSP (dsPIC33) | 8 mux | ±15 V | 20 Msps ext. | VGA | BT/WiFi/Eth | 3.5 W | [wmaus](wmaus/wmaus.md) |
+| **MoUsE** | ~2023 | FPGA (ZYNQ-7) | 32 parallel | ≤±100 V bf | 50 Msps ext. | TGC | raw 500 Mb/s | 12 W | [mouse](mouse/mouse.md) |
+| **Flopatch** (commercial) | ~2023 | integrated (closed), CW | 2 (1TX+1RX) | CW 4 MHz | audio-rate | analog demod | BT | ? (180 min) | [flopatch](flopatch/flopatch.md) |
 
-*`?` = not disclosed / to confirm. See each sheet for source tags and detail.*
+*`?` = not disclosed / to confirm. See each sheet for source tags and detail.
+Broader ≤32-element literature (incl. Weik et al. 2026 Table I: Yin, Bashatah,
+Wang, …) is tabulated in [`literature.md`](literature.md).*
 
 ## Reading the design space
 
@@ -94,9 +100,17 @@ they were reviewed and set aside:
 
 ## Literature & source PDFs
 
-- **Anchor survey:** Jonveaux, Schloh, Meng, Arija, Rintoul, *Journal of Open
-  Hardware* 6(1):3, 2022, DOI 10.5334/joh.28 (`pdfs/28-952-1-PB.pdf`) — distilled in
-  [`literature.md`](literature.md).
-- Device papers: IUP (`pdfs/ssrn-6946751.pdf`), MEMS-US (`pdfs/s41598-020-63529-z.pdf`).
+- **Anchor surveys:**
+  - Jonveaux, Schloh, Meng, Arija, Rintoul, *Journal of Open Hardware* 6(1):3, 2022,
+    DOI 10.5334/joh.28 (`pdfs/28-952-1-PB.pdf`) — components/architecture.
+  - Weik et al., *Current Trends in Ultrasound Wearables: Spotlight on System
+    Architecture*, IEEE Reviews in Biomedical Engineering, 2026 (early access)
+    (`pdfs/Current_Trends_..._early_access.pdf`) — wearable system-architecture +
+    Table I comparison. Peer-reviewed basis of the **SIG-WUS OXP** catalog
+    (<https://sig-wus.org>, GitHub `sig-wus`; live catalog data didn't load — revisit).
+  - Both distilled in [`literature.md`](literature.md).
+- Device papers: IUP (`pdfs/ssrn-6946751.pdf`), MEMS-US (`pdfs/s41598-020-63529-z.pdf`);
+  pic0rick article (`pdfs/pic0rick_full.pdf`).
 - New PDFs (datasheets, reference designs) go in [`../pdfs/`](../pdfs/); any
-  schematics / design files go in [`../design/<name>/`](../design/).
+  schematics / design files go in [`../design/<name>/`](../design/) (one subfolder
+  per design, each with a `SOURCE.md`). Collected so far: un0rick, lit3rick, pic0rick.

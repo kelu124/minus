@@ -6,6 +6,7 @@
 **Status:** open-source (OSHWA FR000006)
 **References:** ResearchGate "lit3rick: an up5k ultrasound pulse-echo device" (2021); un0rick.cc
 **Repository:** https://github.com/kelu124/lit3rick (see un0rick.cc)
+**Design files:** `design/lit3rick/` (schematics PDF, BOM, gerbers, drills) — use to confirm the `[E]` fields below
 **License:** open hardware / GPLv3
 **One-line summary:** Lighter iCE40 UP5K single-channel pulse-echo board — 12-bit ADC, higher-gain AD8332 front-end, external HV modules, dual-SMA for split TX/RX.
 

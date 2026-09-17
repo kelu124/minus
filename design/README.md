@@ -14,5 +14,13 @@ Convention:
 Datasheets and papers (not editable design files) go in
 [`../pdfs/`](../pdfs/) instead.
 
-_Empty for now — populated as reference design files are collected (see
-`docs/claude/TODO.md`)._
+## Collected so far
+
+| Subfolder | Design | Contents |
+|-----------|--------|----------|
+| `un0rick/` | un0rick (iCE40 single-channel) | schematic PDF, BOM, gerbers, drills |
+| `lit3rick/` | lit3rick (UP5K single-channel) | schematics PDF, BOM, gerbers, drills |
+| `pic0rick/` | pic0rick (RP2040) — 3 boards | KiCad + schematic PDFs + gerbers for `adc/`, `mux/`, `panel_adc_pulser_hv/` |
+
+Each has a `SOURCE.md` with the upstream repo URL + commit + retrieval date.
+More to come (IUP if released, and the leads in `docs/claude/TODO.md`).

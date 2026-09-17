@@ -9,13 +9,15 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Next
 
-- Sheet remaining leads: Measurement-2024 compact modular platform (32 el., get
-  PDF → `pdfs/`), rtl-ultrasound (Meng 2019, SDR), compressive single-sensor 3D
-  (Kruizinga 2017).
-- Collect reference design files into `design/<name>/` (start: un0rick, lit3rick,
-  pic0rick from kelu124 GitHub; IUP if released) with a `SOURCE.md` each.
+- Retry the SIG-WUS OXP live catalog (data failed to load); pull the underlying data
+  file from the `sig-wus` GitHub org and cross-check against our sheets.
+- Sheet remaining leads: Measurement-2024 compact modular platform (32 el., get PDF
+  → `pdfs/`), rtl-ultrasound (Meng 2019, SDR), compressive single-sensor 3D
+  (Kruizinga 2017); optionally Bashatah (chirp) + Wang (Barker) from Weik Table I.
+- Confirm lit3rick `[E]` fields from `design/lit3rick/lit3rick_schematics.pdf`.
+- Collect more design files (IUP if released); add `design/` subfolders as sheeted.
 - Fill survey gaps: EchoLite (await IEEE IUS 2025 paper), PuLsE/USoP MCU parts & TX
-  voltages, lit3rick exact ADC/HV/power, pic0rick dimensions/SNR.
+  voltages, pic0rick dimensions/SNR.
 - Decide which reference systems `minus` derives from (kelu124 family / IUP / WULPUS
   / PuLsE / TUSS4470 route).
 

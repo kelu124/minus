@@ -128,6 +128,54 @@ focusing, Barker/chirp coded excitation, compressed sensing (fewer samples than
 Nyquist; enables single-element volumetric), and machine learning (image quality,
 A-mode interpretation).
 
+## Second anchor: Weik et al. 2026 (system-architecture review) + SIG-WUS
+
+**Weik, Nauber, Kaiser, Kirsch, Kunz, Schierling, Leitner, Benini, Liu, Zhou,
+Hampe, Fettweis, Herzog, Kupsch, "Current Trends in Ultrasound Wearables:
+Spotlight on System Architecture", IEEE Reviews in Biomedical Engineering, 2026
+(early access)** (`pdfs/Current_Trends_..._early_access.pdf`). Peer-reviewed basis
+of the **SIG-WUS OXP** (Open eXperimentation/Exchange Platform) catalog at
+<https://sig-wus.org> (GitHub org `sig-wus`; the live catalog data failed to load
+on fetch — revisit). Same "converge on a modular/scalable common platform" thesis
+as the *minus* motivation.
+
+Framework: it splits wearable US into **non-imaging** (≤8 RX ch, muxed to 1) vs
+**imaging** (≥32 ch) vs **non-pulse-echo** (CW / chirp / coded). Building blocks
+match `literature.md` above (TX gen + amp → HV protection/TR → AFE (VGA+filter+ADC)
+→ sequencer/control → compute → comms). Energy metric: **Mbit/J** (data rate ÷
+power).
+
+### Table I (its state-of-the-art comparison; 64+ ch omitted)
+
+| Platform | Transducer | TX | RX | Compute | Link | Key specs | Mbit/J | App | Access |
+|----------|-----------|----|----|---------|------|-----------|--------|-----|--------|
+| **SENS-U** | 4 ch integ. | n/a | 4→1 MUX | n/a | BT, raw | 30° FOV, 55 g, 36 h | n/a | bladder | commercial |
+| **WMAUS** | 8 ch, 5 MHz | ±15 V | 8→1 MUX, 40 MS/s | dsPIC33 (DSP) | BT/Eth/WiFi, raw | 10 Hz, 190 g, 132×90×30, 10 h | 0.03 | HMI/sEMG | commercial/API |
+| **Yin et al.** | 4 ch, 1 MHz | ±50 V | 4→1 MUX, 2.4 MS/s | STM32F7 | BT/WiFi, raw | 85 g, 5 W, 3.5 h | 0.2 | prosthesis ctrl | n/a |
+| WULPUS | 8 ch, ≤4 MHz | 15 V | 8→1 MUX, 8 MS/s | MSP430FR5043 | BLE, raw | 50 Hz, 13 g, 46×25×13, 28 mW | 11 | HMI/heart | open |
+| PuLsE | 1 ch, ≤10 MHz | 15 V | analog envelope, 2.4 MS/s | STM32L496 | BT, HR | 25 Hz, 5.8 mW, 7 d, 15 g, ⌀40 | 52 | heart rate | open (planned) |
+| **MoUsE** | 32 ch array | ≤±100 V, 0.01–10 MHz bf | 32 ch, 50 MS/s | ZYNQ-7 FPGA | raw | 23 Hz, 610 g, 184×123×33, 12 W | 40 | bladder/hand | n/a |
+| USoP | 32 ch array | ≤100 V, 6 MHz | 32→1 MUX, 12 MS/s | PIC32 + flex PCB | WiFi, raw | 31 Hz, 100×30×5, 0.614 W, 12 h | 5.5 | mobile BP | schematics |
+| TinyProbe | 32 ch array | ±32 V, ≤15 MHz bf | 32 ch, 30 MS/s | STM32F4 + Igloo2 FPGA | WiFi, raw | 33 Hz, 57×35×20, 35 g, 0.97 W, 2 h | 22 | flow/muscle | open |
+| **Flopatch** | 2 ch integ., 60° | CW, 4 MHz | 1 ch | n/a | BT, raw | ~23 mm FOV, 22 g, 54×35×18, 180 min | n/a | carotid flow | commercial |
+| **Bashatah et al.** | 4 ch band | sweep 10 ms, 0.5–5 MHz | 4 ch demod, 40 kS/s | TMS320F2 | A-mode | 50 Hz, 100×200×20, 0.82 W | 1.1 | muscle | n/a |
+| **Wang et al.** | 11 ch array, 2 MHz | Barker 5-bit, ±10 V | 11→1 MUX | Arduino Due | raw | 240×200×20 | n/a | bladder | n/a |
+
+*(OEM USB Probe [27], 128-ch, omitted — out of scope.)* Bold = **new to this survey**
+(sheeted where notable; the rest captured here). Note: this table's WULPUS/PuLsE/
+USoP/TinyProbe rows corroborate their own datasheets.
+
+### New in-scope systems from Weik Table I
+
+- **SENS-U** — commercial 4-ch bladder-volume monitor; wearable, BT, 36 h. → sheeted.
+- **WMAUS** (Wearable Multichannel A-mode UltraSound) — 8-ch dsPIC33 wristband, the
+  research origin of the WULPUS/HMI line. → sheeted. **Yin et al.** is a WMAUS
+  re-design on an STM32F7 for prosthesis control (noted in the WMAUS sheet).
+- **MoUsE** — 32-ch ZYNQ-7 FPGA open POCUS-style imaging platform. → sheeted.
+- **Flopatch** — commercial continuous-wave Doppler patch (2-ch, carotid). → sheeted.
+- **Bashatah et al.** (chirp, 4-ch) and **Wang et al.** (Barker-coded, bladder) —
+  captured here; sheet on request.
+
 ## Related open designs by the review authors (kelu124 / co-authors)
 
 - Murgen / Arduino-like AFE (Jonveaux 2017) — see [[murgen]].

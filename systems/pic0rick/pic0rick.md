@@ -6,6 +6,7 @@
 **Status:** open-source (OSHWA certified; available on Tindie)
 **References:** github.com/kelu124/pic0rick ; wulrick comparison
 **Repository:** https://github.com/kelu124/pic0rick
+**Design files:** `design/pic0rick/` (KiCad + schematic PDFs + gerbers for adc, mux, and the 3-in-1 adc+pulser+hv panel); article in `pdfs/pic0rick_full.pdf`
 **License:** open hardware (KiCad, JLCPCB-compatible)
 **One-line summary:** Open, USB-tethered single-channel raw-RF acquisition board with a 65 Msps ADC and variable TGC; PMOD-expandable to 8 channels.
 

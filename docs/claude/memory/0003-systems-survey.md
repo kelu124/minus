@@ -20,7 +20,22 @@ Source: wulrick "extended platform survey"
 - **IUP** (`pdfs/ssrn-6946751.pdf`) and **MEMS-US** (`pdfs/s41598-020-63529-z.pdf`)
   — device papers, each with a datasheet in `systems/`.
 
-## Systems captured (13 sheets)
+## Second anchor + SIG-WUS + design files (2026-09-17, later)
+
+- **Weik et al. 2026** (IEEE RBME, `pdfs/Current_Trends_..._early_access.pdf`) —
+  wearable-US system-architecture review; **Table I** compares SOTA systems
+  (captured in `systems/literature.md`). Peer-reviewed basis of **SIG-WUS OXP**
+  catalog (<https://sig-wus.org>, GitHub `sig-wus`; live catalog data failed to load
+  — revisit).
+- New sheets from Weik Table I: **SENS-U** (commercial 4-ch bladder monitor),
+  **WMAUS** (8-ch dsPIC33 wristband; Yin et al. = STM32F7 re-design, noted inside),
+  **MoUsE** (32-ch ZYNQ-7 open imaging), **Flopatch** (commercial CW-Doppler patch).
+  Bashatah (chirp) + Wang (Barker bladder) captured in literature.md only.
+- **Design files** pulled into `design/<name>/` (with `SOURCE.md` + commit SHA):
+  un0rick, lit3rick, pic0rick (adc / mux / 3-in-1 adc+pulser+hv panel — KiCad +
+  schematic PDFs + gerbers + BOMs). pic0rick article → `pdfs/pic0rick_full.pdf`.
+
+## Systems captured (17 sheets)
 
 New since first pass: **IUP** (HZDR DRESDYN UDV node — STM32H725 + iCE40HX4K +
 MD1213/TC6320 + AD8331 + MD0100 + MAX5184 DAC + LTC2203 16-bit @16 MHz + SD/SDRAM +

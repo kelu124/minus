@@ -8,13 +8,15 @@ the sha.
 
 ## Pending
 
-- Process 3 user-provided PDFs: add IUP + MEMS-US datasheets and
-  `systems/literature.md` (from the Jonveaux et al. 2022 review). Add `pdfs/` (with
-  RP2350 datasheet) and `design/` folders + conventions in CLAUDE.md / minus-docs
-  skill / memory. Update systems/README, memory/0003, TODO/DONE/log.
+- Pull reference design files into `design/{un0rick,lit3rick,pic0rick}/` (+SOURCE.md);
+  process Weik et al. 2026 wearables review + SIG-WUS: capture Table I in
+  `systems/literature.md`, add SENS-U/WMAUS/MoUsE/Flopatch datasheets, memory 0004.
 
 ## Committed
 
+- 2026-09-17  0dd9e66  Add IUP + MEMS-US datasheets, `systems/literature.md` (from
+  Jonveaux et al. 2022 review), and `pdfs/` + `design/` folders with store
+  conventions; RP2350 datasheet added to `pdfs/`.
 - 2026-09-17  bab55c6  Extend `systems/` survey (online research): Murgen, un0rick,
   lit3rick, TUSS4470 sheets; 5-branch README framing; out-of-scope (64+ elements)
   + leads-to-review sections.
