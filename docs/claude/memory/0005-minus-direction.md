@@ -14,7 +14,12 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
 - Closest starting design on disk: `design/pic0rick/panel_adc_pulser_hv/` (3-in-1
   ADC+pulser+HV KiCad panel).
 
+**Requirements draft:** `requirements.md` (root) — MoSCoW requirements + a §4 list of
+open decisions **TBD-1..7** (clinical?, target freq, TX polarity, host link, imaging
+mode, BOM cost ≤$150 target, controller). Resolving those → requirements v1.0 → BOM.
+
 **Not yet decided (open):** exact target frequency (≤3 MHz would reopen Route A),
-unipolar vs bipolar, ADC (speed/bits), controller (RP2040/RP2350 vs iCE40).
+unipolar vs bipolar, ADC (speed/bits), controller (RP2040/RP2350 vs iCE40), plus the
+TBDs above.
 
 See [[0003-systems-survey]], [[0001-project-scope]].

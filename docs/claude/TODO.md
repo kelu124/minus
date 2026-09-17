@@ -5,7 +5,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- _(nothing in progress)_
+- Resolve `requirements.md` §4 open decisions (TBD-1..7: clinical?, target freq, TX
+  polarity, host link, imaging mode, BOM cost, controller) → requirements v1.0.
 
 ## Next
 

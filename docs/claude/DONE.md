@@ -2,6 +2,9 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Drafted `requirements.md` (root, v0.1): MoSCoW requirements across
+  functional/performance/AFE/pulser/data/control/power/mechanical/cost/SW/openness/
+  safety + verification + traceability, with §4 open-decision list (TBD-1..7).
 - 2026-09-17 — Added "Piezo 1–5 MHz" + "ADC sampling" attributes to all 19 system
   sheets (+ template + quick-ref table). Wrote root `analysis.md` (integrated vs
   external-ADC routes + light-BOM pulser options). Pulled pulser datasheets into

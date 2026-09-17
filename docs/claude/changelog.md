@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- Add per-system "Piezo 1–5 MHz" + "ADC sampling" attributes (all 19 sheets +
-  template + quick-ref); root `analysis.md` (routes + light-BOM pulsers); pulser
-  datasheets in `pdfs/datasheets/`; memory 0005.
+- Draft root `requirements.md` (v0.1, MoSCoW + open-decision TBDs); cross-link from
+  analysis.md; update memory 0005 / TODO / DONE / log.
 
 ## Committed
 
+- 2026-09-17  0dea95f  Per-system "Piezo 1–5 MHz" + "ADC sampling" attributes (19
+  sheets + template + quick-ref); root `analysis.md` (routes + light-BOM pulsers);
+  `pdfs/datasheets/` pulser datasheets; memory 0005. **Pushed.**
 - 2026-09-17  622bb3d  `systems/by-ic.md` (MSP430FR5043 + TUSS4470 cross-reference),
   Open Echo datasheet, `design/{biogap-wulpus-pro,open-echo}/` files. **Pushed.**
 - 2026-09-17  6e0b07f  SIG-WUS OXP catalog snapshot (`systems/_sig-wus-oxp/`);

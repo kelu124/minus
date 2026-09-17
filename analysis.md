@@ -115,6 +115,9 @@ iCE40 FPGA).
 
 ---
 
+These open decisions are captured as **TBD-1..7** in the requirements draft,
+[`requirements.md`](requirements.md).
+
 ## 5. Open questions → next decisions
 1. **Fix minus's target frequency** (e.g. 2.25 / 3.5 / 5 MHz). ≤3 MHz keeps Route A
    (MSP430) on the table; 3–5 MHz forces Route B.
