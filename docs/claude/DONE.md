@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-09-17 — Extended survey with online research: added Murgen, un0rick,
+  lit3rick, TUSS4470 sheets (4); framed the design space into 5 branches; recorded
+  64+ element systems (ULA-OP, SARUS, open-UST) as out of scope + leads to review.
+  systems/ now holds 11 sheets.
 - 2026-09-17 — Surveyed 7 lightweight ultrasound systems (EchoLite, PuLsE, USoP,
   WULPUS, WULPUS PRO, pic0rick, TinyProbe); built `systems/` with datasheet
   template + one populated sheet per system + index.

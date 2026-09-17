@@ -9,32 +9,50 @@ inform *minus*. Lives in [`systems/`](../../../systems/README.md); template at
 Source: wulrick "extended platform survey"
 (github.com/kelu124/wulrick, `OtherSystems/`) + each system's primary papers/repos.
 
-## Systems captured (7)
+## Systems captured (11 sheets)
 
-| System | Arch | Ch | Pulser | ADC | Gain | Link | Power |
-|--------|------|----|--------|-----|------|------|-------|
-| EchoLite | MCU | 1 | ? | ? | ? | ? | 33 mW |
-| PuLsE | MCU M4 | 1 | <15 V est. | integ. low-rate | none (analog envelope) | ? | 5.8 mW |
-| USoP | MCU flex | 1 | ~10–30 V | integ. | ? | BT | 614 mW |
-| WULPUS | MSP430 | 8 mux | +15 V unipolar | 8 Msps integ. | fixed PGA | BLE 320 kbps | 22 mW |
-| WULPUS PRO | MSP430 | 16 mux | ±30 V | 8 Msps integ. | VGA+TGC AD8338 | BLE/WiFi | 35–58 mW |
-| pic0rick | RP2040 | 1(+8) | ±24 V bipolar | 65 Msps ext. | TGC AD8331+DAC | USB | ~300–400 mW |
-| TinyProbe | FPGA | 32 || | 64 Vpp | 30 Msps ext. | prog. TGC | WiFi 21.6 Mb/s | <1 W |
+kelu124 family (the direct lineage for *minus*): **Murgen** (2016, arXiv
+1611.10174, Arduino-like modular AFE) → **un0rick** (2019, iCE40HX4K, 65 Msps
+ADC10065 10-bit, AD8331 TGC, MD1210+TC6320, 25/50/75 V) → **lit3rick** (2021,
+iCE40 UP5K, 12-bit ADC, AD8332, external HV) → **pic0rick** (2024, RP2040, ±24 V).
+Plus wearables: EchoLite, PuLsE, USoP, WULPUS, WULPUS PRO, TinyProbe. Plus
+**TUSS4470** as the integrated analog-envelope AFE-IC route (30 kHz–1 MHz,
+envelope-only) — same branch as PuLsE but off-the-shelf.
 
-## Design-space takeaways (first pass)
+## Design-space takeaways
 
-- Four branches: analog-envelope ultra-low-power (PuLsE); integrated-ADC MCU
-  (WULPUS/PRO, capped ~1.4 MHz BW by 8 Msps ADC); external high-speed-ADC
-  (pic0rick 65 Msps, high freq, USB); FPGA multi-channel (TinyProbe).
-- Most relevant to *minus*: **pic0rick** (open single-channel baseline to trim),
-  **WULPUS** (minimal-power A-mode), **PuLsE** (analog-envelope minimalism limit).
-- Candidate parts noted: AD8338 (low-power TGC VGA), LT3463 (dual ±30 V supply),
-  AD8331+MCP4812 DAC (pic0rick TGC), MD0100/MD0101 T/R switch.
+Five branches, minimal → capable:
+1. Integrated analog-envelope AFE IC — TUSS4470 (≤1 MHz, envelope-only). Floor.
+2. Analog-envelope + low-rate ADC — PuLsE (5.8 mW, envelope-only).
+3. Integrated-ADC MCU — WULPUS/PRO (8 Msps ⇒ ~1.4 MHz BW; PRO adds AD8338 TGC,
+   LT3463 dual ±30 V). Lowest power for raw-RF A-mode.
+4. External high-speed-ADC single channel — kelu124 family (65 Msps, AD833x TGC,
+   MD-class pulser). High freq, USB/SPI, higher power. **Most relevant to minus.**
+5. FPGA multi-channel — TinyProbe (32 ch, Wi-Fi, ~45× power). Upper bound.
+
+Core tension for *minus*: external high-speed ADC (frequency + cost + power) vs
+integrated slow ADC (cheap + low-power, capped ~1.4 MHz).
+
+Candidate parts: AD8331/AD8332/AD8338 (VGA/TGC), MCP4812 DAC, LT3463 (dual ±30 V),
+MD1210/MD1213+TC6320 (pulser), MD0100/MD0101 (T/R), ADC10065 (65 Msps 10-bit).
+
+## Out of scope (64+ elements) — reviewed, set aside
+
+ULA-OP / ULA-OP 256 (Florence, 64→256 ch), SARUS (DTU, up to 1024 ch), open-UST
+(tomography ring array). Recorded in systems/README so we don't re-review.
+
+## Leads to review (not yet sheeted)
+
+- "Compact modular open platform for low-cost US imaging", Measurement 2024
+  (S0263224124022516) — confirm channel count (fetch blocked).
+- Water-proofed MEMS-scanner single-element platform (Sci. Reports 2020).
+- AI portable US (arXiv 2311.00482) uses TI AFE58xx (likely 64+ ch).
 
 ## Open confirmations
 
 - EchoLite: paper not public; nearly all fields unconfirmed.
 - PuLsE/USoP: closed hardware; MCU part, TX voltage, wireless partly unknown.
+- lit3rick: exact ADC part, HV module, power — confirm against repo/paper.
 - pic0rick dimensions/SNR: not characterized here yet.
 
 See [[0001-project-scope]] for how this feeds the *minus* design.
