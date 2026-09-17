@@ -47,6 +47,8 @@ First architecture analysis lives in the repo root **`analysis.md`**. Summary:
   host processing; modular so it never blocks raw capture.
 - **RGB LED [S]:** addressable RGB (WS2812/SK6812, PIO-driven) for **autonomous**
   on-badge visual feedback (status; echo/M-mode → colour) without a host.
+- **OSHWA [S]:** plan OSHWA certification (like un0rick/lit3rick/pic0rick); reserve
+  silkscreen space for the OSHWA mark + UID.
 
 **Still open:** external ADC choice (ADEC) — pick a low-cost ~20–30 MSps 10–12-bit
 part; exact HV level; whether a cheap ± rail makes bipolar worthwhile; then draft the

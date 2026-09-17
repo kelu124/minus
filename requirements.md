@@ -227,8 +227,9 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 ## 12. Mechanical / form factor (M)
 
 - **M1 [M]** **Single small PCB** in a **conference-badge form factor** — flat,
-  badge-sized, with a **lanyard hole** and room for **silkscreen artwork** — fabricable
-  by a standard low-cost house (e.g., JLCPCB) from the published files (DP1).
+  badge-sized, with a **lanyard hole** and room for **silkscreen artwork** and the
+  **OSHWA certification mark + UID** (O3) — fabricable by a standard low-cost house
+  (e.g., JLCPCB) from the published files (DP1).
 - **M2 [M]** On-board **USB-C** connector (host + power). Transducer footprints per
   F2c: SMA/coax **+** 2×1 2.54 mm header **+** uFL.
 - **M3 [S]** Minimise board area and component height so it wears as a badge.
@@ -274,7 +275,9 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   clearly stated licenses (e.g., TAPR/CERN-OHL for HW; permissive/GPL for SW).
 - **O2 [M]** Design files shall be **fabricable from the repo** (schematic, PCB,
   gerbers, BOM) without proprietary tools where feasible (prefer KiCad).
-- **O3 [S]** OSHWA-certifiable.
+- **O3 [S]** Plan **OSHWA certification** (as with the owner's un0rick/lit3rick/
+  pic0rick — DP5). Reserve **silkscreen space for the OSHWA certification mark + UID**
+  (e.g. `OSHW FRnnnnnn`) so the tag can be added once the cert is issued.
 
 ## 16. Safety & compliance (SF)
 
