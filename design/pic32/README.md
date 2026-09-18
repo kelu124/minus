@@ -12,6 +12,9 @@ with the **RP2350** for *minus*. Datasheet/product brief:
 >
 > **Cheapest instantiation:** [`../designA/README.md`](../designA/README.md) — DesignA
 > (RP2354A + PIC32A, 5 V N-FET pulser, digipot gain; active-IC BOM ≈ $3.7 / board ≈ $5).
+>
+> **PIC32 programming/flashing (practical):** [`pic32.md`](pic32.md) — ICSP header,
+> PICkit/MPLAB, the two flashing paths, MCLR network.
 
 ---
 

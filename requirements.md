@@ -202,6 +202,14 @@ see the **anti-requirements in §19**.
   the **RP2350 PIO**, so workshop users can generate multi-cycle bursts, swept-
   frequency (chirp), pulse-position and on-off-keyed (OOK) **coded excitation** and
   experiment with pulse compression. This is a core workshop feature.
+- **T4a [M]** **Jumper-selectable pulser-drive source (two-MCU builds, e.g. DesignA):**
+  the pulser MOSFET gate shall be drivable from **either** the controller
+  (**RP2354/RP2350 PIO**) **or** the capture MCU (**PIC32 HS-PWM**), chosen by a
+  **jumper / solder-bridge** (3-pin: gate = centre, the two sources = ends). This lets
+  TX sequencing be owned by whichever suits — **PIC32 HS-PWM** for tight on-chip TX↔ADC
+  sync, or **RP2354 PIO** for coded excitation from the host side. **Only one source
+  drives the gate at a time** (the other pin held Hi-Z/input); the gate driver, if any,
+  sits after the jumper. See [`design/designA/README.md`](design/designA/README.md) §4.
 - **T5 [note]** True **bipolar phase codes** (e.g., ±1 Barker) need a *bipolar*
   pulser; the unipolar baseline supports frequency/pulse-train/OOK coding only.
 - **T6 [S]** **Bipolar option (conditional):** bipolar transmit is accepted **iff** a
@@ -302,6 +310,14 @@ see the **anti-requirements in §19**.
   optional M-mode.
 - **S4 [S]** Reproducible build + easy flashing (RP2350 UF2 drag-and-drop) so
   workshop attendees can reflash without a toolchain.
+- **S4a [M] (if a second MCU / PIC32 is used):** the second MCU shall be **directly
+  flashable/debuggable on-board**. Expose its **ICSP programming pins on an accessible
+  header** — the standard Microchip 5-pin order **MCLR/Vpp, VDD, VSS(GND), PGD(ICSPDAT),
+  PGC(ICSPCLK)** — so it can be programmed with a **PICkit 4/5 or MPLAB Snap** (a
+  provided `.hex` via free **MPLAB IPE**; building needs the vendor XC-DSC toolchain — see
+  §19 N1). This is **in addition to** any host-MCU-over-ICSP path. Route one PGECx/PGEDx
+  pair + MCLR to the header; keep the standard MCLR network (pull-up, no loading of Vpp).
+  See [`design/pic32/pic32.md`](design/pic32/pic32.md) for the flashing detail.
 - **S5 [S]** **Workshop material:** approachable host UI / example notebooks — live
   A-line + **M-mode of muscle contraction**, and a **coded-excitation** demo — so
   attendees get results quickly, then can experiment.

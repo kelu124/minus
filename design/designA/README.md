@@ -14,21 +14,33 @@ digipot-set gain stage. Target **active-IC BOM ≈ $3.7**, whole board ≈ **$5*
 
 ## 2. Block diagram
 
-```
-                       USB-C 5V ──┬─────────────────────────► +5V (pulser rail, T7 header/jumper)
-                                  │
-                              [3V3 LDO] ── 3V3 ──► RP2354A, PIC32A, digipot, LED
-   ┌───────────┐  ICSP(MCLR/PGC/PGD)   ┌──────────────────────────────┐
-   │  RP2354A  │◄────────────────────► │           PIC32A             │
-   │ (QFN-60)  │  SPI + RDY + TRIG     │  PIC32AK3208GC41048 (48-pin) │
-   │ USB-C,    │◄────────────────────► │                              │
-   │ mgr, DSP, │                       │  HS-PWM ─► [N-FET pulser] ─┐  │
-   │ 2MB flash │                       │  op-amp ◄─ gain stage ◄─┐ │  │
-   │ WS2812 LED│                       │  12-bit 40Msps ADC ◄────┘ │  │
-   └───────────┘                       └───────────────────────────┼──┘
-                                                                    │
-        piezo ~3–4 MHz ──► [T/R clamp] ──► gain stage ;  TX pulse ──┘──► piezo
-        (provided)          (BAV99)        (op-amp + digipot)
+```mermaid
+flowchart LR
+  USB["USB-C 5V"] --> LDO["3V3 LDO"]
+  USB --> HV["+5V pulser rail<br/>(T7 jumper)"]
+
+  subgraph RP["RP2354A · QFN-60"]
+    RPfn["USB-C host · manager · DSP<br/>2MB in-package flash · WS2812"]
+  end
+  subgraph PICc["PIC32A · 48-pin"]
+    TXP["HS-PWM (TX)"]
+    GAIN["op-amp + digipot gain"]
+    ADCc["12-bit 40 Msps ADC"]
+    GAIN --> ADCc
+  end
+
+  LDO --> RP
+  LDO --> PICc
+  RPfn <-->|"SPI + RDY + TRIG"| PICc
+  RPfn -->|"ICSP MCLR/PGC/PGD"| PICc
+  ADCc -->|"A-line over SPI"| RPfn
+
+  PZ["piezo ~3-4 MHz<br/>(provided)"] --> TR["T/R clamp<br/>BAV99"] --> GAIN
+  TXP --> JP1{{"JP1 drive-select"}}
+  RPfn -.->|"PIO (alt)"| JP1
+  JP1 --> Q1["N-FET pulser"]
+  HV --> Q1
+  Q1 --> PZ
 ```
 
 Roles: **PIC32A owns TX + capture** (HS-PWM fires the pulser and triggers its own ADC
@@ -50,6 +62,8 @@ the PIC over ICSP** (one USB-C port programs both). Interconnect detail:
 | Y1 | 12 MHz crystal | RP2354 USB clock | 0.10 | LCSC ✓ |
 | J1 | USB-C receptacle | host + power | 0.30 | LCSC ✓ |
 | J2 | 2×1 2.54 header + uFL | transducer (F2c) | 0.30 | LCSC ✓ |
+| JP1 | 3-pin header + shunt | **pulser drive-select** (PIC32 HS-PWM ⟷ RP2354 PIO, req T4a) | 0.05 | LCSC ✓ |
+| J3 | 5-pin 2.54 header (or test pads) | **PIC32 ICSP** (MCLR/VDD/GND/PGD/PGC) — flash w/ PICkit (req S4a) | 0.10 | LCSC ✓ |
 | — | passives (R/C, decoupling) | — | ~0.50 | LCSC ✓ |
 | **Active ICs** | U1+U2+Q1+D1+U3+U4+D2 | | **≈ $3.74** | |
 | **Board total** | + Y1/J1/J2/passives | (ex-piezo, provided) | **≈ $5.2** | |
@@ -78,14 +92,23 @@ rail.** No boost IC, no HV.
           │                  [Rs] series           ← T/R isolation
         [Q1]  N-FET            │
     gate ─┘  drain=hot node  [D1 BAV99] clamp to 3V3/GND  ← protects PIC op-amp input
-    gate ◄── PIC32A HS-PWM (2.5 ns res) / or RP2354 PIO
         │
+      [gate driver? optional]
+        │
+   ┌────┴──── JP1 (3-pin drive-select jumper) ────┐
+   │ centre = gate                                 │
+  PIC32A HS-PWM ●   ○ ← shunt selects ○   ● RP2354 PIO
+  (tight TX↔ADC sync)                    (host-side coded exc.)
        GND
 ```
 
-- **Drive:** the gate is driven by the **PIC32A HS-PWM** (2.5 ns resolution, high-
-  current I/O) — clean multi-cycle bursts, chirp, pulse-train, OOK **coded excitation**
-  (T4). (RP2354 PIO is the alternative if the RP owns TX.)
+- **Drive — jumper-selectable (req T4a):** the gate is driven by **either** the
+  **PIC32A HS-PWM** (2.5 ns res, high-current I/O — tight on-chip TX↔ADC sync) **or**
+  the **RP2354 PIO**, chosen by **JP1** (3-pin: gate on the centre pin, the two MCU
+  sources on the ends; move the shunt to pick). **Only one drives at a time** — firmware
+  sets the *un*selected pin to input/Hi-Z. Both routes support multi-cycle bursts, chirp,
+  pulse-train and OOK **coded excitation** (T4). Any gate driver sits **after** JP1 so it
+  serves whichever source is selected.
 - **Edges:** a small logic-level FET (Ciss ~30–50 pF) switches in ~20 ns straight from
   the pin — enough for 3–4 MHz. Add a tiny gate driver only if edges are soft / for more
   amplitude.
@@ -136,6 +159,50 @@ between firing lines.** Cheapest realization uses the **PIC32A's own op-amp** wi
   (same as flashless RP2350A); optional **RUN reset** button to enter BOOTSEL without a
   power cycle.
 
+## 6b. Programming / flashing (two paths)
+
+Both MCUs must be flashable; DesignA gives **two independent routes** (req S4 / S4a):
+
+- **RP2354A** — native **USB-C BOOTSEL → UF2** drag-and-drop (no tools). It can also act
+  as the PIC programmer over the ICSP lines (§3d).
+- **PIC32A** — flashed **directly over ICSP** via a **5-pin header J3** (standard
+  Microchip order: **MCLR/Vpp, VDD, VSS, PGD(ICSPDAT), PGC(ICSPCLK)**) with a **PICkit
+  4/5 or MPLAB Snap** — a provided `.hex` flashes with free **MPLAB IPE** (no compiler
+  needed). Route **one PGECx/PGEDx pair + MCLR** to J3; keep the standard MCLR network
+  (10 kΩ pull-up to VDD, no cap loading Vpp). The **same PGC/PGD/MCLR net is shared** with
+  the RP2354-over-ICSP path — so either a PICkit *or* the RP2354 can program the PIC.
+  Full detail: [`../pic32/pic32.md`](../pic32/pic32.md).
+
+```mermaid
+flowchart TD
+  PC["Dev PC<br/>MPLAB IPE / X"] -->|USB| PK["PICkit 4/5 or Snap"]
+  PK -->|"ICSP · J3 (5-pin)"| PIC["PIC32A"]
+  UF2["USB-C · BOOTSEL → UF2"] --> RP["RP2354A"]
+  RP -.->|"bit-bang LVP ICSP<br/>(shared PGC/PGD/MCLR)"| PIC
+  N["One programmer at a time;<br/>idle side's ICSP pins Hi-Z"]:::note
+  classDef note fill:#eeeeee,stroke:#999999,stroke-dasharray:3 3;
+```
+
+## Acquisition sequence (one A-line)
+
+```mermaid
+sequenceDiagram
+  participant H as Host (USB)
+  participant R as RP2354A
+  participant P as PIC32A
+  participant T as Piezo
+  H->>R: configure (freq, cycles, PRF, gain, depth)
+  R->>P: params + gain code (SPI)
+  R->>P: TRIG (start)
+  P->>T: HS-PWM burst via N-FET (coded excitation)
+  T-->>P: echo → T/R clamp → op-amp+digipot → ADC
+  Note over P: capture ≤150µs @20Msps into 8KB SRAM
+  P-->>R: RDY (line ready)
+  R->>P: read A-line (SPI burst)
+  R->>R: optional DSP (bandpass/envelope/matched filter)
+  R-->>H: raw/processed A-line ; RGB/OLED update
+```
+
 ## 7. Open risks / to verify
 
 - [ ] **PIC32A sourcing (N2):** not LCSC/JLC-stocked → consigned part or Digikey +
@@ -144,7 +211,13 @@ between firing lines.** Cheapest realization uses the **PIC32A's own op-amp** wi
 - [ ] **Digipot bandwidth/parasitics** in the feedback path at 3–4 MHz (MCP4131 wiper
       capacitance) — validate, or fall back to the resistor-mux.
 - [ ] **Pulse edge quality** driving the FET straight from HS-PWM (add gate driver?).
-- [ ] Confirm PIC32A **48-pin** pin budget with this exact signal set (§3c/§3d).
+- [ ] Confirm PIC32A **48-pin** pin budget with this exact signal set (§3c/§3d) — now
+      incl. JP1 drive-select (2 pins) + J3 ICSP.
+- [ ] **JP1 drive-select (T4a):** firmware must set the *unselected* MCU's gate pin to
+      Hi-Z/input; verify no contention and that both a PIC32 HS-PWM pin and an RP2354 PIO
+      pin reach JP1.
+- [ ] **Shared ICSP net:** PICkit-vs-RP2354 contention on PGC/PGD/MCLR (§6b, pic32.md) —
+      RP2354 pins Hi-Z when a PICkit drives J3.
 - [ ] RP2354A qty-50 LCSC price (base ~$1.27) and PIC32A qty-50 Digikey price.
 
 ## 8. Links

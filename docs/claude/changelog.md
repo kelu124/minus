@@ -8,7 +8,12 @@ the sha.
 
 ## Pending
 
-- (none)
+- `requirements.md`: add **T4a** (jumper-selectable pulser drive: PIC32 HS-PWM ⟷ RP2354
+  PIO) and **S4a** (expose PIC32 ICSP header for direct PICkit flashing).
+- Add `design/pic32/pic32.md` — how the PIC32(A) is flashed (ICSP pinout, PICkit/MPLAB
+  IPE, LVP, MCLR network, two flashing paths).
+- `design/designA/`: add JP1 drive-select + J3 ICSP header to BOM; §6b programming
+  section; **mermaid** diagrams (system block, programming paths, acquisition sequence).
 
 ## Committed
 
