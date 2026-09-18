@@ -134,10 +134,16 @@ lower, and layout is easier (no PIO-clocked parallel-ADC bus to route).
 `PIC32AK3208GC41064-I/PT` (TQFP-64, 32 KB flash, 8 KB RAM) at **$1.91 / 1, $1.73 / 25,
 $1.58 / 100**, **498 in stock**, 7-week factory lead. So it replaces the external
 **ADC + VGA for < $2** — a clear win for DP2/cheapest, *better* than the baseline
-"cheapest" active-IC BOM (≈ $16 with AD8338 + cheap ADC + RP2350). **Caveat (N2/B2):**
-this is a **Digikey** price; the project standardises on **LCSC/JLCPCB** and LCSC
-stock is **not yet confirmed** — if it isn't in JLCPCB's library it becomes a
-consigned/"extended" part for assembly. Verify on the LCSC BOM/RFQ tool before locking.
+"cheapest" active-IC BOM (≈ $16 with AD8338 + cheap ADC + RP2350).
+
+**LCSC / JLCPCB availability (checked 2026-09-18): NOT confirmed — likely not stocked
+yet (N2/B2 risk).** LCSC site-restricted search returned no listing, and JLCPCB's parts
+library search surfaced nothing for `PIC32AK`; RS/Mouser list the family but mostly
+out-of-stock / 2026 lead. It's a new part (2024 product brief). **Consequence:** for the
+project's LCSC/JLCPCB assembly flow it would currently be a **consigned / "extended"
+part** (self-supplied, feeder fee) or you source from **Digikey** and hand-place. This
+is the main open sourcing risk — re-check `jlcpcb.com/parts` + the LCSC BOM tool
+periodically, as new Microchip parts do get added over time.
 
 **Cheapest pulser — 5 V PIO → transistor gating 5 V (= `options.md` U0).** Viable as
 the low-cost baseline. Get four things right:
@@ -228,11 +234,41 @@ borderline, 48 is safe.** Recommend **48-pin** unless a layout pass proves 36 wo
   the PIC can hold.
   - **8 KB (the cheap `3208`)** → ~6 KB capture = **150 µs @ 20 Msps** ✓ (but not
     150 µs @ 40 Msps).
-  - **16 KB (top-of-family `1216`)** → **150 µs @ 40 Msps** (12 KB) fits.
+  - **16 KB** → **150 µs @ 40 Msps** (12 KB) fits. The cheapest way to 16 KB is the
+    **`6416` tier (64 KB flash / 16 KB RAM)** — no need to jump to the 128 KB `1216`.
+- Known flash/RAM tiers: **`3208`** (32/8), **`6416`** (64/16), **`1216`** (128/16).
 - **Recommendation:** start with **`PIC32AK3208GC41048`** (32 KB / 8 KB, 48-pin) —
-  cheapest, covers 150 µs @ 20 Msps. Step up to the **16 KB-RAM tier** only if full
-  40 Msps × 150 µs capture is required. (Confirm the exact intermediate flash/RAM tiers
+  cheapest, covers 150 µs @ 20 Msps. If full **40 Msps × 150 µs** is needed, step to
+  **`PIC32AK6416GC41048`** (64/16, same 48-pin) rather than the 128 KB part. (Confirm
+  the exact intermediate flash/RAM tiers
   and per-SKU prices on the Microchip product selector / LCSC.)
+
+### Footprint — keep it as small as feasible (DP1)
+Each pin count is offered as **TQFP** (`-…/PT`, gull-wing leads) *and* **VQFN**
+(`-…/M7`, leadless). Approximate body sizes (confirm against the package drawing):
+
+| Part / pins | TQFP body (0.5 mm pitch) | VQFN body |
+|-------------|--------------------------|-----------|
+| 36-pin | — | **≈ 5 × 5 mm** (smallest) |
+| 48-pin | ≈ 7 × 7 mm (≈ 9 × 9 w/ leads) | **≈ 6 × 6 mm** |
+| 64-pin | ≈ 10 × 10 mm (≈ 12 × 12 w/ leads) | ≈ 9 × 9 mm |
+
+Guidance for the smallest board:
+- **VQFN beats TQFP** on area (no gull-wing leads) — but it's **bottom-terminated /
+  leadless**, which anti-req **N2** flags to avoid *where avoidable* (harder to hand-
+  solder / visually inspect). **However, the board already carries a QFN RP2350**, so
+  it's reflow/JLC-assembled anyway → a VQFN PIC adds no new assembly requirement. ⇒ For
+  a JLC-assembled badge, **48-pin VQFN (~6×6 mm)** is the small-but-adequate pick;
+  offer **48-pin TQFP** as the hand-solder-friendly alternate; **36-pin VQFN (~5×5 mm)**
+  only if the pin budget (§3c) is confirmed and minimum area is paramount.
+- **Shrink the RP2350 too:** with the PIC32A doing the ADC + analog, the RP2350 no
+  longer needs a wide parallel-ADC GPIO bus → the **RP2350A (QFN-60, 7×7 mm)** likely
+  suffices instead of the larger **RP2350B (QFN-80, 10×10 mm)**, and **RP2354A**
+  (QFN-60, 7×7, 2 MB stacked flash) *also deletes the external QSPI flash chip* — both
+  a smaller MCU and one fewer part. Re-check the RP2350 GPIO budget once the interconnect
+  (§3d) is fixed.
+- Board size is ultimately also set by the **connectors** (USB-C, SMA, the 40-pin
+  header) and test points — but on the silicon side, two ~6–7 mm QFNs is compact.
 
 ## 3d. RP2350 ↔ PIC32A interconnect
 
@@ -280,15 +316,20 @@ PIC32AK…GC41064 family:
   ISO7816/IrDA), 2× SENT. **No USB** — the reason to pair with RP2350.
 - **Other:** QEI, 4× CLC, PTG (peripheral trigger generator), CRC, ECC flash/RAM,
   2-wire ICSP + JTAG debug.
-- **Variants (see §3c):** pin counts **36 / 48 / 64** (VQFN/TQFP); flash/RAM tiers from
-  **32 KB / 8 KB** (`3208`) up to **128 KB / 16 KB** (`1216`); pins and memory are
-  independent axes of the part number.
+- **Variants (see §3c):** pin counts **36 / 48 / 64** (VQFN `-…/M7` or TQFP `-…/PT`);
+  flash/RAM tiers **`3208`** (32/8), **`6416`** (64/16), **`1216`** (128/16); pins and
+  memory are independent axes of the part number. Package bodies ≈ 36-VQFN 5×5,
+  48-VQFN 6×6 / 48-TQFP 7×7, 64-VQFN 9×9 / 64-TQFP 10×10 mm.
 
 ## 5. Open questions / to verify
 
 - [x] **Price** — Digikey ~$1.6–1.9 (32 KB flash / 8 KB RAM / TQFP-64). Cheap. ✓
-- [ ] **LCSC stock + JLCPCB assembly (N2)** — *still open*; Digikey ≠ LCSC. Decides
-      viability for the project's LCSC/JLCPCB flow.
+- [~] **LCSC stock + JLCPCB assembly (N2)** — checked 2026-09-18: **not found on
+      LCSC/JLCPCB** (new part; Digikey has it). ⇒ consigned/"extended" part for JLC
+      assembly, or Digikey + hand-place. Main sourcing risk; re-check periodically.
+- [ ] **Package/footprint (§3c):** smallest feasible → 48-pin **VQFN ~6×6 mm** (board is
+      already QFN-assembled); consider **RP2350A/RP2354A (QFN-60, 7×7)** to shrink the
+      MCU + drop the external flash.
 - [ ] **Per-line settable gain** (TGC dropped): digipot/MDAC in feedback vs resistor-mux
       steps vs (verify) an internal GSEL op-amp ladder. Confirm the op-amp has an
       internal PGA ladder — if so, zero extra parts.
