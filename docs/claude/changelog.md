@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- Price-check gain/LNA ICs on LCSC (2026-09-18): add price table to
-  `systems/afe-vga-ics.md` and refresh `options.md` §2. AD8331 ~$14 (in stock),
-  AD603 ~$9 + $5 LNA in stock, AD8338/AD8332 OOS, LMH6629/ADA4898-1/OPA847 ~$5 in stock;
-  VCA810/AD8432/AFE5808/AD9276 not LCSC-stocked (Digikey).
+- (none)
 
 ## Committed
+
+- 2026-09-18  f219638  LCSC prices for gain/LNA ICs — price table in
+  `systems/afe-vga-ics.md` + refreshed `options.md` §2. AD8331 ~$14 (in stock),
+  AD603 ~$9 + $5 LNA in stock, AD8338/AD8332 OOS, LMH6629/ADA4898-1/OPA847 ~$5 in stock;
+  VCA810/AD8432/AFE5808/AD9276 not LCSC-stocked (Digikey).
 
 - 2026-09-18  90cdf6a  `systems/afe-vga-ics.md`: LNA-pairing section for VGA-only parts
   (VCA810 2.4 / AD603 1.3 nV/√Hz need a <1 nV/√Hz LNA) — OPA847/LMH6629/AD8099/AD797/
