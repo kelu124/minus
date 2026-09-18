@@ -9,6 +9,9 @@ with the **RP2350** for *minus*. Datasheet/product brief:
 > separate high-speed ADC + separate VGA, per `requirements.md` §0 and
 > `docs/claude/memory/0005-minus-direction.md`). It is not (yet) a decision — it's a
 > trade study to capture the concept the owner raised.
+>
+> **Cheapest instantiation:** [`../designA/README.md`](../designA/README.md) — DesignA
+> (RP2354A + PIC32A, 5 V N-FET pulser, digipot gain; active-IC BOM ≈ $3.7 / board ≈ $5).
 
 ---
 
@@ -269,7 +272,8 @@ Guidance for the smallest board:
   (§3d) is fixed.
 - **RP2354A confirmed (datasheet §14.3, §2.1):** 2 MB **in-package** flash (a stacked
   Winbond W25Q16JVWI die), QFN-60, **pin-identical to RP2350A**, 30 GPIO / 4 analog. So
-  **no external QSPI flash chip** on the BOM/PCB. Caveats: **QSPI_IOVDD must be 3.3 V**;
+  **no external QSPI flash chip** on the BOM/PCB. **On LCSC/JLC: C41378174, ~$1.27, in
+  stock** (JLC-assemblable ✓). Caveats: **QSPI_IOVDD must be 3.3 V**;
   an *extra* QSPI device (more flash / PSRAM) can still hang off the QSPI bus using a
   Bank-0 GPIO as chip-select if ever wanted.
 - **BOOTSEL button (RP2354A):** the six QSPI pads (incl. **QSPI_CSn / SS**) are still
