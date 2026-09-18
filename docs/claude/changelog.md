@@ -8,11 +8,13 @@ the sha.
 
 ## Pending
 
-- `design/pic32/`: LCSC/JLCPCB **not stocked** (checked 2026-09-18) → consigned/Digikey;
-  add `6416` (64/16) flash tier; add §3c **Footprint** guidance (48-pin VQFN ~6×6 mm
-  smallest sensible since board is already QFN; shrink to RP2350A/RP2354A QFN-60 7×7).
+- (none)
 
 ## Committed
+
+- 2026-09-18  3b3fba3  PIC32A: LCSC/JLCPCB **not stocked** (→ consigned/Digikey);
+  add `6416` (64/16) flash tier; §3c **Footprint** guidance (48-pin VQFN ~6×6 mm since
+  board is already QFN; shrink RP2350 to RP2350A/RP2354A QFN-60 7×7).
 
 - 2026-09-18  bbd048a  Session 02: `activities/possibilities.md` (workshop activity
   menu); `requirements.md` §19 anti-requirements (N1–N11) + TGC dropped (F6 per-line
