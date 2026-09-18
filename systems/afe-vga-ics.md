@@ -140,6 +140,37 @@ more parts and layout, but lets you tune the LNA noise and the VGA independently
   [`memory/0006-pricing-basis`](memory/0006-pricing-basis.md)). This is why the
   low-cost minus baseline leans on AD8331/AD8338 or the PIC32A-op-amp path, not an AFE.
 
+## Prices (LCSC, checked 2026-09-18)
+
+Qty ~50 basis (workshop batch, [[0006-pricing-basis]]); "1-off" = qty 1. Stock is
+volatile — re-check before ordering.
+
+| Part | Role | LCSC | ~qty50 | 1-off | Stock |
+|------|------|------|--------|-------|-------|
+| **AD8331ARQZ** | 1-ch LNA+VGA | C203731 | **$14.23** (56+) | $18.01 | 48 ✓ |
+| AD8332ACPZ-R7 | 2-ch LNA+VGA | C578698 | ~$16 (tiers n/a) | $16.44 | **OOS** |
+| AD8338ACPZ-RL | 1-ch LNA+VGA | C652715 | **$7.72** (30+) / $7.04 (100+) | $9.84 | **OOS** (both reels) |
+| **AD603ARZ-REEL** | VGA-only | C578331 | **$8.92** (50+) | $12.31 | 2459 ✓ |
+| VCA810 | VGA-only | — | — | — | **not on LCSC** → Digikey |
+| VCA820IDGSR *(VCA810 fam.)* | VGA-only | C702457 | $14.49 (30+) | $16.51 | 7 (low) |
+| **OPA847IDBVR** | LNA | C160422 | **$5.06** (50+) | $6.33 | 85 ✓ |
+| **LMH6629MFE** | LNA | C206003 | **$4.98** (50+) | $6.56 | 65 ✓ |
+| **ADA4898-1YRDZ-R7** | LNA | C207523 | **$5.06** (50+) / $4.16 (100+) | $6.41 | 126 ✓ |
+| AD797ARZ | LNA | C50658 | ~$11 | $11.13 | 49 |
+| AD8099ACPZ | LNA | *verify* | — | — | LCSC ? / Digikey ~$5–7 |
+| AD8432 | dual US LNA | — | — | — | **not on LCSC** → Digikey |
+| AFE5808 / AD9276 | 8-ch AFE | — | — | — | **not on LCSC** (Digikey/Mouser ~$25–45, ref only) |
+
+**Read-out:**
+- **In-stock, cheap single-channel gain today:** **AD603 (VGA-only, ~$9) + a $5 LNA**
+  (ADA4898-1 / LMH6629 / OPA847) ≈ **~$14** for LNA+VGA — comparable to the integrated
+  **AD8331 (~$14, in stock)** but with a lower-noise, selectable LNA.
+- **AD8338** (the cheap integrated favourite) and **AD8332** (dual) are **OOS at LCSC**.
+- **VCA810** and the dedicated **AD8432** LNA and the **octal AFEs** are **not LCSC-
+  stocked** → Digikey/Mouser only (matters for the JLCPCB flow, N2).
+- **Cheapest LNAs** on LCSC: **LMH6629 (~$5, 0.69 nV/√Hz)** and **ADA4898-1 (~$5,
+  0.9 nV/√Hz)** — both in stock; OPA847 (~$5, 0.85) also in stock.
+
 ## Sources
 - ADI AD927x/AD967x octal ultrasound AFE product family (product highlight).
 - TI AFE5808 / AFE5818 product pages; AFE5807 vs VCA5807 (VCA = AFE without ADC).

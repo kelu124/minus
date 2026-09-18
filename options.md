@@ -54,13 +54,17 @@ pricey, power-hungry for one channel); log-amp/envelope (no linear RF TGC).
 
 | Option | Part(s) | Gain | $ (incl gain-ctrl) | Stock | Notes |
 |--------|---------|------|:------------------:|:-----:|-------|
-| **G2 — AD8331** *(derisked, DP5)* | AD8331 (+ PWM) | 48 dB | **~$10.0** | **in stock** | un0rick/pic0rick VGA; ultrasound-grade |
-| G1 — AD8338 | AD8338 (+ PWM ramp) | 0–80 dB | ~$4.0 | **OOS** | cheaper/low-power (WULPUS PRO) but **out of stock at LCSC** |
-| G3 — AD603 + LNA | AD603 + LNA op-amp | ~40 dB | ~$5.0 | check | BOM-floor; lower dynamic range |
+| **G2 — AD8331** *(derisked, DP5)* | AD8331 (+ PWM) | 48 dB | **~$14.2** (qty 56) | **in stock** (48) | un0rick/pic0rick VGA; ultrasound-grade |
+| G1 — AD8338 | AD8338 (+ PWM ramp) | 0–80 dB | ~$7.7 (qty 30) | **OOS** | cheaper/low-power (WULPUS PRO) but **out of stock at LCSC** |
+| G3 — AD603 + LNA | AD603 (~$8.9) + LNA (~$5) | ~40 dB + LNA | **~$14** | **in stock** | AD603-REEL C578331 (2459 stk) + LNA (ADA4898-1/LMH6629/OPA847, all in stock, ~$5); lower-noise selectable LNA |
 
-**Lean pick:** **G2 (AD8331)** is now the pragmatic choice — **in stock**, proven
-(DP5), ~$10. G1 (AD8338) would be cheaper/lower-power **if** back in stock. **BOM
-saver:** set the gain-control voltage from **RP2350 PWM + RC** (no DAC IC).
+**Prices refreshed 2026-09-18 (LCSC, qty ~50).** Full gain-IC survey + price table:
+[`systems/afe-vga-ics.md`](systems/afe-vga-ics.md).
+
+**Lean pick:** **G2 (AD8331)** stays pragmatic — **in stock**, proven (DP5), ~$14.
+**G3 (AD603 + a $5 LNA)** now matches it on price (~$14), both in stock, and lets you
+pick the LNA noise. G1 (AD8338, ~$7–8) is cheaper/lower-power **if** restocked (OOS).
+**BOM saver:** set the gain-control voltage from **RP2350 PWM + RC** (no DAC IC).
 
 ## 3. ADC — shortlist
 
