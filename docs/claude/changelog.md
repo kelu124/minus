@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- Add `design/designA/` — **DesignA**, the cheapest *minus* build: RP2354A + PIC32A,
-  unipolar 5 V N-FET pulser (options.md U0), digipot-set per-line gain, PIC on-die
-  40 Msps ADC; active-IC BOM ≈ $3.7 / board ≈ $5. RP2354A confirmed on LCSC/JLC
-  (C41378174, ~$1.27); PIC32A the only non-LCSC part. Linked from design/README + pic32.
+- (none)
 
 ## Committed
+
+- 2026-09-18  75ad246  Add `design/designA/` — **DesignA**, the cheapest *minus* build:
+  RP2354A + PIC32A, unipolar 5 V N-FET pulser (options.md U0), digipot-set per-line gain,
+  PIC on-die 40 Msps ADC; active-IC BOM ≈ $3.7 / board ≈ $5. RP2354A on LCSC/JLC
+  (C41378174, ~$1.27); PIC32A the only non-LCSC part.
 
 - 2026-09-18  f219638  LCSC prices for gain/LNA ICs — price table in
   `systems/afe-vga-ics.md` + refreshed `options.md` §2. AD8331 ~$14 (in stock),
