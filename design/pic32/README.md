@@ -267,6 +267,19 @@ Guidance for the smallest board:
   (QFN-60, 7×7, 2 MB stacked flash) *also deletes the external QSPI flash chip* — both
   a smaller MCU and one fewer part. Re-check the RP2350 GPIO budget once the interconnect
   (§3d) is fixed.
+- **RP2354A confirmed (datasheet §14.3, §2.1):** 2 MB **in-package** flash (a stacked
+  Winbond W25Q16JVWI die), QFN-60, **pin-identical to RP2350A**, 30 GPIO / 4 analog. So
+  **no external QSPI flash chip** on the BOM/PCB. Caveats: **QSPI_IOVDD must be 3.3 V**;
+  an *extra* QSPI device (more flash / PSRAM) can still hang off the QSPI bus using a
+  Bank-0 GPIO as chip-select if ever wanted.
+- **BOOTSEL button (RP2354A):** the six QSPI pads (incl. **QSPI_CSn / SS**) are still
+  bonded to package pins even though the flash is internal, and BOOTSEL is entered by
+  **pulling QSPI_CSn low at reset/power-up** ("harmlessly selects the internal flash
+  die"). ⇒ Wire the BOOTSEL button exactly as on a flashless RP2350A/Pico: **from the
+  QSPI_CSn (SS) pin to GND, via a ~1 kΩ series resistor**, pressed during power-up. To
+  enter BOOTSEL without a power cycle, pair it with a **RUN (reset) button** (hold
+  BOOTSEL, pulse RUN low). On the badge these can be small tact switches or just test
+  pads if we minimise buttons.
 - Board size is ultimately also set by the **connectors** (USB-C, SMA, the 40-pin
   header) and test points — but on the silicon side, two ~6–7 mm QFNs is compact.
 

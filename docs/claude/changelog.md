@@ -8,7 +8,9 @@ the sha.
 
 ## Pending
 
-- (none)
+- `design/pic32/` §3c: confirm from RP2350 datasheet — RP2354A has 2 MB in-package flash
+  (no external flash chip; QSPI_IOVDD=3.3V); BOOTSEL button wires QSPI_CSn→GND via ~1kΩ
+  (same as flashless RP2350A), optionally paired with a RUN reset button.
 
 ## Committed
 
