@@ -25,4 +25,11 @@ Anchor sources for the *minus* survey (PDFs in `pdfs/`, distilled in
 - **un0rick.cc** — hub for the kelu124 open-hardware family (un0rick, lit3rick,
   pic0rick, echomods/Murgen, pyusbus). Design files mirrored in `design/`.
 
+- **[kelu124/pic32arick](https://github.com/kelu124/pic32arick)** — the owner's own
+  **PIC32AK1216GC41064** ultrasound board (docs-only repo, no firmware yet): 5 V
+  **push-pull pulser** (IRLML6244/2244 + TC4427A), **3-op-amp gain chain** (fixed OA1 +
+  MCP4531 I²C-digipot OA2 + bias OA3), **MD0100** T/R, **Tag-Connect/6-pin ICSP** header,
+  RPi-header + SAO. The proven PIC32-side reference reused by **DesignA**
+  (`design/designA/`); details folded into `design/pic32/pic32.md` + `design/designA/`.
+
 Related: [[0003-systems-survey]].

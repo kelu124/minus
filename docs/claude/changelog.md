@@ -8,7 +8,13 @@ the sha.
 
 ## Pending
 
-- (none)
+- Add `design/designA/toolchain_designA.md` — Ubuntu CLI + Makefile toolchain (RP2354
+  pico-sdk→uf2, PIC32A XC-DSC→hex via ipecmd/PICkit; XC-DSC confirmed Linux + PIC32A).
+- Fold **kelu124/pic32arick** intel into DesignA + pic32.md: push-pull pulser
+  (IRLML6244/2244 + TC4427A), 3-op-amp gain chain (fixed OA1 + MCP4531 I²C digipot OA2 +
+  bias OA3), MD0100 T/R, 6-pin ICSP + 47Ω + Tag-Connect + off-center friction-fit holes
+  (Microchip gpdim demo). BOM ≈ $4.7 active / $6.3 board (min variant $5.4). pic32arick
+  added to key-references memory.
 
 ## Committed
 

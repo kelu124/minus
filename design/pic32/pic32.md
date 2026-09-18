@@ -41,19 +41,31 @@ it is. (Product brief: "two-wire ICSP with non-intrusive access … IEEE 1149.2 
   over UART (PIC32A has no USB). Optional; ICSP stays the bring-up/recovery path.
 
 ### Standard programming header (what to put on the board)
-The Microchip **5-pin ICSP** header, in order:
+The Microchip **6-pin, 0.1″ single-row ICSP** header, in order (per
+[kelu124/pic32arick `programming_header.md`](https://github.com/kelu124/pic32arick/blob/main/programming_header.md)):
 
 ```
-  1  MCLR/Vpp
+  1  MCLR/Vpp    ← triangle-marked pin 1
   2  VDD (3V3)
-  3  VSS (GND)
-  4  PGD (ICSPDAT)   ← chosen PGEDx
-  5  PGC (ICSPCLK)   ← chosen PGECx
- (6  PGM/LVP — usually NC)
+  3  GND (VSS)
+  4  PGED1  (ICSPDAT)   ← chosen PGEDx
+  5  PGEC1  (ICSPCLK)   ← chosen PGECx
+  6  NC     (PGM/LVP — leave unconnected)
 ```
 
-(PICkit uses a 6-pin 0.1″ SIL; pin 1 is marked by the triangle.) A 5-pin header **or
-just 5 test pads** works.
+- **47 Ω series resistors** on **PGEC1 and PGED1** (between the MCU pin and the header)
+  — limits current if the target is active while programming, and isolates the shared
+  ICSP net (RP2354 also on PGC/PGD/MCLR).
+- **Solderless options** (great for a workshop badge — zero/low connector BOM):
+  - **Tag-Connect TC2030-IDC-NL** — spring-loaded pogo-pin, ~6 × 10 mm PCB footprint,
+    **no board-mounted connector** (just an etched pad pattern). pic32arick's pick.
+  - **Off-center / alternated friction-fit holes** — as used by Microchip's
+    [`pic32ak1216gc41064-gpdim-demo`](https://github.com/microchip-pic-avr-examples/pic32ak1216gc41064-gpdim-demo):
+    the plated through-holes are **staggered slightly off the row centre (alternating
+    sides)** so a plain 0.1″ pin header **press-fits and grips** for a solid **solderless**
+    contact — plug a header/PICkit adapter in, program, pull out. No soldering, no
+    special connector.
+- A plain **6-pin 0.1″ header** or **6 test pads** also works.
 
 ### MCLR network (important)
 - **10 kΩ pull-up** from `MCLR` to VDD.
@@ -67,8 +79,9 @@ just 5 test pads** works.
 
 Two flashing paths share the **same PGC/PGD/MCLR net**:
 
-1. **Direct (PICkit):** header **J3** = `MCLR, VDD, GND, PGD, PGC` → PICkit/Snap + MPLAB
-   IPE. This is the requested "flash the PIC32 directly" path (req S4a).
+1. **Direct (PICkit):** **J3** = the 6-pin ICSP above (or a Tag-Connect / friction-fit
+   pad pattern) → PICkit/Snap + MPLAB IPE. This is the "flash the PIC32 directly" path
+   (req S4a), with **47 Ω series R** on PGC/PGD.
 2. **Via RP2354:** the RP2354 bit-bangs **LVP ICSP** on the same three lines (§3d) so one
    USB-C port programs both MCUs (RP2354 via UF2 → then flashes the PIC).
 
@@ -83,3 +96,10 @@ a time.
 - [ ] MCLR network values on the final schematic; PICkit-vs-RP2354 **bus contention**
       handling on the shared ICSP net.
 - [ ] Confirm **MPLAB Snap** (cheapest) supports the PIC32AK, or require PICkit 4/5.
+
+## References
+- Owner's PIC32A board — programming header, pulser, op-amp chain:
+  [kelu124/pic32arick](https://github.com/kelu124/pic32arick).
+- Off-center friction-fit ICSP header:
+  [microchip pic32ak1216gc41064-gpdim-demo](https://github.com/microchip-pic-avr-examples/pic32ak1216gc41064-gpdim-demo).
+- PIC32/dsPIC Flash Programming Spec (DS60001145); XC-DSC docs (DS50003918/19).
