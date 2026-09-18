@@ -8,14 +8,13 @@ the sha.
 
 ## Pending
 
-- `requirements.md`: add **T4a** (jumper-selectable pulser drive: PIC32 HS-PWM ⟷ RP2354
-  PIO) and **S4a** (expose PIC32 ICSP header for direct PICkit flashing).
-- Add `design/pic32/pic32.md` — how the PIC32(A) is flashed (ICSP pinout, PICkit/MPLAB
-  IPE, LVP, MCLR network, two flashing paths).
-- `design/designA/`: add JP1 drive-select + J3 ICSP header to BOM; §6b programming
-  section; **mermaid** diagrams (system block, programming paths, acquisition sequence).
+- (none)
 
 ## Committed
+
+- 2026-09-18  d663709  DesignA: PIC32 direct-flash (S4a + `design/pic32/pic32.md` ICSP/
+  PICkit/LVP/MCLR), pulser drive-select jumper JP1 (T4a: PIC32 HS-PWM ⟷ RP2354 PIO),
+  J3 ICSP header, §6b programming, and mermaid diagrams (block / programming / sequence).
 
 - 2026-09-18  75ad246  Add `design/designA/` — **DesignA**, the cheapest *minus* build:
   RP2354A + PIC32A, unipolar 5 V N-FET pulser (options.md U0), digipot-set per-line gain,
