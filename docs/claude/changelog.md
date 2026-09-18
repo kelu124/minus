@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- `systems/afe-vga-ics.md`: add LNA-pairing section for VGA-only parts (VCA810 2.4 /
-  AD603 1.3 nV/√Hz need a <1 nV/√Hz LNA) — OPA847/LMH6629/AD8099/AD797/ADA4898 op-amp
-  LNAs + AD8432 dedicated ultrasound LNA; T/R protection; note integrated-LNA VGAs
-  (AD8331/AD8338/AFE5808) dominate real reference designs.
+- (none)
 
 ## Committed
+
+- 2026-09-18  90cdf6a  `systems/afe-vga-ics.md`: LNA-pairing section for VGA-only parts
+  (VCA810 2.4 / AD603 1.3 nV/√Hz need a <1 nV/√Hz LNA) — OPA847/LMH6629/AD8099/AD797/
+  ADA4898 op-amp LNAs + AD8432 dedicated ultrasound LNA; T/R protection; integrated-LNA
+  VGAs (AD8331/AD8338/AFE5808) dominate real reference designs.
 
 - 2026-09-18  160c089  Add `systems/afe-vga-ics.md` — survey of RX gain ICs (LNA +
   variable-gain / AFE), single-channel → 8/16-channel (AD833x, AD8338, AD603/VCA810,
