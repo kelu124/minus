@@ -8,30 +8,15 @@ the sha.
 
 ## Pending
 
-- Add `activities/possibilities.md` — workshop activity menu across HW / ultrasound /
-  firmware / host, tagged by difficulty.
-- `requirements.md`: add §19 anti-requirements (N1–N11) — things to avoid (closed
-  toolchains constrain MCU/FPGA choice, no vendor/EDA lock-in, no un-reproducible parts).
-- Add `design/pic32/` concept note — pairing a Microchip PIC32A (PIC32AK…GC41064:
-  40 Msps 12-bit ADC + 3× 100 MHz op-amps, no USB) with RP2350 as an alternative
-  acquisition architecture; mirror the family product brief into `pdfs/datasheets/`.
-- `design/pic32/`: add §3a — BOM simplicity comparison (ADC+VGA fold into PIC32A) and
-  the cheapest 5V PIO→N-FET pulser (options.md U0) with gate-drive/edge/amplitude caveats.
-- `design/pic32/`: add real Digikey price ($1.6–1.9, TQFP-64, 32KB/8KB), correct SRAM
-  to 8KB (redo 150µs math), add §3b gain stage (TGC dropped → per-line settable gain via
-  digipot/MDAC or resistor-mux; optional LNA-first); LCSC/JLCPCB still TBD.
-- `requirements.md`: **TGC dropped** (owner decision) — F6 now a per-line settable gain
-  [M], A3 rewritten (digipot/MDAC/PGA/static-VGA) + new A3a optional LNA, P8/A1/§17 updated.
-- New rule: **keep a Markdown sibling next to every PDF** (via local `markitdown`) —
-  documented in CLAUDE.md, `pdfs/README.md`, and the minus-docs skill; generated `.md`
-  for all 11 existing PDFs in `pdfs/` + `pdfs/datasheets/`.
-- `design/pic32/`: add §3c (chip choice — 36/48/64-pin, flash/RAM tiers; recommend
-  48-pin `3208`, flash ~32 KB, SRAM is the lever) and §3d (RP2350↔PIC32A interconnect —
-  ICSP/reset, SPI, RDY IRQ, TRIG, optional UART, shared 3V3).
-- Session-close log note; global memory persisted (outside repo).
+- (none)
 
 ## Committed
 
+- 2026-09-18  bbd048a  Session 02: `activities/possibilities.md` (workshop activity
+  menu); `requirements.md` §19 anti-requirements (N1–N11) + TGC dropped (F6 per-line
+  settable gain, A3/A3a/P8/A1/§17); `design/pic32/` concept (PIC32A + RP2350: BOM,
+  5V pulser, gain, §3c chip choice, §3d interconnect; Digikey ~$1.6–1.9, LCSC TBD);
+  new rule — Markdown sibling for every PDF via markitdown (+ `.md` for all 11 PDFs).
 - 2026-09-17  828d364  Record cheaper 8-bit ADC candidates (TLC5540/ADS830/AD9280) to
   verify on LCSC; ADEC remains the open cost driver. **Pushed.**
 - 2026-09-17  4c6f5cb  Real LCSC prices+URLs+stock in options; ADC bottleneck (~$33
