@@ -84,6 +84,41 @@ Catalog of receive-path gain ICs used in ultrasound, from **single-channel VGAs*
 
 ---
 
+## Pairing a VGA-only part with an LNA (VCA810 / AD603)
+
+**Why an LNA is needed.** A bare VGA sets the noise floor at its own input-noise density,
+which is too high for weak echoes: **VCA810 ≈ 2.4 nV/√Hz**, **AD603 ≈ 1.3 nV/√Hz**. So
+you put a **low-noise fixed-gain first stage (~15–25 dB, < ~1 nV/√Hz)** ahead of it — the
+LNA sets sensitivity; the VGA then does the *variable* part. Chain:
+
+`transducer → T/R protection → LNA (fixed, low-noise) → VGA (VCA810 / AD603) → AAF → ADC`
+
+(VCA810 and AD603 are functionally interchangeable — same −40…+40 / −11…+31 dB
+linear-in-dB VGA role; TI positions VCA810 as an AD603 replacement.)
+
+**LNAs commonly used** (low-noise wideband op-amps configured at fixed gain):
+
+| LNA | Vendor | Input noise | GBW / BW | Notes |
+|-----|--------|-------------|----------|-------|
+| **OPA847** | TI | **0.85 nV/√Hz** | 3.9 GHz GBW | Classic HF LNA; stable at gain ≥ ~12. |
+| **LMH6629** | TI | **0.69 nV/√Hz** | ~4 GHz GBW | Lowest-noise; decompensated (min gain ~10). |
+| **AD8099** | ADI | 0.95 nV/√Hz | 550 MHz | Low-noise, easy to apply. |
+| **ADA4898-1/2** | ADI | 0.9 nV/√Hz | 65 MHz | Good value single/dual LNA. |
+| **AD797** | ADI | 0.9 nV/√Hz | 110 MHz GBW | Precision low-noise; ample for 3–4 MHz. |
+| **AD8432** | ADI | 0.85 nV/√Hz | ~tens of MHz | **Purpose-built dual ultrasound LNA** — resistor-set gain, active input impedance, **integrated overvoltage/T-R protection**; designed to precede a VGA. |
+
+**Input protection / T-R** (the LNA must survive the TX pulse): back-to-back diode
+limiter (e.g. BAV99 to rails), a shunt-diode **T/R switch (MD0100-class)**, or an LNA
+with a **built-in clamp** (AD8432, or the AD8331/AD8332 LNA). At the minus HV level
+(~5–50 V unipolar) a simple diode clamp or MD0100 suffices (req A2).
+
+**Reference-design reality:** most modern ultrasound front-ends **skip the discrete LNA**
+by using a VGA/AFE with an **integrated LNA** — **AD8331/AD8332** (fixed 15.6/17.9/21.3 dB
+LNA, 0.74 nV/√Hz; used by un0rick/pic0rick, DP5), **AD8338** (WULPUS-PRO), or the octal
+**AFE5808 / AD9276** (0.63–0.98 nV/√Hz internal LNA). The **discrete VGA + separate LNA**
+route (VCA810/AD603 + OPA847/AD8099/AD8432…) is the older / more flexible / DIY path —
+more parts and layout, but lets you tune the LNA noise and the VGA independently.
+
 ## Relevance to *minus* (single-channel, low-cost, no TGC)
 
 - **Best single-channel fits** are already in `options.md`: **AD8331** (proven/in-stock,
@@ -91,8 +126,10 @@ Catalog of receive-path gain ICs used in ultrasound, from **single-channel VGAs*
   their gain-control pin at a static voltage (RP2350 PWM+RC, no DAC IC).
 - **With the PIC32A concept** ([`../design/pic32/`](../design/pic32/README.md)), a full
   VGA IC may be unnecessary: use the **PIC32A op-amp + a digipot/MDAC** (or a bare
-  **VGA-only** part like VCA810 / AD603 + LNA) feeding the PIC's ADC. Or feed an
-  **AD8331/AD8338** straight into the PIC ADC and skip the PIC op-amps.
+  **VGA-only** part like VCA810 / AD603 + a low-noise LNA — see the pairing section
+  above) feeding the PIC's ADC. Or feed an **AD8331/AD8338** straight into the PIC ADC
+  and skip the PIC op-amps. If the PIC op-amp's own noise is the limit, the **AD8432**
+  (dual ultrasound LNA + protection) is a clean fixed first stage (req A3a).
 - **Octal AFEs (AFE5808 / AD9276-family)** are **over-spec and expensive** ($10–40+) for
   one channel — but they're **the** reference if minus ever grows to multi-channel /
   B-mode. Handy detail: TI's **VCA5807/VCA8500** and **MAX2078/79** give the LNA+VGA
@@ -106,5 +143,7 @@ Catalog of receive-path gain ICs used in ultrasound, from **single-channel VGAs*
 ## Sources
 - ADI AD927x/AD967x octal ultrasound AFE product family (product highlight).
 - TI AFE5808 / AFE5818 product pages; AFE5807 vs VCA5807 (VCA = AFE without ADC).
+- TI VCA810 (input noise 2.4 nV/√Hz; positioned as an AD603 replacement); LNA specs
+  from OPA847 / LMH6629 / AD8099 / AD797 / ADA4898 / AD8432 datasheets.
 - Owner's echomods "Choosing components" bench notes (kelu124.gitbooks.io/echomods).
 - Part specs are **approximate — verify against each datasheet + LCSC** before use.

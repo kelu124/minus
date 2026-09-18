@@ -8,7 +8,10 @@ the sha.
 
 ## Pending
 
-- (none)
+- `systems/afe-vga-ics.md`: add LNA-pairing section for VGA-only parts (VCA810 2.4 /
+  AD603 1.3 nV/√Hz need a <1 nV/√Hz LNA) — OPA847/LMH6629/AD8099/AD797/ADA4898 op-amp
+  LNAs + AD8432 dedicated ultrasound LNA; T/R protection; note integrated-LNA VGAs
+  (AD8331/AD8338/AFE5808) dominate real reference designs.
 
 ## Committed
 
