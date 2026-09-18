@@ -46,6 +46,9 @@ When a discussion settles something that should outlive the session:
 
 - Downloaded PDFs (papers, datasheets, reference-design docs) → `pdfs/` with a
   descriptive name; index them in `pdfs/README.md`. Never leave them in a temp dir.
+  Keep a **Markdown sibling** next to each PDF (same basename `.md`) so the text is
+  greppable — generate with the local **markitdown**: `markitdown foo.pdf -o foo.md`,
+  and commit the `.md` with the PDF. (Skip for purely graphical schematic PDFs.)
 - Schematics / design files (KiCad, Gerbers, PDF schematics, BOMs) →
   `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`); note
   the upstream source (repo URL + version) in a short `SOURCE.md`.

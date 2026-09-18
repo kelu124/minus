@@ -25,6 +25,11 @@ Then you are "up and running" with the past discussions and discoveries.
   to `docs/claude/DONE.md` with the date.
 - **Downloaded PDFs** (papers, datasheets, reference-design docs) → save into
   `pdfs/` (not a temp dir) with a descriptive name; index them in `pdfs/README.md`.
+  **Always keep a Markdown sibling next to each PDF** (same basename, `.md`) so the
+  text is greppable and cheap to read without re-parsing the PDF. Generate it with
+  the locally-installed **markitdown**: `markitdown foo.pdf -o foo.md`. Commit the
+  `.md` alongside the PDF. (This applies to text-bearing PDFs in `pdfs/`; skip it for
+  purely graphical schematic PDFs in `design/` where markitdown yields no useful text.)
 - **Schematics / design files** (KiCad, Gerbers, PDF schematics, BOMs) → save into
   `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`).
 - **Repo size:** overall size is fine, but **never commit a single file larger than

@@ -60,7 +60,9 @@ excitation**.
 piezo; depth-variable gain; programmable/coded excitation; host-side processing;
 badge form factor; low, workshop-scalable BOM.
 **Out of scope (this version):** multi-element phased-array beamforming, on-board
-real-time B-mode reconstruction, clinical use/certification (see §16).
+real-time B-mode reconstruction, clinical use/certification (see §16). For things we
+actively **do not** want — closed toolchains, vendor lock-in, un-reproducible parts —
+see the **anti-requirements in §19**.
 
 ## 2. Intended use & users
 
@@ -125,7 +127,13 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   and receive. TX and RX are **linked by default** (shared element); a **jumper /
   solder-bridge** shall allow **splitting TX and RX** for a dual-element / separate
   TX-RX transducer (F7). See open item TXRX-LINK.
-- **F6 [S]** The system shall provide **depth-variable gain (TGC)**, host-programmable.
+- **F6 [M]** The system shall provide a **receive gain stage** whose gain is
+  **host-settable and changeable between firing lines** (a fixed gain per line, not
+  swept within a line). **TGC (depth-variable gain within a line) is NOT required**
+  (owner decision, 2026-09-18) — dropped for simplicity, since the reference
+  application images at shallow, roughly fixed depth. Implementation options: a
+  digipot/MDAC in an op-amp feedback path, a switched resistor bank, a PGA, or a VGA
+  used at a static setting (see A3).
 - **F7 [C]** The system should support a **dual-element** (separate TX/RX) mode via a
   second connector (cf. lit3rick).
 - **F8 [S]** The system shall support **M-mode** (repeated A-lines over time,
@@ -159,16 +167,25 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 - **P6 [S]** Programmable **PRF** at least **100 Hz–10 kHz**.
 - **P7 [S]** Acquisition depth: capture **≥ 120 µs** per line (≈ 9 cm at 1540 m/s),
   host-extendable.
-- **P8 [C]** Total gain (fixed + TGC) adjustable over **≥ 40 dB**.
+- **P8 [C]** Total settable gain range **≥ 40 dB** (fixed + per-line-settable stage;
+  no TGC — see F6/A3).
 
 ## 7. Analog front-end / signal chain (A)
 
-- **A1 [M]** RX chain: transducer → T/R protection → low-noise amp → (TGC) VGA →
-  anti-alias filter → ADC.
+- **A1 [M]** RX chain: transducer → T/R protection → (low-noise amp, A3a) →
+  settable-gain stage (A3) → anti-alias filter → ADC.
 - **A2 [M]** RX input protection shall survive the transmit pulse (T/R switch or
   clamp, e.g., MD0100/MD0101-class).
-- **A3 [S]** Gain shall be a **variable-gain amplifier** (e.g., AD8331/AD8332, or the
-  low-power AD8338), controlled by a host-set DAC ramp for TGC.
+- **A3 [S]** The gain stage shall be **digitally settable between lines** (F6). Since
+  **TGC is not required**, a smooth fast control is unnecessary: a **digital
+  potentiometer / MDAC in an op-amp feedback path**, a **switched resistor bank**, an
+  integrated **PGA**, or a **VGA held at a static setting** all satisfy it. (A VGA such
+  as AD8331/AD8338 remains acceptable but is no longer required — gain lives in a
+  resistor ratio, so a digitally-controlled resistor is the natural cheap primitive; a
+  DAC voltage sets gain only in a true VGA/multiplier.)
+- **A3a [C]** A **fixed low-noise LNA** as the first RX stage (ahead of the settable
+  gain) — sets the noise floor for weak echoes (esp. with a low-voltage pulser).
+  Optional; add if op-amp-input noise limits SNR.
 - **A4 [S]** Anti-alias filtering matched to the ADC rate and transducer band.
 
 ## 8. Transmit / pulser (T)
@@ -322,7 +339,7 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
 | Area | Acceptance check |
 |------|------------------|
 | TX (T1–T2) | Scope the pulse into a known load: amplitude, shape, frequency vs config. |
-| RX/AFE (A1–A3, P2) | Inject a tone / pulse-echo off a reflector; verify band, gain, TGC ramp. |
+| RX/AFE (A1–A3, P2) | Inject a tone / pulse-echo off a reflector; verify band and that gain is settable between lines over the P8 range (no TGC). |
 | ADC (P3–P4) | Capture a known signal; verify rate, bits, no clipping/aliasing. |
 | SNR (P5) | Pulse-echo off a wire/phantom; measure SNR ≥ 50 dB. |
 | Data path (D1–D3) | Stream N lines at working PRF; verify no sample loss. |
@@ -340,6 +357,61 @@ real-time B-mode reconstruction, clinical use/certification (see §16).
   pic0rick — the owner has built these and is happy with their performance, so their
   blocks are the derisked starting point.
 - Design starting point: [`design/pic0rick/panel_adc_pulser_hv/`](design/).
+
+## 19. Anti-requirements — what we want to avoid (N)
+
+Constraints stated as **negatives**: properties a candidate design, part, or tool must
+**not** have. Each is the flip side of an openness / cost / simplicity requirement, and
+most act as **hard filters on part and tool choice** before the trade study even starts.
+Priority **[N]** = a violation should disqualify a candidate unless explicitly waived.
+
+- **N1 [N] — No closed/proprietary firmware toolchains.** The MCU (and any
+  programmable logic) must build and flash with a **free, open, cross-platform**
+  toolchain — no paid seat, node-locked license, registration, or vendor sign-off to
+  compile or program. *This directly constrains silicon choice:* it keeps the MCU on
+  open SDKs (RP2350 → pico-sdk / GCC, per DP4) and, **if programmable logic is ever
+  added**, limits the **FPGA brand/family to those with a fully open flow** — e.g.
+  **Lattice iCE40 / ECP5 via Yosys + nextpnr** (as the owner's `we_gate` uses), **not**
+  parts that require Vivado/Quartus/Libero or an encrypted bitstream. A part with no
+  open flow is disqualified regardless of price or performance. (Ties O1, O2, DP5, S4.)
+- **N2 [N] — No un-reproducible parts.** Avoid **single-source, NDA-gated, EOL, or
+  not-broadly-stocked** ICs (must be JLCPCB-assemblable or hand-solderable and orderable
+  by attendees). Avoid packages a low-cost house / hand assembly can't do reliably
+  (fine-pitch BGA, bottom-terminated leadless where avoidable). (B2, DP3, M1.)
+- **N3 [N] — No proprietary-EDA lock-in.** Design files must not require paid/closed EDA
+  to open, edit, or fabricate. **Prefer KiCad**; do not ship a design only as an Altium/
+  proprietary project or as flattened PDFs with no editable source. (O2.)
+- **N4 [N] — No vendor-locked / OS-locked host software or drivers.** Avoid custom
+  kernel drivers, Windows-only tools, or closed runtimes. Present as a **driverless
+  USB-CDC / standard vendor class** that works on Linux/macOS/Windows out of the box; the
+  host stack stays open Python (+ optional WebSerial). (C2, C3, S2.)
+- **N5 [N] — No reflash that needs a full toolchain or a hardware programmer.** A
+  workshop attendee must be able to reflash by **UF2 drag-and-drop** (S4). Do not make
+  the baseline flow depend on a JTAG/SWD pod, an IDE install, or a license. (Debug
+  headers may exist, but must not be *required* for normal use.)
+- **N6 [N] — No closed/black-box data path.** The **raw RF** must remain accessible in a
+  documented, open, versioned format (F3, S2). Avoid firmware/host that only exposes a
+  processed envelope or a proprietary/opaque container — that would defeat the DSP (S6),
+  coded-excitation (T4) and experimentation goals (F10).
+- **N7 [N] — No dependence on cloud or online services.** Capture, configuration, and
+  processing must work **fully offline/local**. No mandatory account, license server,
+  or internet round-trip to run the badge.
+- **N8 [N] — No creep beyond the single-channel badge.** Reject features that break
+  DP1–DP3 or the badge form factor: multi-channel/phased-array, on-board B-mode
+  reconstruction, big displays/compute. (Reinforces F9 [W], §1 out-of-scope.)
+- **N9 [N] — No clinical/medical positioning.** Nothing in the HW, FW, host, or docs may
+  imply diagnostic/medical use or otherwise trigger regulatory scope. (§16, SF1/SF3.)
+- **N10 [N] — No dangerous or exotic HV.** Stay at the modest unipolar baseline
+  (≤ ~+50 V, T2); avoid HV levels or topologies needing special creepage, isolation, or
+  costly rated parts, and avoid a proliferation of custom supply rails. (SF2, DP3.)
+- **N11 [N] — No proprietary/single-probe connector lock-in.** Do not tie the board to
+  one bespoke probe connector; keep the standard footprints (SMA/coax + 2×1 header +
+  uFL, F2c) and the **standard RPi 40-pin** extension interface (C5) — no bespoke
+  expansion bus. (F2c, C5.)
+
+> **Rule of thumb:** if adopting a part or tool would force a *closed, paid, single-
+> source, or non-reproducible* dependency onto a builder, it's out — even when it's the
+> technically nicest option. Openness and reproducibility (O1/O2, DP5) win the tie.
 
 ---
 

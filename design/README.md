@@ -23,6 +23,7 @@ Datasheets and papers (not editable design files) go in
 | `pic0rick/` | pic0rick (RP2040) — 3 boards | KiCad + schematic PDFs + gerbers for `adc/`, `mux/`, `panel_adc_pulser_hv/` |
 | `biogap-wulpus-pro/` | BioGAP WULPUS-pro shield (MSP430FR5043) | schematics PDF, assembly PDF, BOM (Altium source upstream) |
 | `open-echo/` | Open Echo TUSS4470 shield | KiCad sch/pcb/pro + gerbers + BOM |
+| `pic32/` | **Concept** (no design files yet) | Thoughts on pairing a Microchip PIC32A (PIC32AK…GC41064: 40 Msps ADC + 100 MHz op-amps) with the RP2350 as an alternative acquisition architecture. |
 
 Each has a `SOURCE.md` with the upstream repo URL + commit + retrieval date.
 More to come (IUP if released, and the leads in `docs/claude/TODO.md`).

@@ -4,6 +4,11 @@ Papers, datasheets, and reference-design documents backing the survey and the
 *minus* design work. Store any PDF you download here (rather than a temp dir), with
 a descriptive name.
 
+**Markdown siblings:** every PDF here keeps a `.md` version of the same basename
+sitting next to it (e.g. `foo.pdf` → `foo.md`), so the text is greppable and cheap to
+read without re-parsing the PDF. Generate it with the locally-installed **markitdown**:
+`markitdown foo.pdf -o foo.md`. Commit the `.md` with the PDF.
+
 | File | What it is |
 |------|-----------|
 | `28-952-1-PB.pdf` | Jonveaux, Schloh, Meng, Arija, Rintoul — *Review of Current Simple Ultrasound Hardware Considerations, Designs, and Processing Opportunities*, Journal of Open Hardware 6(1):3, 2022 (DOI 10.5334/joh.28). Anchor survey → `systems/literature.md`. |
