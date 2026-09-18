@@ -16,6 +16,8 @@ out of scope** (listed at the bottom for context only).
   component menus (pulsers, HV, TGC, ADC, AFE) and single-element B-mode strategies.
 - **[`by-ic.md`](by-ic.md)** — designs grouped by key IC (MSP430FR5043, TUSS4470,
   AD833x, MD1213/TC6320, …) so a part choice traces to working references.
+- **[`afe-vga-ics.md`](afe-vga-ics.md)** — survey of RX gain ICs (LNA + variable-gain /
+  AFE), single-channel through 8/16-channel, for the *minus* gain stage.
 - One subfolder per design/product. Source/confidence tags in each sheet:
   `[D]` datasheet/repo · `[P]` paper · `[S]` slides/survey · `[E]` estimate · `?` unknown.
 - Source PDFs live in [`../pdfs/`](../pdfs/) (see its README).

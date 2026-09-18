@@ -4,6 +4,9 @@ Cross-reference of which surveyed designs use which critical ultrasound IC, so a
 part choice for *minus* can be traced to working references. Links point to the
 datasheet in `systems/<slug>/` or to `literature.md` for table-only entries.
 
+> For the **RX gain-IC landscape** (LNA + variable-gain / AFE, single-channel through
+> 8/16-channel), see [`afe-vga-ics.md`](afe-vga-ics.md).
+
 ---
 
 ## TI MSP430FR5043 (integrated ultrasonic MCU — USS_A)

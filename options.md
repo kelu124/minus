@@ -50,6 +50,7 @@ amplitude. B1/B2 are for higher-voltage bipolar.
 
 Excluded by filter: integrated multichannel AFEs (AFE58xx / AD927x — over-spec,
 pricey, power-hungry for one channel); log-amp/envelope (no linear RF TGC).
+*Full LNA+VGA/AFE landscape (1→8/16-ch): [`systems/afe-vga-ics.md`](systems/afe-vga-ics.md).*
 
 | Option | Part(s) | Gain | $ (incl gain-ctrl) | Stock | Notes |
 |--------|---------|------|:------------------:|:-----:|-------|

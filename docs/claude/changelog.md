@@ -8,7 +8,10 @@ the sha.
 
 ## Pending
 
-- (none)
+- Add `systems/afe-vga-ics.md` — survey of RX gain ICs (LNA + variable-gain / AFE),
+  single-channel → 8/16-channel (AD833x, AD8338, AD603/VCA810, AD8332/VCA26xx,
+  AD8334/AFE5401, AFE5808/AD9276-family/MAX2082, VCA5807, AFE5832); linked from
+  systems/README, by-ic.md, options.md §2.
 
 ## Committed
 
