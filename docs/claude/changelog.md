@@ -8,15 +8,15 @@ the sha.
 
 ## Pending
 
-- Add `design/designA/toolchain_designA.md` — Ubuntu CLI + Makefile toolchain (RP2354
-  pico-sdk→uf2, PIC32A XC-DSC→hex via ipecmd/PICkit; XC-DSC confirmed Linux + PIC32A).
-- Fold **kelu124/pic32arick** intel into DesignA + pic32.md: push-pull pulser
-  (IRLML6244/2244 + TC4427A), 3-op-amp gain chain (fixed OA1 + MCP4531 I²C digipot OA2 +
-  bias OA3), MD0100 T/R, 6-pin ICSP + 47Ω + Tag-Connect + off-center friction-fit holes
-  (Microchip gpdim demo). BOM ≈ $4.7 active / $6.3 board (min variant $5.4). pic32arick
-  added to key-references memory.
+- (none)
 
 ## Committed
+
+- 2026-09-18  d66d17c  DesignA: Ubuntu CLI+Makefile toolchain (`toolchain_designA.md`:
+  RP2354 pico-sdk→uf2, PIC32A XC-DSC→hex via ipecmd/PICkit) + reuse of **kelu124/pic32arick**
+  blocks — push-pull pulser (IRLML6244/2244 + TC4427A), 3-op-amp gain (OA1 fixed + MCP4531
+  I²C digipot OA2 + bias OA3), MD0100 T/R, 6-pin ICSP (47Ω + Tag-Connect + off-center
+  friction-fit holes). BOM ≈ $4.7 active / $6.3 board (min $5.4); pic32arick → memory 0004.
 
 - 2026-09-18  d663709  DesignA: PIC32 direct-flash (S4a + `design/pic32/pic32.md` ICSP/
   PICkit/LVP/MCLR), pulser drive-select jumper JP1 (T4a: PIC32 HS-PWM ⟷ RP2354 PIO),
