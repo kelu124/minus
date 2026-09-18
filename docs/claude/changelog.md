@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- Add `systems/afe-vga-ics.md` — survey of RX gain ICs (LNA + variable-gain / AFE),
-  single-channel → 8/16-channel (AD833x, AD8338, AD603/VCA810, AD8332/VCA26xx,
-  AD8334/AFE5401, AFE5808/AD9276-family/MAX2082, VCA5807, AFE5832); linked from
-  systems/README, by-ic.md, options.md §2.
+- (none)
 
 ## Committed
+
+- 2026-09-18  160c089  Add `systems/afe-vga-ics.md` — survey of RX gain ICs (LNA +
+  variable-gain / AFE), single-channel → 8/16-channel (AD833x, AD8338, AD603/VCA810,
+  AD8332/VCA26xx, AD8334/AFE5401, AFE5808/AD9276-family/MAX2082, VCA5807, AFE5832);
+  linked from systems/README, by-ic.md, options.md §2.
 
 - 2026-09-18  0bbbd34  Confirm (RP2350 datasheet) RP2354A = 2 MB in-package flash, no
   external flash chip (QSPI_IOVDD 3.3V); BOOTSEL button wires QSPI_CSn→GND via ~1kΩ
