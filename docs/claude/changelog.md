@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- `design/devkit/`: add a shareable **PCB designer brief** (B1–B11) — board scope, power/
-  clocks, dual programming, inter-MCU bus, pulser bench, jumper-selected RX front-ends +
-  gain-control options + ADC input conditioning, connectors/taps, layout guidance,
-  deliverables, references.
+- (none)
 
 ## Committed
+
+- 2026-09-21  9ba7a33  `design/devkit/`: shareable **PCB designer brief** (B1–B11) — board
+  scope, power/clocks, dual programming, inter-MCU bus, pulser bench, jumper-selected RX
+  front-ends + gain-control + ADC input conditioning, connectors/taps, layout guidance,
+  deliverables, references.
 
 - 2026-09-21  4a272f2  ADC input conditioning (DesignA §5a: single-supply 0→VREF, mid-rail
   bias, ~2.8 Vpp fit, clamp) + TX↔ADC hardware trigger (§5b: HS-PWM/PTG, PIC-owns-TX);
