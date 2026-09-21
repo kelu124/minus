@@ -8,7 +8,9 @@ the sha.
 
 ## Pending
 
-- (none)
+- Add standalone `design/devkit/pcb-brief.md` — one-file PCB-designer handoff (overview,
+  power/clocks, programming, inter-MCU bus, pulser, jumper-selected RX front-ends + gain +
+  ADC conditioning, connectors/taps, layout, deliverables, refs); linked from devkit README.
 
 ## Committed
 

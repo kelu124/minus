@@ -169,6 +169,9 @@ schematic blocks carry straight over.
 
 # PCB designer brief (shareable)
 
+> **Standalone one-file version for handoff:** [`pcb-brief.md`](pcb-brief.md) — the same
+> brief without the surrounding derisk-planning context. Keep the two in sync.
+
 > Self-contained summary for a PCB designer. This board is an **evaluation / derisking
 > platform** — the goal is **flexibility and measurability, not size or cost**. Everything
 > is on **one board**; contested choices are selected with **jumpers** and every analog
