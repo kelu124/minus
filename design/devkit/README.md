@@ -164,3 +164,152 @@ schematic blocks carry straight over.
 - Toolchain: [`../designA/toolchain_designA.md`](../designA/toolchain_designA.md).
 - Gain/LNA IC survey + prices: [`../../systems/afe-vga-ics.md`](../../systems/afe-vga-ics.md).
 - Prior art: [kelu124/pic32arick](https://github.com/kelu124/pic32arick).
+
+---
+
+# PCB designer brief (shareable)
+
+> Self-contained summary for a PCB designer. This board is an **evaluation / derisking
+> platform** — the goal is **flexibility and measurability, not size or cost**. Everything
+> is on **one board**; contested choices are selected with **jumpers** and every analog
+> node has a **test point / SMA tap**.
+
+## B1. What this board is
+
+A single-channel **pulse-echo ultrasound** front-end dev board pairing two MCUs:
+- **RP2354A** (Raspberry Pi, QFN-60, 7×7 mm) — USB-C host link, system manager, DSP,
+  RGB LED, and **in-system programmer for the PIC** over ICSP. 2 MB in-package flash
+  (no external flash chip). LCSC/JLC `C41378174`.
+- **PIC32AK6416GC41064** (Microchip, 64-pin TQFP or VQFN) — the **analog capture engine**:
+  three on-die 100 MHz op-amps (RX gain), a 12-bit 40 Msps ADC, HS-PWM (pulser + ADC
+  trigger). Runs 3.0–3.6 V. *(Sourcing note: not currently LCSC-stocked — consign or
+  hand-place; full datasheet DS70005592 in `pdfs/datasheets/`.)*
+
+Signal flow: **transducer → T/R → [selectable RX front-end] → PIC32 ADC → SPI → RP2354 →
+USB-C**; **RP2354/PIC HS-PWM → pulser → transducer**.
+
+## B2. Board-level requirements
+
+- **4-layer**, solid ground plane under the analog section; **size unconstrained**
+  (favour clean layout + probe access over compactness).
+- **All MCU pins broken out** to labelled 0.1″ headers (classic dev-board fan-out).
+- **KiCad** source deliverable (schematic, PCB, gerbers, BOM CSV); fine-pitch parts
+  (RP2354A, PIC32AK) placed for JLCPCB assembly, headers/jumpers/SMA hand-solderable.
+- **Self-documenting silkscreen:** label every functional block, header pin, jumper, and
+  test point.
+
+## B3. Power & clocks
+
+| Rail | Source | Notes |
+|------|--------|-------|
+| +5 V | USB-C VBUS | logic-side 5 V; also the **pulser rail** but **ferrite-isolated** (≈600 Ω @100 MHz) with local bulk+HF decoupling near the FETs |
+| +3V3 DVDD | 3V3 LDO from 5 V | digital: RP2354, PIC digital, LED, logic |
+| +3V3 AVDD | from 3V3 (ferrite/0 Ω link + **current-sense pads**) | analog: PIC AVDD, op-amp/ADC; keep quiet |
+| VREF | AVDD (default) or ext VREF+ pin | ADC full-scale; decouple per datasheet |
+
+- **RP2354 QSPI_IOVDD must be 3.3 V** (internal flash). PIC needs its **VCAP** cap.
+- **RP2354 USB clock:** 12 MHz crystal close to the device. **PIC** runs on internal
+  FRC+PLL (no crystal). Per-pin 100 nF decoupling on every supply pin.
+
+## B4. Programming / debug (two paths, shared net)
+
+- **RP2354:** USB-C **BOOTSEL** button (wire **QSPI_CSn/SS → GND via ~1 kΩ**, pressed at
+  power-up) + a **RUN** reset button. Flash via UF2.
+- **PIC32:** **6-pin ICSP** header `1 MCLR/Vpp · 2 VDD · 3 GND · 4 PGED1 · 5 PGEC1 · 6 NC`
+  **plus Tag-Connect TC2030-NL pads** (and consider the **off-center/alternated friction-
+  fit holes** for solderless press-fit). **47 Ω series** on PGEC1/PGED1; **10 kΩ** MCLR
+  pull-up, short MCLR net, no cap loading Vpp.
+- The **RP2354 also connects to PGC/PGD/MCLR** so it can bit-bang LVP ICSP (one USB-C port
+  programs both). Only one programmer active at a time → keep RP2354 pins Hi-Z when a
+  PICkit drives the header (series R / firmware).
+
+## B5. Inter-MCU interface (RP2354 ↔ PIC32)
+
+| Bus | Signals | Purpose |
+|-----|---------|---------|
+| SPI | SCK, MOSI, MISO, CS | RP2354 master reads the captured A-line from the PIC (≤40 Mbps) |
+| IRQ | RDY | PIC → RP2354 "line ready" |
+| Trigger | TRIG | RP2354 → PIC ADC ext-trigger (used when RP2354 owns TX) |
+| I²C | SDA, SCL | gain-control digipot/DAC + OLED |
+| UART | TX, RX | debug/log (optional) |
+
+## B6. Transmit / pulser (bench, populate-options)
+
+- **Push-pull** default: **IRLML6244 (N)** + **IRLML2244 (P)** driven by a **TC4427A**
+  dual gate driver (3V3→5V level-shift, dead-band). **Footprint for a single low-side
+  N-FET (2N7002)** as the minimal alternative.
+- **Gate-drive source = JP1** (3-pin): **PIC32 HS-PWM** ⟷ **RP2354 PIO**; the TC4427A sits
+  after JP1. Only one source at a time (other Hi-Z).
+- **HV-rail select jumper:** USB **5 V** / on-board **boost** (footprint) / **external HV**
+  header (T7). Also **pads for an MD1213 + TC6320** high-voltage pulser for later.
+- **Damping:** selectable series/parallel resistor (100–200 Ω) at the transducer node.
+- **T/R protection:** **MD0100** (footprint) with a **BAV99** clamp alternative.
+- **TX↔ADC coupling:** the PIC HS-PWM that drives the gate can also emit the ADC start
+  trigger (same counter) — route so this is exercisable; expose the trigger on a TP.
+
+## B7. Receive front-end (jumper-selected, all on-board)
+
+Common **RX node** (after T/R) and common **ADC node** (to a PIC ADC input). Each block
+taps RX via `JIN_*` and drives the ADC node via `JOUT_*`; fit one JIN+JOUT pair to select
+a path (unused blocks left un-jumpered → isolated). **Keep JIN links right at the RX node
+to minimise stubs.**
+
+| Path | Blocks to place | Route |
+|------|-----------------|-------|
+| FE-0 straight | (link only) | RX → ADC |
+| FE-A PIC-opamp | route PIC OA1/OA2/OA3 in/out pins to the board | RX → OA1 fixed → OA2 (digipot) → ADC |
+| FE-B LNA + PIC-opamp | **AD8432 / LMH6629 / OPA847** | RX → LNA → PIC OA → ADC |
+| FE-C ext VGA | **AD8331** (QSOP-20) | RX → AD8331 → ADC |
+| FE-D ext VGA (LP) | **AD8338** (LFCSP-16 3×3) | RX → AD8338 → ADC |
+
+- **Gain-control options** (jumper-selected into the OA2 gain node / VGA Vgain):
+  **MCP4531** digipot (I²C) · **MCP4131** digipot (SPI) · **74HC4052** resistor-mux ·
+  **MCP4728** DAC or RP2354 **PWM+RC** for VGA Vgain.
+- **ADC input conditioning (critical — single supply):** the front-end must present a
+  signal **AC-coupled and biased to mid-rail VREF/2 ≈ 1.65 V**, scaled so the largest echo
+  ≈ **2.6–2.8 Vpp** (never bipolar; ADC is 0→VREF). Provide the **mid-rail bias buffer**
+  (PIC OA3 or a divider+buffer) and an **overrange clamp** (diodes to the rails) at the
+  ADC input. Anti-alias: 2-pole RC (≈ (100 Ω+56 pF)×2) before the ADC.
+
+## B8. Transducer & I/O connectors
+
+- Transducer: **SMA/coax + 2×1 2.54 mm header + u.FL** (all three footprints; populate
+  as needed).
+- **SMA/coax taps** at: transducer node, LNA out, VGA/op-amp out, **ADC input**, TX gate —
+  for signal-generator injection / scope probing (high-Z nodes: AC-couple / series-R the
+  tap so it doesn't load the path).
+- **Loopback self-test:** a mux/jumper to switch the RX input between the transducer and
+  an injected reference (PIC DAC / SMA) to characterise the chain without acoustics.
+- Optional: **RPi 40-pin** header (can be unpopulated pads), **SAO** header, **I²C OLED**
+  (SSD1306), WS2812 RGB LED.
+- **Test points** on all rails, VREF, clocks, SPI/I²C, RDY, TRIG, MCLR/PGC/PGD, HV rail,
+  bias node.
+
+## B9. Layout guidance (mixed-signal + HV pulse + 40 Msps ADC)
+
+- **Ground:** one solid GND plane; keep the **RX analog return** clean and under the RX
+  chain. Don't route SPI/PWM/USB/digital across the RX front-end.
+- **AVDD/DVDD** split, joined at one point (ferrite/0 Ω) with the current-sense pads.
+- **Pulser:** keep the TX switching loop (FETs ↔ decoupling ↔ transducer return) **tight
+  and away from RX**; the T/R node is the analog boundary. Ferrite + bulk (100 µF) + HF
+  (100 nF/10 nF) decoupling right at the FET/driver, as pic32arick.
+- **RX:** short op-amp feedback loops; guard the high-Z op-amp inputs; minimise stubs on
+  the shared RX and ADC nets; VREF + ADC-input decoupling per the datasheet.
+- **Clock:** crystal + load caps hugging the RP2354, guard ring.
+- **SMA taps** are for probing, not matched transmission lines (unless a tap is explicitly
+  a 50 Ω injection point — mark it).
+
+## B10. Deliverables
+
+KiCad project (sch + PCB), schematic PDF, gerbers + drills, and a costed BOM CSV with
+LCSC/Digikey part numbers. Note in the BOM which parts are **populate-optional** (the FE
+variants, gain-control options, single-FET pulser, MD1213 pads, boost, OLED, 40-pin).
+
+## B11. Reference material (in this repo / linked)
+
+- PIC32AK **datasheet DS70005592** + **flash-prog-spec DS70005583** — `pdfs/datasheets/`
+  (with `.md` siblings). Product brief DS70005582.
+- Front-end/pulser/gain/ICSP prior art: **[kelu124/pic32arick](https://github.com/kelu124/pic32arick)**.
+- Friction-fit ICSP header: **[microchip pic32ak…gpdim-demo](https://github.com/microchip-pic-avr-examples/pic32ak1216gc41064-gpdim-demo)**.
+- Gain/LNA IC options + LCSC prices: [`../../systems/afe-vga-ics.md`](../../systems/afe-vga-ics.md).
+- Target cheap product this feeds: [`../designA/README.md`](../designA/README.md).

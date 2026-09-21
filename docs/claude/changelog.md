@@ -8,7 +8,10 @@ the sha.
 
 ## Pending
 
-- (none)
+- `design/devkit/`: add a shareable **PCB designer brief** (B1–B11) — board scope, power/
+  clocks, dual programming, inter-MCU bus, pulser bench, jumper-selected RX front-ends +
+  gain-control options + ADC input conditioning, connectors/taps, layout guidance,
+  deliverables, references.
 
 ## Committed
 
