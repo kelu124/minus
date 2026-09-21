@@ -8,13 +8,14 @@ the sha.
 
 ## Pending
 
-- Add `design/devkit/` — **DesignA-DK** derisking board: RP2354A + PIC32AK6416 (64-pin/
-  16KB), fully broken out, swappable RX front-ends (FE-0 straight … FE-B LNA+opamp …
-  FE-C/D ext VGA), gain-control options (I²C/SPI digipot, resistor-mux, VGA Vgain), pulser
-  bench (push-pull/single-FET/ext-HV), split rails, SMA taps + loopback self-test.
-  Derisk-priority + parallel vendor-eval (Curiosity+GP-DIM, Pico2). Linked from design/README.
+- (none)
 
 ## Committed
+
+- 2026-09-21  dced415  Add `design/devkit/` — **DesignA-DK** derisking board: RP2354A +
+  PIC32AK6416 (64-pin/16KB), fully broken out, swappable RX front-ends (FE-0 … FE-C/D ext
+  VGA), gain-control options (I²C/SPI digipot, resistor-mux, VGA Vgain), pulser bench,
+  split rails, SMA taps + loopback self-test; derisk-priority + vendor-eval path.
 
 - 2026-09-18  d66d17c  DesignA: Ubuntu CLI+Makefile toolchain (`toolchain_designA.md`:
   RP2354 pico-sdk→uf2, PIC32A XC-DSC→hex via ipecmd/PICkit) + reuse of **kelu124/pic32arick**
