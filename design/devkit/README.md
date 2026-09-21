@@ -5,6 +5,11 @@
 broken-out, and modular** so every contested front-end / pulser / gain decision can be
 **swapped and measured** on the bench before the cheap DesignA badge is frozen.
 
+> **⚠ Review findings:** a 4-agent flaw review (2026-09-21) is captured in
+> [`review-findings.md`](review-findings.md) — read it before committing the schematic.
+> Confirmed datasheet corrections are applied throughout; higher-severity design flaws
+> (B/C) are tracked there.
+
 ## 1. Philosophy — measure, don't guess
 
 Space and BOM are *not* constraints here. So every design choice that is currently an
@@ -208,7 +213,7 @@ USB-C**; **RP2354/PIC HS-PWM → pulser → transducer**.
 | +5 V | USB-C VBUS | logic-side 5 V; also the **pulser rail** but **ferrite-isolated** (≈600 Ω @100 MHz) with local bulk+HF decoupling near the FETs |
 | +3V3 DVDD | 3V3 LDO from 5 V | digital: RP2354, PIC digital, LED, logic |
 | +3V3 AVDD | from 3V3 (ferrite/0 Ω link + **current-sense pads**) | analog: PIC AVDD, op-amp/ADC; keep quiet |
-| VREF | AVDD (default) or ext VREF+ pin | ADC full-scale; decouple per datasheet |
+| VREF | **AVDD** (no external VREF pin on this family) | ADC full-scale; decouple per datasheet |
 
 - **RP2354 QSPI_IOVDD must be 3.3 V** (internal flash). PIC needs its **VCAP** cap.
 - **RP2354 USB clock:** 12 MHz crystal close to the device. **PIC** runs on internal
@@ -239,7 +244,8 @@ USB-C**; **RP2354/PIC HS-PWM → pulser → transducer**.
 ## B6. Transmit / pulser (bench, populate-options)
 
 - **Push-pull** default: **IRLML6244 (N)** + **IRLML2244 (P)** driven by a **TC4427A**
-  dual gate driver (3V3→5V level-shift, dead-band). **Footprint for a single low-side
+  dual gate driver (**8-pin**, 3V3→5V level-shift; **no internal dead-time** — from PWM or
+  use a tied-gate totem; review-findings A5/A6/C1). **Footprint for a single low-side
   N-FET (2N7002)** as the minimal alternative.
 - **Gate-drive source = JP1** (3-pin): **PIC32 HS-PWM** ⟷ **RP2354 PIO**; the TC4427A sits
   after JP1. Only one source at a time (other Hi-Z).

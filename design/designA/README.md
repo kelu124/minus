@@ -11,6 +11,12 @@ simple, F6 per-line settable gain / no TGC, T1–T4 unipolar coded pulser).
 > front-end + an RP2354A** for USB-C/manager/DSP + one-cable programming. The pulser,
 > gain chain, T/R and ICSP-header choices below adopt pic32arick's validated blocks.
 
+> **⚠ Open design issues:** a multi-agent review (2026-09-21) found flaws to resolve before
+> fab — see [`../devkit/review-findings.md`](../devkit/review-findings.md). Factual
+> datasheet corrections (VREF=AVDD, op-amp High/Low-power specs, ENOB ~10.5-bit, TC4427A
+> has no internal dead-time / is 8-pin) are applied below; deeper items (gain-stage
+> bandwidth, anti-alias corner, USB-C Rd, MCLR isolation) are flagged inline.
+
 ## 1. Idea in one line
 
 **RP2354A** (USB-C host + manager + DSP, *2 MB in-package flash → no external flash*)
@@ -62,7 +68,7 @@ the PIC over ICSP** (one USB-C port programs both). Interconnect detail:
 | U1 | **RP2354A** (QFN-60) | MCU / USB-C / mgr / DSP; **2 MB internal flash** | **1.27** | **LCSC C41378174 / JLC ✓** (16k stk) |
 | U2 | **PIC32AK3208GC41048** (48-pin) | capture engine: 40 Msps 12-bit ADC + 100 MHz op-amps | **~1.73** | Digikey ✓; **not LCSC** → consigned (N2) |
 | Q1,Q2 | IRLML6244 (N) + IRLML2244 (P) | push-pull unipolar pulser (both edges driven) | 0.20 | LCSC ✓ |
-| U5 | TC4427A dual gate driver | 3V3→5V gate drive + dead-band (SOT-23-5) | 0.30 | LCSC ✓ |
+| U5 | TC4427A dual gate driver (**8-pin**) | 3V3→5V gate drive (**no internal dead-time** — must come from the PWM source, or use a tied-gate CMOS totem; see review-findings A5/A6) | 0.30 | LCSC ✓ |
 | D1 | MD0100 (T/R switch) | protect RX from TX edge (BAV99 = cheaper fallback) | ~0.60 | Digikey (BAV99 LCSC) |
 | U3 | digital pot MCP4531-103 (I²C) | per-line settable gain (OA2 gain resistor) | ~0.40 | LCSC ✓ |
 | U4 | 3V3 LDO (ME6211 / AP2112) | 3V3 from USB 5V | 0.10 | LCSC ✓ |
@@ -104,19 +110,23 @@ i.e. a smaller dead zone. This is the owner's validated 5 V pulser.
         [N-FET IRLML6244] ─┘ pulls LOW    │
           │                            [Rdamp 100–200Ω to GND]  ← ring-down damping
          GND
-        gates ◄── [TC4427A dual gate driver, 3V3→5V level-shift, dead-band]
+        gates ◄── [TC4427A dual gate driver (8-pin), 3V3→5V level-shift — dead-time from PWM]
                          ▲
    ┌───────── JP1 (drive-select) ─────────┐
   PIC32A HS-PWM ●  ○── shunt ──○  ● RP2354 PIO
   (complementary PWM pair)        (PIO complementary pair)
 ```
 
-- **Push-pull (recommended):** **N-FET IRLML6244** + **P-FET IRLML2244** (SOT-23),
-  driven by a **TC4427A** dual gate driver (SOT-23-5, 1.5 A, level-shifts 3.3 V logic to
-  the 5 V gate, built-in dead-band to avoid shoot-through). Rise ~4–5 ns; ~125 mA gate
-  transient into a ~500 pF piezo. 5 V trades ~20–26 dB SNR vs a 100 V MD1213 pulser
-  (< 5 cm penetration) but is cheap and HV-safe. **Active damping** option: fire a
-  second, opposite pulse ~T/2 later (2nd PWM channel).
+- **Push-pull (recommended):** **N-FET IRLML6244** + **P-FET IRLML2244** (SOT-23, 20 V —
+  keep the totem rail ≤ ~15 V; boost/HV belongs to the MD1213 path, review-findings B7),
+  driven by a **TC4427A** dual gate driver (**8-pin**, 1.5 A, level-shifts 3.3 V logic to
+  the 5 V gate). **The TC4427A has NO internal dead-time** — for a complementary pair the
+  PWM source must insert dead-time, **or drive the totem as a tied-gate CMOS pair (one
+  signal, no dead-time — recommended)**. Realistic edges at 5 V are **~20–30 ns** (not the
+  earlier "4–5 ns"); peak gate current ~400–600 mA into a ~500 pF piezo. 5 V trades
+  ~20–26 dB SNR vs a 100 V MD1213 pulser (< 5 cm penetration) but is cheap and HV-safe.
+  **Active damping** option: fire a second, opposite pulse ~T/2 later. *(Topology decision
+  + faster-driver option: review-findings B7/C1/C2.)*
 - **Absolute-minimum variant:** a **single low-side N-FET** (2N7002/AO3400) straight
   off 5 V with a **BAV99** clamp instead of the MD0100 — ~$0.5 cheaper, but softer edges
   / longer ring-down. Use only if shaving the last cents matters.
@@ -153,9 +163,11 @@ between firing lines.** Adopts the **pic32arick 3-op-amp chain** — all three o
   (I²C, 10 kΩ/128 steps) → **~2–129× (6–42 dB)**; Rf2 10 k, Cf2 1.5 pF. Firmware writes
   the wiper code **once per line** (no TGC).
 - **OA3 — mid-rail bias** unity-gain buffer (single-supply biasing).
-- **Combined:** ~**+20.5 dB … +56.5 dB**, then a **2-pole RC anti-alias** ((100 Ω+56 pF)×2,
-  ~−3.7 dB at 20 MHz Nyquist) into a **PIC32A 12-bit 40 Msps ADC** channel (on-die — no
-  external ADC).
+- **Combined:** ~**+20.5 dB … +56.5 dB** *on paper* — but **finite op-amp GBW (100 MHz
+  High-Power / 50 MHz Low-Power) caps usable gain at 3–4 MHz to ≈ +34 dB**; the top of the
+  range needs an LNA or a real VGA (review-findings **B1**). Then a **2-pole RC anti-alias**
+  — the drawn (100 Ω+56 pF)×2 (~28 MHz corner) is **too high for a 40/20 Msps ADC; move to
+  ~6–8 MHz** (review-findings **B3**) — into a **PIC32A 12-bit 40 Msps ADC** (on-die).
 - **Why a digipot, not a DAC:** gain lives in the **resistor ratio**; the digipot *is*
   the gain resistor. Firmware writes the code once per line (static within a line). A DAC
   *voltage* only sets gain in a true VGA/multiplier.
@@ -173,10 +185,12 @@ The PIC32A runs on **one 3.0–3.6 V rail**, so its op-amps and ADC **cannot see
 Ultrasound RF is 0-centered (≈ ±2 V raw), so it must be **biased to mid-rail and scaled**
 to fit; never fed in bipolar.
 
-- **ADC range (single-ended, VREF = AVDD ≈ 3.3 V): 0 → VREF**, 12-bit → **LSB ≈ 0.8 mV**.
-  Use **single-ended**: this ADC's *differential* mode is limited (~±VREF/4 per the
-  dsPIC33A docs — verify), so single-ended is the **larger** window. Pins must stay
-  0–3.3 V (ESD clamps conduct beyond → damage + long recovery).
+- **ADC range (single-ended, reference = AVDD ≈ 3.3 V): 0 → VREF**, 12-bit (**ENOB ≈
+  10.5 bits**) → **LSB ≈ 0.8 mV**. **No external VREF+ pin on this family** — reference is
+  AVDD (corrected 2026-09-21). Use **single-ended**: the "~±VREF/4" differential limit is
+  from generic dsPIC33A docs, **not the PIC32AK datasheet — verify**; single-ended is the
+  safe larger window. Pins must stay 0–3.3 V (ESD clamps conduct beyond → damage + long
+  recovery).
 - **Bias to VREF/2 ≈ 1.65 V** (code ≈ 2048): **OA3** supplies this mid-rail reference to
   the gain-stage inputs so the output centres at 1.65 V and swings ±.
 - **AC-couple** the front-end into the op-amp (series cap + mid-rail bias); set the
@@ -268,8 +282,10 @@ sequenceDiagram
 - [ ] **PIC32A op-amp noise** vs echo level → is the optional LNA (A3a) actually needed?
 - [ ] **Digipot bandwidth/parasitics** on OA2 (MCP4531 wiper capacitance) at 3–4 MHz —
       validate, or fall back to the resistor-mux.
-- [ ] **MD0100 vs BAV99** T/R (cost vs protection); **complementary-PWM dead-band** on
-      the TC4427A (shoot-through) — reuse pic32arick's proven values.
+- [ ] **MD0100 vs BAV99** T/R (BAV99 clamps to ~4.3 V > PIC abs-max — needs series R,
+      5 V-only; review-findings C4). **Dead-time / shoot-through:** TC4427A has none — use
+      tied-gate totem or PWM-inserted dead-time (C1). Add a **10 kΩ pull-down on the
+      driver input** (JP1 off = pulser off, C3).
 - [ ] Confirm PIC32A **48-pin** pin budget with this exact signal set (§3c/§3d) — now
       incl. JP1 drive-select (2 pins) + J3 ICSP.
 - [ ] **JP1 drive-select (T4a):** firmware must set the *unselected* MCU's gate pin to

@@ -12,6 +12,32 @@ Fuller rationale + test plan: [`README.md`](README.md) in this folder.
 
 ---
 
+## 0. Must-fix issues before layout (read first)
+
+From a design review ([`review-findings.md`](review-findings.md), 2026-09-21). Full list
+there; the load-bearing ones for the PCB designer:
+
+- **USB-C: add 5.1 kΩ `Rd` pull-downs on CC1 and CC2** (else VBUS never enables). Verify
+  RP2354 USB **DP/DM 27 Ω** series terminations. *(B4)*
+- **ICSP MCLR: use LVP-only, or isolate the RP2354's MCLR tap** (series R + clamp / lift
+  jumper). A PICkit HV-Vpp (~9 V) on the shared net would exceed the RP2354's 3.3 V
+  abs-max. Add series R on the RP2354 PGC/PGD/MCLR taps too. *(B5/C13)*
+- **HV-rail select is MD1213-path only** — never feed boost/external HV into the IRLML
+  5 V totem (a 5 V driver can't turn the P-FET off → shoot-through). Interlock it. *(B7)*
+- **Pulser dead-time:** the TC4427A has **none** — drive the totem **tied-gate (one
+  signal)** or insert dead-time in the PWM; add a **10 kΩ pull-down** on the driver
+  input (default OFF). *(A5/C1/C3)*
+- **Anti-alias corner ~6–8 MHz**, not the ~28 MHz drawn (no alias rejection at 40/20
+  Msps). *(B3)*
+- **Gain-stage bandwidth:** one op-amp can't give the full +56 dB at 3–4 MHz (GBW limit
+  ≈ +34 dB usable) — distribute gain / plan on the LNA path. *(B1/B2)*
+- **RX/ADC nodes:** prefer **0 Ω links over pin headers**, tie unused FE inputs to
+  mid-rail, and give **each FE path its own AC-couple + bias** (one shared bias buffer
+  can't serve FE-0/FE-A/VGAs). *(C8/C9)*
+- **Single I²C master** (RP2354) for the gain/OLED bus. *(C12)*
+
+---
+
 ## 1. Overview
 
 A single-channel ultrasound front-end pairing two MCUs:
@@ -66,7 +92,7 @@ flowchart LR
 | **+5 V** | USB-C VBUS | logic 5 V; also the **pulser rail** but **ferrite-isolated** (~600 Ω @100 MHz) with local bulk (100 µF) + HF (100 nF/10 nF) decoupling at the FETs |
 | **+3V3 DVDD** | 3V3 LDO from 5 V | digital: RP2354, PIC digital, LED, logic |
 | **+3V3 AVDD** | from 3V3 via ferrite/0 Ω + **current-sense pads** | analog: PIC AVDD, op-amps/ADC — keep quiet |
-| **VREF** | AVDD (default) or external VREF+ pin | ADC full-scale; decouple per datasheet |
+| **VREF** | **AVDD** (no external VREF pin on this family) | ADC full-scale; decouple per datasheet |
 
 - **RP2354 `QSPI_IOVDD` must be 3.3 V** (internal flash). Provide the PIC **`VCAP`** cap.
 - **RP2354 USB clock:** 12 MHz crystal + load caps hugging the device (guard ring). **PIC**
@@ -97,7 +123,8 @@ flowchart LR
 ## 6. Transmit / pulser (bench with populate-options)
 
 - **Push-pull default:** **IRLML6244 (N)** + **IRLML2244 (P)** driven by a **TC4427A**
-  dual gate driver (3V3→5V level-shift, dead-band). **Footprint for a single low-side
+  dual gate driver (**8-pin**, 3V3→5V level-shift; **no internal dead-time** — insert it in
+  the PWM or drive the totem tied-gate). **Footprint for a single low-side
   N-FET (2N7002)** as the minimal alternative.
 - **Gate-drive source = JP1** (3-pin): **PIC32 HS-PWM** ⟷ **RP2354 PIO**; the TC4427A sits
   **after** JP1; only one source at a time (the other Hi-Z).

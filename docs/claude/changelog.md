@@ -8,7 +8,12 @@ the sha.
 
 ## Pending
 
-- (none)
+- Add `design/devkit/review-findings.md` — consolidated 4-agent flaw review (severity-ranked
+  + fix tracker). Apply confirmed datasheet corrections across pic32/designA/devkit/pcb-brief
+  (VREF=AVDD/no ext pin, op-amp HP-vs-LP 100/50 MHz + ±3mV, ENOB ~10.5, TC4427A no dead-time
+  /8-pin, pulser edges ~20–30ns). Add pcb-brief §0 "must-fix before layout" (USB-C Rd, MCLR
+  LVP-only, HV interlock, dead-time+JP1 pull-down, AA ~6–8MHz, gain-vs-GBW, 0Ω links, 1 I²C
+  master). New memory `0007-designA-devkit.md` (+INDEX).
 
 ## Committed
 

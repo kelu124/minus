@@ -8,3 +8,4 @@ One line per memory file. Read this first to find the right topic.
 - [0004-key-references.md](0004-key-references.md) — Anchor reviews (Jonveaux 2022, Weik 2026), SIG-WUS OXP catalog, un0rick.cc.
 - [0005-minus-direction.md](0005-minus-direction.md) — Provisional direction + all locked owner requirements (RP2350, USB-C, 3–4 MHz, unipolar, badge, …).
 - [0006-pricing-basis.md](0006-pricing-basis.md) — Parts pricing basis: LCSC at qty ~20–50 (workshop batch), JLCPCB-stocked.
+- [0007-designA-devkit.md](0007-designA-devkit.md) — DesignA (cheap RP2354A+PIC32AK board) + DesignA-DK jumper-selected devkit; key decisions + the 2026-09-21 flaw review.

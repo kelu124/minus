@@ -322,20 +322,24 @@ PIC32AK…GC41064 family:
 - **This part (PIC32AK3208GC41064):** **32 KB flash**, **8 KB SRAM** (Digikey: 8K×8),
   **64-pin** (TQFP `-I/PT` / QFN `-I/M7`), 49 I/O. Price **$1.91/1, $1.73/25, $1.58/100**
   (Digikey, 498 in stock, 7-wk factory lead). *LCSC/JLCPCB availability still TBD.*
-- **ADC:** **two 12-bit ADCs, up to 40 Msps**, up to 22 analog input pins, 20 setting
-  channels (single-ended or differential), oversampling / integration / window /
-  single modes, per-channel digital comparator, 2nd-order filter accumulators on 3
-  channels, band-gap ref + temp sensor.
-- **ADC input range (single supply):** referenced to **VREF = AVDD (~3.3 V)** or an
-  external VREF+ pin. **Single-ended: 0 → VREF** (LSB ≈ 0.8 mV); pins must stay 0–3.3 V.
-  **Differential is limited (~±VREF/4 per dsPIC33A docs — verify)**, so single-ended is
-  the larger window. ⇒ 0-centred RF must be **biased to VREF/2 (~1.65 V)** and scaled to
+- **ADC:** **two 12-bit ADCs, up to 40 Msps** (**ENOB ≈ 10.5 bits**, not full 12), up to
+  22 analog input pins, 20 setting channels (single-ended or differential), oversampling /
+  integration / window / single modes, per-channel digital comparator, 2nd-order filter
+  accumulators on 3 channels, band-gap ref + temp sensor.
+- **ADC input range (single supply):** reference is **AVDD (~3.3 V)** — **no external
+  VREF+ pin on this family** (corrected 2026-09-21). **Single-ended: 0 → VREF** (LSB ≈
+  0.8 mV); pins must stay 0–3.3 V. **Differential:** the "~±VREF/4" figure is from generic
+  dsPIC33A docs and is **not in the PIC32AK datasheet — verify**; single-ended is the safe
+  larger window. ⇒ 0-centred RF must be **biased to VREF/2 (~1.65 V)** and scaled to
   ~2.6–2.8 Vpp (DesignA §5a). *Full detail in the datasheet DS70005592 (mirrored in `pdfs/datasheets/`).*
 - **ADC↔TX trigger:** the **HS-PWM ADC-trigger** + **PTG** + ADC **window/gate** modes
   let the pulser-driving PWM also start the ADC off the **same counter** → phase-locked,
   ~2.5 ns, zero-jitter acquisition when the PIC owns TX (DesignA §5b).
-- **Op-amps:** **three rail-to-rail 100 MHz** op-amps, **100 V/µs** slew, **1 mV**
-  typ offset.
+- **Op-amps:** **three rail-to-rail** op-amps — **100 MHz GBW / 100 V/µs slew in
+  High-Power mode only** (Low-Power = **50 MHz / 10 V/µs**); offset **±1 mV typ, ±3 mV
+  max**; **input-noise density is unspecified** in the datasheet ⇒ whether an LNA is needed
+  is an open, bench-only question. *(GBW/gain limits the usable gain at 3–4 MHz — see
+  `../devkit/review-findings.md` B1.)*
 - **Comparators/DACs:** three 5 ns comparators with **12-bit PDM DACs** (slope comp,
   one output buffer).
 - **Current sources:** four 10 µA constant + four programmable.
