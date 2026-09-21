@@ -8,11 +8,14 @@ the sha.
 
 ## Pending
 
-- Add standalone `design/devkit/pcb-brief.md` — one-file PCB-designer handoff (overview,
-  power/clocks, programming, inter-MCU bus, pulser, jumper-selected RX front-ends + gain +
-  ADC conditioning, connectors/taps, layout, deliverables, refs); linked from devkit README.
+- (none)
 
 ## Committed
+
+- 2026-09-21  a05eef6  Add standalone `design/devkit/pcb-brief.md` — one-file PCB-designer
+  handoff (overview + mermaid, power/clocks, programming, inter-MCU bus, pulser, jumper-
+  selected RX front-ends + gain + ADC conditioning, connectors/taps, layout, deliverables,
+  refs); linked from devkit README.
 
 - 2026-09-21  9ba7a33  `design/devkit/`: shareable **PCB designer brief** (B1–B11) — board
   scope, power/clocks, dual programming, inter-MCU bus, pulser bench, jumper-selected RX
