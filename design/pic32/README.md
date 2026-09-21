@@ -326,6 +326,14 @@ PIC32AK…GC41064 family:
   channels (single-ended or differential), oversampling / integration / window /
   single modes, per-channel digital comparator, 2nd-order filter accumulators on 3
   channels, band-gap ref + temp sensor.
+- **ADC input range (single supply):** referenced to **VREF = AVDD (~3.3 V)** or an
+  external VREF+ pin. **Single-ended: 0 → VREF** (LSB ≈ 0.8 mV); pins must stay 0–3.3 V.
+  **Differential is limited (~±VREF/4 per dsPIC33A docs — verify)**, so single-ended is
+  the larger window. ⇒ 0-centred RF must be **biased to VREF/2 (~1.65 V)** and scaled to
+  ~2.6–2.8 Vpp (DesignA §5a). *Full detail in the datasheet DS70005592 (mirrored in `pdfs/datasheets/`).*
+- **ADC↔TX trigger:** the **HS-PWM ADC-trigger** + **PTG** + ADC **window/gate** modes
+  let the pulser-driving PWM also start the ADC off the **same counter** → phase-locked,
+  ~2.5 ns, zero-jitter acquisition when the PIC owns TX (DesignA §5b).
 - **Op-amps:** **three rail-to-rail 100 MHz** op-amps, **100 V/µs** slew, **1 mV**
   typ offset.
 - **Comparators/DACs:** three 5 ns comparators with **12-bit PDM DACs** (slope comp,

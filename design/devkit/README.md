@@ -19,7 +19,9 @@ turn the open items in [`../designA`](../designA/README.md) §7 and
 | Open decision | How the devkit answers it |
 |---------------|---------------------------|
 | PIC32A ADC real perf (ENOB, gap-free 40/20 Msps, SRAM depth) | SMA inject a known tone/pulse at the ADC node; capture; measure. Also derisk on vendor eval HW (§9). |
-| Do we need an external **LNA**, or are the PIC op-amps enough? | Swap RX front-end cards FE-0…FE-4 (§4); compare SNR on the same target. |
+| Do we need an external **LNA**, or are the PIC op-amps enough? | Jumper-select FE-0…FE-D (§4); compare SNR on the same target. |
+| **ADC input conditioning** (mid-rail bias, ~2.8 Vpp fit, clip onset, ENOB near rails, AC-coupling corner) | Bias-point test point; SMA inject a known ±V swing; sweep gain to clip; measure ENOB vs level (DesignA §5a). |
+| **TX↔ADC hardware trigger** (PWM-generated trigger jitter/delay) | Scope TX first edge vs ADC-start on a test point; measure jitter/pre-delay; compare PIC-HS-PWM vs RP2354-via-TRIG (DesignA §5b). |
 | **Gain-control** method (digipot I²C vs SPI vs resistor-mux vs VGA Vgain) | Populate-options + a common gain bus (§5); compare BW/steps/noise. |
 | **Pulser**: push-pull vs single-FET; 5 V enough?; ring-down | Pulser bench with both fitted + HV-rail select + damping options (§6). |
 | **TX drive source** (PIC HS-PWM vs RP2354 PIO) | JP1 drive-select (as DesignA) — try both. |

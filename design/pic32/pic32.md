@@ -102,4 +102,6 @@ a time.
   [kelu124/pic32arick](https://github.com/kelu124/pic32arick).
 - Off-center friction-fit ICSP header:
   [microchip pic32ak1216gc41064-gpdim-demo](https://github.com/microchip-pic-avr-examples/pic32ak1216gc41064-gpdim-demo).
-- PIC32/dsPIC Flash Programming Spec (DS60001145); XC-DSC docs (DS50003918/19).
+- **PIC32AK Flash Programming Spec DS70005583** (mirrored in `pdfs/datasheets/`, with
+  `.md` sibling) — the family-specific ICSP/LVP entry sequence + timing; full datasheet
+  **DS70005592** (also mirrored). XC-DSC docs (DS50003918/19).

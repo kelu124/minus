@@ -157,12 +157,8 @@ between firing lines.** Adopts the **pic32arick 3-op-amp chain** — all three o
   ~−3.7 dB at 20 MHz Nyquist) into a **PIC32A 12-bit 40 Msps ADC** channel (on-die — no
   external ADC).
 - **Why a digipot, not a DAC:** gain lives in the **resistor ratio**; the digipot *is*
-  the gain resistor. (A DAC voltage only sets gain in a true VGA/multiplier.)
-
-- **Why a digipot, not a DAC:** op-amp gain lives in the **resistor ratio**, so the
-  right primitive is a **digitally-controlled resistor** (MCP4131 digipot / MDAC) in the
-  feedback path — a DAC *voltage* only sets gain in a true VGA/multiplier. Firmware
-  writes the gain code between lines (fast enough; gain is static within a line).
+  the gain resistor. Firmware writes the code once per line (static within a line). A DAC
+  *voltage* only sets gain in a true VGA/multiplier.
 - **Capture:** ≤ ~150 µs @ 20 Msps (6 KB of the PIC's 8 KB SRAM); PIC bursts the A-line
   to RP2354 over SPI.
 - **Cheaper alternative:** a resistor bank + analog mux (74HC4052) gives 3–4 discrete
@@ -170,6 +166,45 @@ between firing lines.** Adopts the **pic32arick 3-op-amp chain** — all three o
 - **Optional LNA (A3a):** the PIC op-amps are general-purpose; if weak-echo SNR limits
   the demo, add a fixed low-noise LNA first stage (LMH6629/ADA4898-1/OPA847 ~$5). Omitted
   in the cheapest build.
+
+### 5a. ADC input conditioning (single-supply — critical)
+
+The PIC32A runs on **one 3.0–3.6 V rail**, so its op-amps and ADC **cannot see < 0 V**.
+Ultrasound RF is 0-centered (≈ ±2 V raw), so it must be **biased to mid-rail and scaled**
+to fit; never fed in bipolar.
+
+- **ADC range (single-ended, VREF = AVDD ≈ 3.3 V): 0 → VREF**, 12-bit → **LSB ≈ 0.8 mV**.
+  Use **single-ended**: this ADC's *differential* mode is limited (~±VREF/4 per the
+  dsPIC33A docs — verify), so single-ended is the **larger** window. Pins must stay
+  0–3.3 V (ESD clamps conduct beyond → damage + long recovery).
+- **Bias to VREF/2 ≈ 1.65 V** (code ≈ 2048): **OA3** supplies this mid-rail reference to
+  the gain-stage inputs so the output centres at 1.65 V and swings ±.
+- **AC-couple** the front-end into the op-amp (series cap + mid-rail bias); set the
+  high-pass corner **< ~100 kHz** so 3–4 MHz passes flat and DC/pulser offset is blocked.
+- **Fit the swing with headroom:** target **~2.6–2.8 Vpp** (≈ ±1.3–1.5 V around 1.65 V),
+  staying ~0.2–0.3 V off each rail (op-amp output limit + ADC non-linearity near rails).
+  ⇒ a raw **±2 V (4 Vpp) is too big** — set the gain so the **largest echo of interest
+  ≈ ±1.4 V**, not the transducer's raw peak.
+- **Clamp for overrange:** MD0100 T/R + a diode limiter to the rails at the ADC/op-amp
+  node keeps TX leakage / strong near-field spikes inside 0–3.3 V.
+- **Auto-range:** the per-line digipot gain doubles as the fit-to-ADC control — fire →
+  read peak code → back off a step if near full-scale → refire (RP2354/host loop).
+
+### 5b. Acquisition tightly coupled to TX (hardware trigger)
+
+Because the **PIC HS-PWM that drives the pulser can also emit the ADC trigger** off the
+**same counter**, acquisition is phase-locked to the first pulse edge with **~2.5 ns
+resolution and zero firmware jitter**:
+
+- **PWM-generated ADC trigger (default):** set the PWM generator's trigger-compare to the
+  count of the first pulser edge (t = 0), or add a programmable delay to blank the TX
+  artifact / set a near-field start. Same counter ⇒ cycle-accurate.
+- **PTG** (Peripheral Trigger Generator) sequences *fire burst → wait → trigger ADC* for
+  coded-excitation bursts; **ADC window mode** can gate the acquisition from PWM/PTG.
+- **Requires PIC-owns-TX** (JP1 → PIC HS-PWM) for the tightest coupling — TX + ADC share
+  the PIC's timebase. If RP2354 owns TX, route its pulse-start into the **PIC ADC external
+  trigger (TRIG)** — still hardware, but crosses a chip boundary (added delay/jitter). So
+  **PIC-HS-PWM-owns-TX is the recommended JP1 default** for coupled acquisition.
 
 ## 6. Power & clocks
 

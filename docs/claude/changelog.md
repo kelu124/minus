@@ -8,7 +8,11 @@ the sha.
 
 ## Pending
 
-- (none)
+- Mirror the **full PIC32AK datasheet (DS70005592, 36 MB)** + **Flash Programming Spec
+  (DS70005583)** into `pdfs/datasheets/` with `.md` siblings; index them.
+- Document ADC input conditioning + TX↔ADC hardware trigger: DesignA §5a/§5b, pic32
+  §4/§3d facts, requirements **A5** (single-supply mid-rail bias/clamp/~2.8 Vpp) + **C1c**
+  (hardware-coupled ADC trigger via HS-PWM/PTG), devkit derisk-map rows. Tidy dup bullet.
 
 ## Committed
 

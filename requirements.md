@@ -187,6 +187,14 @@ see the **anti-requirements in §19**.
   gain) — sets the noise floor for weak echoes (esp. with a low-voltage pulser).
   Optional; add if op-amp-input noise limits SNR.
 - **A4 [S]** Anti-alias filtering matched to the ADC rate and transducer band.
+- **A5 [M]** **Single-supply input conditioning.** The ADC is single-supply
+  (0 → VREF ≈ 3.3 V, no negative input), so the 0-centred RF (≈ ±2 V raw) shall be
+  **AC-coupled, biased to mid-rail (VREF/2 ≈ 1.65 V)**, and **scaled so the largest echo
+  of interest fits ~2.6–2.8 Vpp** with rail headroom — never fed bipolar. A **mid-rail
+  bias buffer** provides the reference; an **overrange clamp** at the ADC/op-amp node keeps
+  pins within 0–VREF. Prefer **single-ended** (this ADC's differential range is limited).
+  Per-line gain (A3/F6) doubles as the fit-to-ADC / auto-range control. See
+  [`design/designA/README.md`](design/designA/README.md) §5a.
 
 ## 8. Transmit / pulser (T)
 
@@ -247,6 +255,14 @@ see the **anti-requirements in §19**.
 - **C1b [M]** **Fast, steady acquisition:** the controller shall capture the external
   ADC (ADEC) as a **continuous, gap-free** stream at the full P3 sample rate into RAM
   (**PIO + DMA**), sustaining one full acquisition line (D2) without dropped samples.
+- **C1c [M]** **Acquisition tightly coupled to TX (hardware trigger):** the ADC
+  acquisition start shall be triggered **in hardware, off the same timebase as the pulser
+  first edge** — not by software/interrupt — for phase-locked, low-jitter capture with a
+  programmable pre-delay (blank TX artifact / set near-field start). On the PIC32A route
+  this is native: the **HS-PWM that drives the pulser also emits the ADC trigger** (same
+  counter), with **PTG** for coded-burst sequences (DesignA §5b) — which favours the
+  **PIC-owns-TX** JP1 setting (T4a). On the RP2350-only route, the PIO pulse-start shall
+  hardware-trigger the ADC likewise.
 - **C2 [M]** Host interface: **USB** on the RP2350's native USB, via an **on-board
   USB connector (USB-C preferred)**, presenting a documented command/data protocol.
 - **C3 [M]** A **Python** host API/reference client shall configure acquisitions and

@@ -10,6 +10,8 @@ Datasheets / app-notes for candidate ICs (esp. pulser options — see
 | `AN-H53_HV-pulser-circuits.pdf` | Microchip AN-H53 | HV pulser circuit app note (MD1210/MD1213). |
 | `TUSS4470_AFE.pdf` | TI TUSS4470 | Integrated single-channel AFE (TX H-bridge + LNA + log-amp + envelope), 30 kHz–1 MHz. |
 | `PIC32AK1216GC41064-family-product-brief-DS70005582.pdf` | Microchip PIC32AK…GC41064 family | 200 MHz PIC32A MCU (FPU+DSP) with **2× 12-bit 40 Msps ADC**, **3× 100 MHz rail-to-rail op-amps**, 3 comparators + 12-bit DACs, HS PWM. Concept: pair with RP2350 as the analog capture engine → `design/pic32/`. |
+| `PIC32AK1216GC41064-family-datasheet-DS70005592.pdf` | Microchip PIC32AK…GC41064 family | **Full datasheet** (DS70005592) — ADC input range/VREF, op-amp specs, HS-PWM/PTG ADC triggering, pinouts, electrical. The authoritative reference for `design/pic32/` + DesignA. |
+| `PIC32AK1216GC41064-family-flash-programming-spec-DS70005583.pdf` | Microchip PIC32AK…GC41064 family | Flash Programming Spec (DS70005583) — ICSP/LVP entry sequence + timing (for the RP2354→PIC bit-bang programmer and PICkit); see `design/pic32/pic32.md`. |
 
 Not mirrored (host blocked download — links):
 - **TC6320** (Microchip HV P/N MOSFET pair, ±100 V, 2 A) — covered in MD1213DB1; product page: microchip.com/TC6320.
