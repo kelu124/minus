@@ -8,8 +8,9 @@ broken-out, and modular** so every contested front-end / pulser / gain decision 
 ## 1. Philosophy — measure, don't guess
 
 Space and BOM are *not* constraints here. So every design choice that is currently an
-open question becomes either a **swappable daughter-card**, a **populate-option**, or a
-**jumper**, and every analog node gets a **test point / SMA tap**. The devkit's job is to
+open question becomes either an **on-board block behind a jumper**, a **populate-option**,
+or a **routing jumper** — one board, no daughter-cards — and every analog node gets a
+**test point / SMA tap**. The devkit's job is to
 turn the open items in [`../designA`](../designA/README.md) §7 and
 [`../pic32`](../pic32/README.md) §5 into **bench measurements**.
 
@@ -41,62 +42,67 @@ turn the open items in [`../designA`](../designA/README.md) §7 and
 - **Everything broken out:** all PIC32 GPIO/analog/op-amp/HS-PWM pins and RP2354
   GPIO/PIO to **labelled 0.1″ headers** (classic dev-board fan-out).
 
-## 4. Modular RX front-end (the key derisk)
+## 4. On-board RX front-ends, jumper-selected (the key derisk)
 
-A **standard mezzanine header** carries the RX path so daughter-cards swap in seconds.
-The mainboard has jumpers to choose the **ADC-input source** = { PIC op-amp out /
-mezzanine out / direct }, and to route the PIC op-amp pins (OA1/OA2 in/out) to the header.
+**No mezzanine / daughter-cards.** All front-end blocks live on the **one board**,
+populated in parallel; a pair of jumpers routes exactly **one path** at a time from a
+common **RX node** (after the T/R) to a common **ADC node** (the PIC32 ADC input).
 
-**Mezzanine bus (one 2×… header):** `TRANSDUCER_IN, GND, +5V, +3V3(AVDD), ADC_OUT,
-I²C(SDA/SCL), SPI(optional), VGAIN(analog), TXGATE, TRIG, 2× spare`.
+**Routing scheme** — each block taps the RX node through its own **input jumper**
+(`JIN_*`) and drives the ADC node through its own **output jumper** (`JOUT_*`). Fit one
+`JIN`+`JOUT` shunt pair to select a path; the unused blocks are left un-jumpered (isolated,
+no loading). FE-0 is a single RX→ADC link.
 
 ```mermaid
 flowchart LR
   PZ["transducer / SMA inject"] --> TR["T/R (populate:<br/>MD0100 / BAV99)"]
-  TR --> MEZ{{"mezzanine header<br/>(swap FE-0…FE-4)"}}
-  MEZ --> JSRC{"ADC-src jumper"}
-  subgraph PIC["PIC32AK (64-pin)"]
-    OA["on-die op-amps<br/>OA1 fixed / OA2 digipot"]
-    ADC["12-bit 40 Msps ADC"]
-    OA --> ADC
-  end
-  JSRC -->|"via PIC op-amps"| OA
-  JSRC -->|"direct / ext-VGA out"| ADC
-  GAINBUS["gain bus: I²C · SPI · VGAIN"] -.-> MEZ
-  GAINBUS -.-> OA
+  TR --> RXN(["RX node"])
+  RXN -->|JIN_0| ADCN
+  RXN -->|JIN_A| OA["PIC op-amps<br/>OA1 fixed / OA2 digipot"]
+  RXN -->|JIN_B| LNA["ext LNA<br/>AD8432/LMH6629"]
+  RXN -->|JIN_C| V1["AD8331 LNA+VGA"]
+  RXN -->|JIN_D| V2["AD8338 VGA"]
+  LNA -->|JIN_B2| OA
+  OA -->|JOUT_A| ADCN
+  V1 -->|JOUT_C| ADCN
+  V2 -->|JOUT_D| ADCN
+  LNA -->|JOUT_B| ADCN
+  ADCN(["ADC node"]) --> ADC["PIC32 ADC<br/>12-bit 40 Msps"]
   ADC -->|"SPI + RDY"| RP["RP2354A<br/>USB-C · DSP · programmer"]
-  RP -->|"TRIG / JP1"| PLS["pulser bench<br/>push-pull or single-FET"]
-  RP -->|"ICSP"| PIC
+  RP -->|"TRIG / JP1"| PLS["pulser (push-pull / single-FET)"]
+  RP -->|ICSP| ADC
   PLS --> PZ
-  TAPS["SMA taps + test points at every node"]:::note
+  GAIN["gain bus (§5): I²C · SPI · VGAIN"]:::note
   classDef note fill:#eeeeee,stroke:#999999,stroke-dasharray:3 3;
 ```
 
-Front-end cards (same connector, compare on the same phantom/target):
+Selectable paths (all on the one board; pick with the `JIN`/`JOUT` shunts):
 
-| Card | Path | Tests |
-|------|------|-------|
-| **FE-0 straight** | transducer → T/R → ADC (no gain) | baseline noise floor / dynamic range |
-| **FE-A PIC-opamp** | T/R → PIC OA1(fixed) → OA2(digipot) → ADC | the DesignA path |
-| **FE-B LNA + PIC-opamp** | T/R → **LNA (AD8432 / LMH6629 / OPA847)** → PIC OA → ADC | does an LNA lift SNR? |
-| **FE-C ext VGA** | T/R → **AD8331** (LNA+VGA) → ADC (bypass PIC opamps) | proven ultrasound VGA reference |
-| **FE-D ext VGA LP** | T/R → **AD8338** → ADC | low-power/cheaper VGA |
+| Path | JIN / JOUT | Route | Tests |
+|------|-----------|-------|-------|
+| **FE-0 straight** | JIN_0 | RX → ADC (no gain) | baseline noise floor / dynamic range |
+| **FE-A PIC-opamp** | JIN_A / JOUT_A | RX → PIC OA1(fixed) → OA2(digipot) → ADC | the DesignA path |
+| **FE-B LNA + PIC-opamp** | JIN_B / JIN_B2 / JOUT_A | RX → **LNA** → PIC OA → ADC | does an LNA lift SNR? |
+| **FE-C ext VGA** | JIN_C / JOUT_C | RX → **AD8331** → ADC (bypass PIC opamps) | proven ultrasound VGA reference |
+| **FE-D ext VGA LP** | JIN_D / JOUT_D | RX → **AD8338** → ADC | low-power/cheaper VGA |
 
-> This is exactly "different front ends on top of the PIC32 op-amps": FE-B pre-conditions
-> *before* the PIC op-amps; FE-C/D *bypass* them; FE-0 skips gain entirely — all measured
-> against FE-A.
+> This is "different front ends on top of the PIC32 op-amps" without connectors: FE-B feeds
+> the PIC op-amps through an external LNA; FE-C/D bypass them; FE-0 skips gain — each is a
+> jumper choice, measured against FE-A on the same target. Keep the parallel input taps
+> **short** and place `JIN` links right at the RX node to minimise stubs on the RF path.
 
 ## 5. Gain-control options (populate + jumper)
 
-On the FE-A card and mainboard, make the gain-set element selectable so we can compare:
+The gain-set element for the PIC-op-amp path (FE-A) is a **jumper-selected** choice among
+several on-board options, so we can compare:
 - **MCP4531-103** digipot (**I²C**) — DesignA default.
 - **MCP4131** digipot (**SPI**) — compare bandwidth/wiper parasitics.
 - **Resistor bank + 74HC4052** analog mux — stepped gain, cheapest.
 - **VGA Vgain** drive for FE-C/D: from a small **DAC (MCP4728)** *or* **RP2354 PWM+RC** —
   compare a real control-voltage VGA vs the digipot approach.
 
-Pick via a jumper block; bring `VGAIN`, `SDA/SCL`, `SPI` to the mezzanine so any card can
-use any method.
+A **jumper block** selects which device sits in the OA2 gain node / drives the VGA `VGAIN`
+pin; the I²C, SPI and `VGAIN` nets run to all candidates on the one board.
 
 ## 6. Pulser bench (populate-options)
 
@@ -144,9 +150,11 @@ spin:
 ## 10. Path back to DesignA
 
 Once the bench picks winners (LNA yes/no, which gain method, push-pull vs single, HV
-level, 48- vs 64-pin, SRAM tier), **down-spec** to the cheap DesignA: one FE, one gain
-method, minimal pulser, 48-pin `3208`, small board. The devkit's schematic blocks are
-the library DesignA draws from.
+level, 48- vs 64-pin, SRAM tier), **DesignA is the devkit with the losing blocks removed**
+— keep the winning FE path (drop the other `JIN`/`JOUT` links and their parts), one gain
+method, minimal pulser, 48-pin `3208`, small board. Because it's one board with jumpers
+(not daughter-cards), down-spec = **depopulate + hard-wire the chosen jumpers**; the
+schematic blocks carry straight over.
 
 ## Links
 - Target product: [`../designA/README.md`](../designA/README.md) · concept/trade study:

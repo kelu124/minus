@@ -8,7 +8,9 @@ the sha.
 
 ## Pending
 
-- (none)
+- `design/devkit/`: drop mezzanine/daughter-cards → **single board, jumper-selected**
+  RX paths (JIN_*/JOUT_* shunts route one of FE-0…FE-D from RX node to ADC node);
+  gain-control via on-board jumper block; down-spec to DesignA = depopulate losers.
 
 ## Committed
 

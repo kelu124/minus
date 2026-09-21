@@ -25,7 +25,7 @@ Datasheets and papers (not editable design files) go in
 | `open-echo/` | Open Echo TUSS4470 shield | KiCad sch/pcb/pro + gerbers + BOM |
 | `pic32/` | **Concept** (no design files yet) | Thoughts on pairing a Microchip PIC32A (PIC32AK…GC41064: 40 Msps ADC + 100 MHz op-amps) with the RP2350 as an alternative acquisition architecture. |
 | `designA/` | **Concept spec** (no design files yet) | Cheapest *minus* build: RP2354A + PIC32A, 5 V push-pull pulser, digipot-set gain; active-IC BOM ≈ $4.7 / board ≈ $6. |
-| `devkit/` | **Concept spec** (no design files yet) | DesignA-DK: large, fully broken-out RP2354A + PIC32AK **derisking board** — swappable RX front-ends (FE-0…FE-4), gain-control options, pulser bench, SMA taps. |
+| `devkit/` | **Concept spec** (no design files yet) | DesignA-DK: large, fully broken-out RP2354A + PIC32AK **derisking board** — one board, jumper-selected RX front-ends (FE-0…FE-D), gain-control options, pulser bench, SMA taps. |
 
 Each has a `SOURCE.md` with the upstream repo URL + commit + retrieval date.
 More to come (IUP if released, and the leads in `docs/claude/TODO.md`).
