@@ -8,7 +8,11 @@ the sha.
 
 ## Pending
 
-- (none)
+- Add `design/devkit/` — **DesignA-DK** derisking board: RP2354A + PIC32AK6416 (64-pin/
+  16KB), fully broken out, swappable RX front-ends (FE-0 straight … FE-B LNA+opamp …
+  FE-C/D ext VGA), gain-control options (I²C/SPI digipot, resistor-mux, VGA Vgain), pulser
+  bench (push-pull/single-FET/ext-HV), split rails, SMA taps + loopback self-test.
+  Derisk-priority + parallel vendor-eval (Curiosity+GP-DIM, Pico2). Linked from design/README.
 
 ## Committed
 
