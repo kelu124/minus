@@ -8,14 +8,14 @@ the sha.
 
 ## Pending
 
-- Add `design/devkit/review-findings.md` — consolidated 4-agent flaw review (severity-ranked
-  + fix tracker). Apply confirmed datasheet corrections across pic32/designA/devkit/pcb-brief
-  (VREF=AVDD/no ext pin, op-amp HP-vs-LP 100/50 MHz + ±3mV, ENOB ~10.5, TC4427A no dead-time
-  /8-pin, pulser edges ~20–30ns). Add pcb-brief §0 "must-fix before layout" (USB-C Rd, MCLR
-  LVP-only, HV interlock, dead-time+JP1 pull-down, AA ~6–8MHz, gain-vs-GBW, 0Ω links, 1 I²C
-  master). New memory `0007-designA-devkit.md` (+INDEX).
+- (none)
 
 ## Committed
+
+- 2026-09-21  c8eb87d  Add `design/devkit/review-findings.md` (4-agent flaw review, ranked +
+  fix tracker); apply datasheet corrections across pic32/designA/devkit/pcb-brief (VREF=AVDD,
+  op-amp HP/LP 100/50 MHz + ±3mV, ENOB ~10.5, TC4427A no dead-time/8-pin, edges ~20–30ns);
+  pcb-brief §0 must-fix-before-layout; memory `0007-designA-devkit.md` (+INDEX).
 
 - 2026-09-21  a05eef6  Add standalone `design/devkit/pcb-brief.md` — one-file PCB-designer
   handoff (overview + mermaid, power/clocks, programming, inter-MCU bus, pulser, jumper-
