@@ -8,11 +8,14 @@ the sha.
 
 ## Pending
 
-- `design/devkit/`: drop mezzanine/daughter-cards → **single board, jumper-selected**
-  RX paths (JIN_*/JOUT_* shunts route one of FE-0…FE-D from RX node to ADC node);
-  gain-control via on-board jumper block; down-spec to DesignA = depopulate losers.
+- (none)
 
 ## Committed
+
+- 2026-09-21  a533a39  `design/devkit/`: single board, **jumper-selected** RX paths
+  (JIN_*/JOUT_* route one of FE-0…FE-D from RX node to ADC node) — no mezzanine/
+  daughter-cards; gain-control via on-board jumper block; down-spec to DesignA =
+  depopulate losers.
 
 - 2026-09-21  dced415  Add `design/devkit/` — **DesignA-DK** derisking board: RP2354A +
   PIC32AK6416 (64-pin/16KB), fully broken out, swappable RX front-ends (FE-0 … FE-C/D ext
