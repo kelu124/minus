@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  SessionStart resume hook (`.claude/hooks/session-resume.sh` + `.claude/settings.json`) and
+  `minus-resume` skill; TODO RESUME HERE moved to the top.
 
 ## Committed
 

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-resume.sh",
+            "timeout": 20,
+            "statusMessage": "minus: loading resume context"
+          }
+        ]
+      }
+    ]
+  }
+}

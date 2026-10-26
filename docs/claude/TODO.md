@@ -5,6 +5,11 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **RESUME HERE:** owner bridges **R53 → 0 Ω** (JP1 already cut; measured MCLR 2.88 V with
+    GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
+    `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping`. If `pic id` still
+    fails, debug `pic_icsp.c` entry timing (scope / slower clock) or compare with the Snap.
+
 - **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
   - ~~Install MPLAB X + XC-DSC~~ done 2026-10-26 (6.35 / 3.31.01); **both firmwares build**.
   - Get an **MPLAB Snap or PICkit Basic** + TC2030-NL cable; flash `firmware/pic32/build/minus_pic.hex`
@@ -14,10 +19,6 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   - First flash: confirm `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F … -M -OL` works (codes verified
     in the installed readme; the option set itself is untested on hardware).
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
-  - **RESUME HERE:** owner bridges **R53 → 0 Ω** (JP1 already cut; measured MCLR 2.88 V with
-    GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
-    `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping`. If `pic id` still
-    fails, debug `pic_icsp.c` entry timing (scope / slower clock) or compare with the Snap.
   - Measure the real R53 / R5 values (board unpowered) and record them in
     `design/devkit/review-findings.md`. Optional: row programming (§3.4) for speed.
   - Step 2: PIC SPI client + ADC capture → RP.
