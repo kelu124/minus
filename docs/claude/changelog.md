@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  RP fw 0.1.3: `pic pins`, `pic mclr low|hiz` diagnostics; first on-hardware run logged
-  (RP ok, `reboot dfu` ok, PIC powered but no ICSP response yet).
+- (none)
 
 ## Committed
+
+- 2026-10-26  5b05ef2  RP fw 0.1.3: `pic pins`, `pic mclr low|hiz` diagnostics; first on-hardware run logged
+  (RP ok, `reboot dfu` ok, PIC powered but no ICSP response yet).
 
 - 2026-10-26  f3ed78a  RP2354 ICSP programmer for the PIC32 (`pic id/image/flash/verify/erase`, `pic_icsp.c`,
   `tools/hex2c.py`, hex embedded at build time); rp fw 0.1.2; README/STEP1/skills/memory/TODO.
