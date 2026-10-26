@@ -6,7 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
-| 2026-10-26 | `550dcb2` | docs: changelog — record previous sha under Committed; add COMMITS.md | Changelog bookkeeping + first version of this file. |
+| 2026-10-26 | `b6aef06` | docs: changelog — record e456800 under Committed; add COMMITS.md | Changelog bookkeeping + first version of this file. |
 | 2026-10-26 | `e456800` | chore(skills): fix kicad-netlist-reading after retrieval test; add minus-commit-log skill | Close the gaps a fresh agent hit when following the KiCad skill; start the commit log the owner asked for. |
 | 2026-10-26 | `1024135` | docs: changelog — record 276750c under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
 | 2026-10-26 | `276750c` | docs(pdfs): add MPLAB X / IPE / MDB user guides with markitdown siblings + index | Keep the Microchip tooling docs greppable next to the PIC32 toolchain work. |

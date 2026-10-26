@@ -18,6 +18,9 @@ value is the one-line purpose and that it survives squashes/rebases as a readabl
 4. Commit 2+3 together as `docs: changelog — record <sha> under Committed`, then push
    (`git push origin main`): the owner wants commits pushed as work progresses.
 
+A commit cannot contain its own sha: the row for the bookkeeping commit itself is written
+at the *next* cycle (or in a tiny follow-up). Never `--amend` after writing a sha into the file.
+
 ## Regenerate / audit
 ```bash
 git log --format='%h %ad %s' --date=short --grep='Co-Authored-By: Claude' --all | head -50
