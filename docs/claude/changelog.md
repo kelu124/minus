@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  STEP1/README/memory 0008: list all Microchip tools that support the PIC32AK1216GC41048
+  (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) from `Device_Support.pdf`.
 
 ## Committed
 

@@ -56,9 +56,15 @@ uses **`ipecmd`**, which ships inside **MPLAB X IDE** (the IPE is a component of
    the `.atpack` is a zip). It holds `xc32/support/PIC32A/h/p32AK1216GC41048.h`, the linker
    script and the config-bit docs; the firmware's register and `#pragma config` names were
    checked against it. MPLAB X can also install it from *Tools → Packs* if you prefer.
-4. **Hardware:** a **PICkit 4/5 or ICD 4/5** on **J1** (Tag-Connect TC2030-NL, Microchip
-   ICSP pinout 1 MCLR · 2 VDD · 3 GND · 4 PGD · 5 PGC · 6 NC). The RP-as-programmer path
-   is step 2; for step 1 the PICkit is needed once to load the PIC.
+4. **Hardware — any of these on J1** (Tag-Connect TC2030-NL, Microchip ICSP pinout
+   1 MCLR · 2 VDD · 3 GND · 4 PGD · 5 PGC · 6 NC). Per Microchip's device-support list
+   (`pdfs/mplab/Device_Support.pdf`, MPLAB X ≥ 6.25) the PIC32AK1216GC41048 is programmable
+   **and** debuggable with: **MPLAB Snap** (cheapest, ~€30, LVP-only — fine, this part is
+   LVP-only anyway), **PICkit Basic** (~€30), **PICkit 4 / 5**, **ICD 4 / 5**, **ICE 4**.
+   Not supported: Atmel-ICE/EDBG/nEDBG tools, PM3. Snap and PICkit Basic do not power the
+   target, so the board must be on USB. The **RP2354 as programmer** (GPIO21/22/24) is step 2:
+   feasible per the programming spec, but keep a Microchip tool as the known-good reference
+   while that code is being written.
 
 Check:
 ```bash
