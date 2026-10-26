@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Add `pdfs/mplab/` (MPLAB X / IPE / MDB / debug-features / device-support guides) with
-  markitdown `.md` siblings + index; pointer from `pdfs/README.md`.
+- (none)
 
 ## Committed
+
+- 2026-10-26  276750c  Add `pdfs/mplab/` (MPLAB X / IPE / MDB / debug-features / device-support guides) with
+  markitdown `.md` siblings + index; pointer from `pdfs/README.md`.
 
 - 2026-10-26  3e33b15  Add `STEP1.md` (board fixes · Ubuntu install · link test); RP CLI `version` /
   `rgb R G B` / `reboot [dfu]` (fw 0.2.0); PIC config pragmas + register names verified against
