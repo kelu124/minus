@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Bench findings persisted (MCLR 2.88 V with GPIO24 low, JP1 cut → R53 must be 0 Ω; resume
-  plan in memory 0008 + TODO); `tools/rpcli.py` added; README/skill bench notes.
+- (none)
 
 ## Committed
+
+- 2026-10-26  872b0df  Bench findings persisted (MCLR 2.88 V with GPIO24 low, JP1 cut → R53 must be 0 Ω; resume
+  plan in memory 0008 + TODO); `tools/rpcli.py` added; README/skill bench notes.
 
 - 2026-10-26  5b05ef2  RP fw 0.1.3: `pic pins`, `pic mclr low|hiz` diagnostics; first on-hardware run logged
   (RP ok, `reboot dfu` ok, PIC powered but no ICSP response yet).
