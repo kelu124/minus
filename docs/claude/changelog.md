@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Programmer decision (Snap / PICkit Basic): ipecmd tool codes from the installed MPLAB X
-  6.35 readme, Makefile default TOOL=SNAP, STEP1 marks MPLAB X installed + udev note.
+- (none)
 
 ## Committed
+
+- 2026-10-26  9638149  Programmer decision (Snap / PICkit Basic): ipecmd tool codes from the installed MPLAB X
+  6.35 readme, Makefile default TOOL=SNAP, STEP1 marks MPLAB X installed + udev note.
 
 - 2026-10-26  678fde8  STEP1/README/memory 0008: list all Microchip tools that support the PIC32AK1216GC41048
   (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) from `Device_Support.pdf`.

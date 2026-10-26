@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-26 | `9638149` | chore: programmer = Snap/PICkit Basic; ipecmd tool codes from installed MPLAB X 6.35; udev note | Owner chose a cheap programmer; wire the right ipecmd code into the Makefile and docs. |
 | 2026-10-26 | `678fde8` | docs: list supported programmers for the PIC32AK (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) | Answer "can I use something other than a PICkit?" from the MPLAB device-support list; cheaper Snap / PICkit Basic are valid. |
 | 2026-10-26 | `ebb3e15` | docs(commit-log): correct sha of b6aef06 row; note the self-sha rule | Fix the one wrong sha produced by an amend; document why the newest row always lags one commit. |
 | 2026-10-26 | `b6aef06` | docs: changelog — record e456800 under Committed; add COMMITS.md | Changelog bookkeeping + first version of this file. |
