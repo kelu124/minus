@@ -8,11 +8,13 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Skills: `kicad-netlist-reading` fixed after a subagent retrieval test (passive-tracing
-  step, path note, examples labelled); new `minus-commit-log` skill with `COMMITS.md` (every Claude
-  commit + purpose).
+- (none)
 
 ## Committed
+
+- 2026-10-26  e456800  Skills: `kicad-netlist-reading` fixed after a subagent retrieval test (passive-tracing
+  step, path note, examples labelled); new `minus-commit-log` skill with `COMMITS.md` (every Claude
+  commit + purpose).
 
 - 2026-10-26  276750c  Add `pdfs/mplab/` (MPLAB X / IPE / MDB / debug-features / device-support guides) with
   markitdown `.md` siblings + index; pointer from `pdfs/README.md`.

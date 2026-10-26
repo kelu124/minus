@@ -1,0 +1,66 @@
+# Claude commits in the minus repo
+
+Newest first. One row per commit Claude authored (all carry `Co-Authored-By: Claude`).
+Maintained by the `minus-commit-log` skill on every commit; audit with
+`git log --format='%h %ad %s' --date=short --grep='Co-Authored-By: Claude'`.
+
+| Date | Commit | Subject | Why / what it enabled |
+|------|--------|---------|------------------------|
+| 2026-10-26 | `550dcb2` | docs: changelog — record previous sha under Committed; add COMMITS.md | Changelog bookkeeping + first version of this file. |
+| 2026-10-26 | `e456800` | chore(skills): fix kicad-netlist-reading after retrieval test; add minus-commit-log skill | Close the gaps a fresh agent hit when following the KiCad skill; start the commit log the owner asked for. |
+| 2026-10-26 | `1024135` | docs: changelog — record 276750c under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-10-26 | `276750c` | docs(pdfs): add MPLAB X / IPE / MDB user guides with markitdown siblings + index | Keep the Microchip tooling docs greppable next to the PIC32 toolchain work. |
+| 2026-10-26 | `157de5a` | docs: changelog — record 3e33b15 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-10-26 | `3e33b15` | feat(firmware): STEP1.md, RP CLI (version/rgb/reboot dfu), semver rule, Makefiles, repo skills | Give the owner a step-by-step bring-up (STEP1.md), the requested CLI commands, the firmware semver rule, make-based builds, and reusable skills. |
+| 2026-10-26 | `7c9480f` | docs: changelog — record 67576a0 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-10-26 | `67576a0` | feat: devkit KiCad project (minUS_10102026) + first inter-MCU link firmware | Bring the as-built devkit into the repo and start firmware: netlist-verified pin map, RP2354A link-test firmware (builds), PIC32 UART source, flaw list. |
+| 2026-09-21 | `9575d82` | docs: changelog — record c8eb87d under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `c8eb87d` | docs: save design review findings + apply datasheet corrections across devkit | 2026-09-21 four-agent flaw review of the devkit concept; datasheet corrections (VREF=AVDD, op-amp specs, TC4427A). |
+| 2026-09-21 | `7dd467a` | docs: changelog — record a05eef6 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `a05eef6` | docs(devkit): add standalone PCB design brief for handoff | One-file PCB brief a designer can work from. |
+| 2026-09-21 | `84f635e` | docs: changelog — record 9ba7a33 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `9ba7a33` | docs(devkit): add shareable PCB designer brief (B1–B11) | (see docs/claude/changelog.md) |
+| 2026-09-21 | `e19c11b` | docs: changelog — record 4a272f2 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `4a272f2` | docs: ADC input conditioning + TX-coupled acquisition + PIC32AK datasheet | (see docs/claude/changelog.md) |
+| 2026-09-21 | `fcd8315` | docs: changelog — record a533a39 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `a533a39` | design(devkit): single-board, jumper-selected paths (no mezzanine) | (see docs/claude/changelog.md) |
+| 2026-09-21 | `06681ee` | docs: changelog — record dced415 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-21 | `dced415` | design: add DesignA-DK devkit (derisking board) spec | (see docs/claude/changelog.md) |
+| 2026-09-18 | `540bb80` | docs: changelog — record d66d17c under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `d66d17c` | design(A): Ubuntu CLI toolchain + reuse of kelu124/pic32arick blocks | (see docs/claude/changelog.md) |
+| 2026-09-18 | `9c6644b` | docs: changelog — record d663709 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `d663709` | design(A): PIC32 direct-flash (ICSP), pulser drive-select jumper, mermaid | (see docs/claude/changelog.md) |
+| 2026-09-18 | `9e3a84f` | docs: changelog — record 75ad246 (DesignA) under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `75ad246` | design: add DesignA — cheapest RP2354A + PIC32A pulse-echo badge | (see docs/claude/changelog.md) |
+| 2026-09-18 | `25ca713` | docs: changelog — record f219638 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `f219638` | docs: LCSC prices for gain/LNA ICs (2026-09-18) | (see docs/claude/changelog.md) |
+| 2026-09-18 | `61feef4` | docs: changelog — record 90cdf6a under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `90cdf6a` | docs(afe): LNA pairing for VGA-only parts (VCA810/AD603) | (see docs/claude/changelog.md) |
+| 2026-09-18 | `e02915e` | docs: changelog — record 160c089 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `160c089` | docs: survey of RX gain ICs (LNA + variable gain / AFE), 1→8/16 channel | (see docs/claude/changelog.md) |
+| 2026-09-18 | `639216a` | docs: changelog — record 0bbbd34 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `0bbbd34` | docs(pic32): confirm RP2354A internal flash + BOOTSEL wiring | (see docs/claude/changelog.md) |
+| 2026-09-18 | `52fc147` | docs: changelog — record 3b3fba3 under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `3b3fba3` | docs(pic32): LCSC/JLCPCB availability check + footprint guidance | (see docs/claude/changelog.md) |
+| 2026-09-18 | `1e008de` | docs: changelog — record bbd048a under Committed | Changelog bookkeeping: move the previous commit from Pending to Committed with its sha. |
+| 2026-09-18 | `bbd048a` | docs: workshop activities, anti-requirements, PIC32A concept, PDF→md rule | (see docs/claude/changelog.md) |
+| 2026-09-17 | `6a38407` | docs: rewrite root README as a project overview for visitors | (see docs/claude/changelog.md) |
+| 2026-09-17 | `4b7c2c6` | docs: session-close log note + changelog catch-up | (see docs/claude/changelog.md) |
+| 2026-09-17 | `828d364` | docs: record cheaper 8-bit ADC candidates to verify on LCSC (ADEC) | (see docs/claude/changelog.md) |
+| 2026-09-17 | `4c6f5cb` | docs: real LCSC prices+URLs+stock in options; ADC bottleneck; TXRX-LINK question | (see docs/claude/changelog.md) |
+| 2026-09-17 | `bc967b2` | docs: options.md trade study + priced CSV; gain alternatives; 5V/±5V HV | (see docs/claude/changelog.md) |
+| 2026-09-17 | `bd81776` | docs: requirements — I2C OLED + Raspberry Pi 2x20 standardized extension header | (see docs/claude/changelog.md) |
+| 2026-09-17 | `1078423` | docs: requirements — friendly-layout, test points, extension + external-HV headers | (see docs/claude/changelog.md) |
+| 2026-09-17 | `1a6975b` | docs: requirements — plan OSHWA cert + reserve silkscreen for the mark/UID | (see docs/claude/changelog.md) |
+| 2026-09-17 | `785d3c0` | docs: requirements v0.3 refinements — bipolar-if-cheap-rail, on-device DSP, RGB LED | (see docs/claude/changelog.md) |
+| 2026-09-17 | `d7f7b79` | docs: requirements v0.3 — NDT workshop badge, 3-4 MHz unipolar, coded excitation | (see docs/claude/changelog.md) |
+| 2026-09-17 | `b21abac` | docs: requirements v0.2 — RP2350 MCU, on-board USB-C, small/cheap/simple | (see docs/claude/changelog.md) |
+| 2026-09-17 | `6b64555` | docs: draft requirements.md (v0.1) | (see docs/claude/changelog.md) |
+| 2026-09-17 | `0dea95f` | analysis: routes + light-BOM pulsers; per-system 1-5 MHz + sampling attrs | (see docs/claude/changelog.md) |
+| 2026-09-17 | `622bb3d` | survey: by-IC cross-ref (MSP430FR5043, TUSS4470) + Open Echo + design files | (see docs/claude/changelog.md) |
+| 2026-09-17 | `6e0b07f` | survey: SIG-WUS OXP catalog data, FloPatch detail, BioGAP shield | (see docs/claude/changelog.md) |
+| 2026-09-17 | `25b8e55` | survey: design files + Weik 2026 review + SIG-WUS, 4 new sheets | (see docs/claude/changelog.md) |
+| 2026-09-17 | `0dd9e66` | survey: add IUP + MEMS-US, literature review, pdfs/ & design/ | (see docs/claude/changelog.md) |
+| 2026-09-17 | `bab55c6` | survey: add kelu124-family + AFE-IC designs, scope 64+ out | (see docs/claude/changelog.md) |
+| 2026-09-17 | `82c24e3` | survey: add lightweight ultrasound systems datasheets | (see docs/claude/changelog.md) |
+| 2026-09-17 | `beffd20` | docs: set up Claude documentation & memory system | (see docs/claude/changelog.md) |
