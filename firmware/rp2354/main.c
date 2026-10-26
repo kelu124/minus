@@ -161,12 +161,43 @@ static bool pic_verify_image(unsigned *bad_words) {
 
 static void cmd_pic(const char *arg) {
     if (!arg || !*arg || !strcmp(arg, "help")) {
-        printf("pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
+        printf("pic pins    read PGC/PGD/MCLR/RDY/UART_RX levels (who drives what)\n"
+               "pic mclr low|hiz   hold the MCLR tap low for a meter check / release it\n"
+               "pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
                "pic image   describe the PIC image embedded in this firmware\n"
                "pic flash   bulk erase + program + verify the embedded image, then run the PIC\n"
                "pic verify  compare PIC flash with the embedded image (no write)\n"
                "pic erase   bulk erase only (PIC is blank afterwards)\n"
                "needs: R53 = 0R, JP1 cut (C31 off MCLR), nothing plugged on J1\n");
+        return;
+    }
+    if (!strcmp(arg, "pins")) {
+        // read every PIC-side line as a plain input (no pulls): tells us what the board holds them at
+        const struct { const char *n; uint pin; } L[] = {{"PGC1/GPIO21", MINUS_PIN_PIC_PGC}, {"PGD1/GPIO22", MINUS_PIN_PIC_PGD},
+            {"MCLR/GPIO24", MINUS_PIN_PIC_MCLR}, {"RDY/GPIO7", MINUS_PIN_RDY}, {"UART_RX/GPIO17", MINUS_PIN_UART_RX}};
+        for (unsigned i = 0; i < sizeof L / sizeof L[0]; i++) {
+            bool was_out = gpio_get_dir(L[i].pin) == GPIO_OUT; uint fn = gpio_get_function(L[i].pin);
+            gpio_set_function(L[i].pin, GPIO_FUNC_SIO); gpio_set_dir(L[i].pin, GPIO_IN); gpio_disable_pulls(L[i].pin);
+            busy_wait_us(50); int v = gpio_get(L[i].pin);
+            gpio_set_pulls(L[i].pin, true, false); busy_wait_us(50); int vu = gpio_get(L[i].pin);
+            gpio_set_pulls(L[i].pin, false, true); busy_wait_us(50); int vd = gpio_get(L[i].pin);
+            gpio_disable_pulls(L[i].pin);
+            printf("  %-15s level=%d  with pull-up=%d  with pull-down=%d  -> %s\n", L[i].n, v, vu, vd,
+                   (vu == vd) ? (vu ? "driven HIGH externally" : "driven LOW externally") : "floating (nothing drives it)");
+            if (was_out) gpio_set_dir(L[i].pin, GPIO_OUT);
+            gpio_set_function(L[i].pin, fn);
+        }
+        printf("expect: PGC/PGD driven HIGH by the PIC's internal pull-ups when it is powered and erased; MCLR HIGH via R5.\n");
+        return;
+    }
+    if (!strncmp(arg, "mclr", 4)) {
+        const char *m = arg[4] == ' ' ? arg + 5 : "";
+        if (!strcmp(m, "low")) {
+            gpio_init(MINUS_PIN_PIC_MCLR); gpio_put(MINUS_PIN_PIC_MCLR, 0); gpio_set_dir(MINUS_PIN_PIC_MCLR, GPIO_OUT);
+            printf("GPIO24 driving LOW. Measure J1 pin 1 (PIC MCLR): must be < 0.66 V (stock R53 4k7 gives ~1.05 V). 'pic mclr hiz' to release.\n");
+        } else if (!strcmp(m, "hiz")) {
+            gpio_set_dir(MINUS_PIN_PIC_MCLR, GPIO_IN); gpio_disable_pulls(MINUS_PIN_PIC_MCLR); printf("GPIO24 released (Hi-Z)\n");
+        } else printf("usage: pic mclr low | hiz\n");
         return;
     }
     if (!strcmp(arg, "image")) {

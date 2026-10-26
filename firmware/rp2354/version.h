@@ -3,7 +3,7 @@
 #define FW_NAME           "minus-devkit-rp2354"
 #define FW_VERSION_MAJOR  0
 #define FW_VERSION_MINOR  1
-#define FW_VERSION_PATCH  2
+#define FW_VERSION_PATCH  3
 #define PROTO_VERSION     1   // RP<->PIC ASCII link protocol (PING/PONG/ID?/TRIG?)
 #define _FW_STR(x) #x
 #define FW_STR(x) _FW_STR(x)

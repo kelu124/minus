@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  RP fw 0.1.3: `pic pins`, `pic mclr low|hiz` diagnostics; first on-hardware run logged
+  (RP ok, `reboot dfu` ok, PIC powered but no ICSP response yet).
 
 ## Committed
 
