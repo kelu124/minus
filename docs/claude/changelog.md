@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-10-26  ebb3e15  Commit-log skill: fix sha row, add self-sha rule.
+
 - 2026-10-26  e456800  Skills: `kicad-netlist-reading` fixed after a subagent retrieval test (passive-tracing
   step, path note, examples labelled); new `minus-commit-log` skill with `COMMITS.md` (every Claude
   commit + purpose).
