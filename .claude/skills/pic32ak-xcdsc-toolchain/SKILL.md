@@ -18,7 +18,7 @@ Flashing uses **`ipecmd`**, shipped inside **MPLAB X IDE** (`/opt/microchip/mpla
 | Compiler | `xc-dsc-gcc -mcpu=32AK1216GC41048 -mdfp=<pack>/xc32 …`, hex via `xc-dsc-bin2hex` |
 | DFP without MPLAB X | `curl -o p.atpack https://packs.download.microchip.com/Microchip.PIC32AK-GC_DFP.<ver>.atpack && unzip p.atpack -d <pack>` |
 | Header / linker / config docs | `<pack>/xc32/support/PIC32A/{h,gld}/p32AK…`, `<pack>/xc32/docs/config_docs/32AK….html` |
-| Flash with PICkit | `ipecmd.sh -TPPK5 -P32AK1216GC41048 -F fw.hex -M -OL` (PK4/ICD4/ICD5 likewise) |
+| Flash | `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F fw.hex -M -OL` — tool codes SNAP, PKBASIC, PK4, PK5, ICD4, ICD5, ICE4 (`docs/Readme for IPECMD.htm` in MPLAB X) |
 | ICSP header | Microchip 6-pin: 1 MCLR · 2 VDD · 3 GND · 4 PGD · 5 PGC · 6 NC (Tag-Connect TC2030) |
 | Toolchain present? | `command -v xc-dsc-gcc; ls /opt/microchip/` |
 

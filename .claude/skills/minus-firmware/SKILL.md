@@ -16,7 +16,7 @@ MAJOR/MINOR unless the owner says so.
 export PICO_SDK_PATH=/home/kelu/projets/pico-sdk        # 2.1.0
 cmake -S firmware/rp2354 -B firmware/rp2354/build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build firmware/rp2354/build -j && picotool load -x firmware/rp2354/build/minus_rp.uf2
-make -C firmware/pic32 info && make -C firmware/pic32 && make -C firmware/pic32 flash TOOL=PK5
+make -C firmware/pic32 info && make -C firmware/pic32 && make -C firmware/pic32 flash TOOL=SNAP   # or PKBASIC/PK4/PK5/ICD4/ICD5/ICE4
 ```
 Board header: `firmware/rp2354/board/minus_devkit.h` (`PICO_BOARD=minus_devkit`, 2 MB flash,
 `MINUS_PIN_*` names). Always rebuild the RP side before claiming a change works; the PIC side

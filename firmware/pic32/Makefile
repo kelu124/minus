@@ -8,7 +8,8 @@ MPLABX   ?= $(lastword $(sort $(wildcard /opt/microchip/mplabx/v*)))
 # Device Family Pack "Microchip.PIC32AK-GC_DFP" (packs.download.microchip.com). Either the copy
 # unpacked under ~/microchip/packs (see STEP1.md) or the one MPLAB X installs.
 DFP      ?= $(firstword $(wildcard $(HOME)/microchip/packs/PIC32AK-GC_DFP/*) $(wildcard $(MPLABX)/packs/Microchip/PIC32AK-GC_DFP/*))
-TOOL     ?= PK5            # ipecmd tool code: PK5 = PICkit 5, PK4 = PICkit 4, ICD4, ICD5
+TOOL     ?= SNAP           # ipecmd -TP code (from MPLAB X 6.35 "Readme for IPECMD"): SNAP, PKBASIC (PICkit Basic),
+                           # PK4, PK5, ICD4, ICD5, ICE4. Owner aims at Snap or PICkit Basic (2026-10-26).
 
 CC   := $(XC_DSC)/bin/xc-dsc-gcc
 BIN2HEX := $(XC_DSC)/bin/xc-dsc-bin2hex

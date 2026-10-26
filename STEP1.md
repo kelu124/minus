@@ -33,17 +33,21 @@ ninja, picotool 2.3.0. `firmware/rp2354` builds → `build/minus_rp.uf2`.
 Device support is a separate **Device Family Pack** (`Microchip.PIC32AK-GC_DFP`), and flashing
 uses **`ipecmd`**, which ships inside **MPLAB X IDE** (the IPE is a component of that installer).
 
-1. **MPLAB X IDE v6.35** (you downloaded `~/Downloads/MPLABX-v6.35-linux-installer.tar`, 1.1 GB):
+1. **MPLAB X IDE v6.35** — **installed 2026-10-26** at `/opt/microchip/mplabx/v6.35` (it also
+   installed the `PIC32AK-GC_DFP` 1.1.53 pack under `packs/Microchip/`). For reference:
    ```bash
    cd ~/Downloads && tar xf MPLABX-v6.35-linux-installer.tar      # -> MPLABX-v6.35-linux-installer.sh
    sudo ./MPLABX-v6.35-linux-installer.sh                           # GUI; or add: --mode text
    #   keep "MPLAB IPE" ticked (ipecmd), keep the 16-bit/dsPIC + PIC32 device families ticked
    #   default path: /opt/microchip/mplabx/v6.35   (needs ~3 GB; / has 16 GB free)
    ```
-   Programmer access without root: MPLAB X installs udev rules
-   (`/etc/udev/rules.d/*mchp*`); if a PICkit is not seen, `sudo udevadm control --reload && sudo udevadm trigger`
-   and replug.
-2. **XC-DSC compiler** (current v4.00, free, no licence key — PRO optimisations included):
+   Programmer access without root: no Microchip udev rule was found after the install
+   (`grep -l 04d8 /etc/udev/rules.d/*` is empty). If the tool is not detected as your user, run
+   `sudo /opt/microchip/mplabx/v6.35/MPLABCOMM-3.56.00-linux-installer.run`, or add
+   `/etc/udev/rules.d/99-microchip.rules` with
+   `SUBSYSTEM=="usb", ATTR{idVendor}=="04d8", MODE="0666"` then
+   `sudo udevadm control --reload && sudo udevadm trigger` and replug.
+2. **XC-DSC compiler** — **still to install** (current v4.00, free, no licence key — PRO optimisations included):
    download the Linux `.run` from https://www.microchip.com/xcdsc (file like
    `xc-dsc-v4.00-full-install-linux-x64-installer.run`), then
    ```bash
@@ -61,8 +65,11 @@ uses **`ipecmd`**, which ships inside **MPLAB X IDE** (the IPE is a component of
    (`pdfs/mplab/Device_Support.pdf`, MPLAB X ≥ 6.25) the PIC32AK1216GC41048 is programmable
    **and** debuggable with: **MPLAB Snap** (cheapest, ~€30, LVP-only — fine, this part is
    LVP-only anyway), **PICkit Basic** (~€30), **PICkit 4 / 5**, **ICD 4 / 5**, **ICE 4**.
-   Not supported: Atmel-ICE/EDBG/nEDBG tools, PM3. Snap and PICkit Basic do not power the
-   target, so the board must be on USB. The **RP2354 as programmer** (GPIO21/22/24) is step 2:
+   Not supported: Atmel-ICE/EDBG/nEDBG tools, PM3. **Decision 2026-10-26: aim at MPLAB Snap
+   or PICkit Basic.** Both are powered by their own USB cable and do not power the target, so
+   the devkit must be on USB-C while flashing. `ipecmd` tool codes (from the installed
+   `docs/Readme for IPECMD.htm`): `SNAP`, `PKBASIC`, `PK4`, `PK5`, `ICD4`, `ICD5`, `ICE4` →
+   `make -C firmware/pic32 flash TOOL=SNAP` (default) or `TOOL=PKBASIC`. The **RP2354 as programmer** (GPIO21/22/24) is step 2:
    feasible per the programming spec, but keep a Microchip tool as the known-good reference
    while that code is being written.
 
@@ -80,7 +87,7 @@ make -C firmware/pic32           # -> firmware/pic32/build/minus_pic.hex
 2. **Open the console:** `picocom -b 115200 /dev/ttyACM0` (or `screen`, `minicom`; baud is
    ignored on USB CDC). Type `help`, then `version` (firmware version, chip id, unique id) and
    `rgb 255 255 255` to check the LED. `rgb` takes 0–255 per channel.
-3. **Flash the PIC32:** `make -C firmware/pic32 flash TOOL=PK5` (PK4 / ICD4 / ICD5 likewise).
+3. **Flash the PIC32:** `make -C firmware/pic32 flash` (TOOL defaults to `SNAP`; `TOOL=PKBASIC` for PICkit Basic).
    LED2 (red, next to the PIC) starts blinking ≈ once per second.
 4. **Link test:** on the RP console type `ping` → expect `ping 1: ok, ~1000 us, rdy=…`; `auto`
    pings every 500 ms (LED green = PONG ok, blue = no reply, red = garbage); `stat` shows

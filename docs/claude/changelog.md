@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  Programmer decision (Snap / PICkit Basic): ipecmd tool codes from the installed MPLAB X
+  6.35 readme, Makefile default TOOL=SNAP, STEP1 marks MPLAB X installed + udev note.
 
 ## Committed
 

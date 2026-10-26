@@ -104,7 +104,7 @@ in `~/microchip/packs/`). Then:
 ```bash
 make -C firmware/pic32 info      # paths it resolved
 make -C firmware/pic32           # -> build/minus_pic.hex
-make -C firmware/pic32 flash TOOL=PK5
+make -C firmware/pic32 flash TOOL=SNAP     # or PKBASIC / PK4 / PK5 / ICD4 / ICD5 / ICE4
 ```
 The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.TXBF/RXBE`,
 `RPINR9bits.U1RXR`, `RPOR9bits.RP39R`, `RPCONbits.IOLOCK`, `PACCON2bits.RPCONWR`,
