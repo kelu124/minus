@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-26 | `b874cfb` | feat(claude): SessionStart resume hook + minus-resume skill; TODO RESUME HERE on top | Owner wants the next session to pick up from the last exchanges automatically: hook injects the context, skill says how to use it. |
 | 2026-10-26 | `872b0df` | docs: persist bench findings + resume plan (MCLR 2.88 V, R53 -> 0R); add tools/rpcli.py | Session handoff: everything needed to resume the PIC flash after the R53 rework is in memory 0008, TODO and the private memory. |
 | 2026-10-26 | `5b05ef2` | feat(rp2354): pic pins / pic mclr diagnostics (fw 0.1.3); log first on-hardware run | First real-board session: RP firmware and reboot dfu verified; PIC alive but no ICSP reply → bench diagnostics to separate the MCLR divider from firmware timing. |
 | 2026-10-26 | `f3ed78a` | feat(rp2354): ICSP programmer for the PIC32 — pic id/image/flash/verify/erase (fw 0.1.2) | One USB-C cable programs both chips: the RP carries the PIC image and flashes it over GPIO21/22/24 (owner asked; embed-at-build chosen). |

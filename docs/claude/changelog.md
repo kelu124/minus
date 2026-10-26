@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  SessionStart resume hook (`.claude/hooks/session-resume.sh` + `.claude/settings.json`) and
-  `minus-resume` skill; TODO RESUME HERE moved to the top.
+- (none)
 
 ## Committed
+
+- 2026-10-26  b874cfb  SessionStart resume hook (`.claude/hooks/session-resume.sh` + `.claude/settings.json`) and
+  `minus-resume` skill; TODO RESUME HERE moved to the top.
 
 - 2026-10-26  872b0df  Bench findings persisted (MCLR 2.88 V with GPIO24 low, JP1 cut → R53 must be 0 Ω; resume
   plan in memory 0008 + TODO); `tools/rpcli.py` added; README/skill bench notes.
