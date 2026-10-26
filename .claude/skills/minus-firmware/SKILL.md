@@ -24,7 +24,9 @@ is uncompiled until XC-DSC is installed (**REQUIRED SUB-SKILL:** pic32ak-xcdsc-t
 
 ## CLI (USB CDC on the RP) — keep it this shape
 One line in, text out, `help` lists everything. Existing: `version`, `rgb R G B`, `reboot [dfu]`,
-`ping/auto/stop/stat`, `reset`, `rdy`, `trig`, `raw <text>`. New commands: add to the dispatch
+`ping/auto/stop/stat`, `reset`, `rdy`, `trig`, `raw <text>`, `pic id|image|flash|verify|erase`
+(ICSP programmer, `pic_icsp.c`; PIC hex embedded via `tools/hex2c.py` → `build/pic_image.c`,
+so **rebuild the RP after every PIC build** to refresh the image). New commands: add to the dispatch
 chain in `main.c`, to `help()`, to the table in `firmware/README.md`, bump PATCH.
 
 ## Link protocol (RP ↔ PIC, UART0 ↔ UART1, 115200 8N1, ASCII lines)

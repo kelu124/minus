@@ -10,6 +10,7 @@
 //
 // Commands (type on the USB console):
 //   help | version | rgb R G B | reboot [dfu] | ping | auto | stop | reset | rdy | trig | raw <text> | stat
+//   pic id | pic image | pic flash | pic verify | pic erase     (ICSP programmer on GPIO21/22/24)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +24,8 @@
 #include "pico/version.h"
 #include "hardware/structs/sysinfo.h"
 #include "version.h"
+#include "pic_icsp.h"
+#include "pic_image.h"
 
 #define LINK_UART      uart0
 #define LINK_BAUD      115200
@@ -136,6 +139,77 @@ static void cmd_reboot(const char *arg) {
     while (true) tight_loop_contents();
 }
 
+// ---------------------------------------------------------------- PIC32 ICSP programmer
+static bool pic_verify_image(unsigned *bad_words) {
+    uint32_t buf[64]; unsigned bad = 0, first_bad = 0; bool any = false;
+    for (const pic_segment_t *sg = pic_image_segments; sg->len; sg++) {
+        for (uint32_t off = 0; off < sg->len; off += sizeof buf) {
+            unsigned n = (sg->len - off) / 4; if (n > 64) n = 64;
+            pic_read_block(sg->addr + off, buf, n);
+            for (unsigned i = 0; i < n; i++) {
+                const uint8_t *p = sg->data + off + 4 * i;
+                uint32_t want = (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
+                if (buf[i] != want) { if (!any) { any = true; first_bad = sg->addr + off + 4 * i;
+                        printf("  mismatch @0x%06lx: read 0x%08lx want 0x%08lx\n", (unsigned long)first_bad, (unsigned long)buf[i], (unsigned long)want); }
+                    bad++; }
+            }
+        }
+    }
+    if (bad_words) *bad_words = bad;
+    return bad == 0;
+}
+
+static void cmd_pic(const char *arg) {
+    if (!arg || !*arg || !strcmp(arg, "help")) {
+        printf("pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
+               "pic image   describe the PIC image embedded in this firmware\n"
+               "pic flash   bulk erase + program + verify the embedded image, then run the PIC\n"
+               "pic verify  compare PIC flash with the embedded image (no write)\n"
+               "pic erase   bulk erase only (PIC is blank afterwards)\n"
+               "needs: R53 = 0R, JP1 cut (C31 off MCLR), nothing plugged on J1\n");
+        return;
+    }
+    if (!strcmp(arg, "image")) {
+        printf("image '%s': %u segment(s), %u bytes\n", pic_image_name, pic_image_nseg, pic_image_bytes);
+        for (const pic_segment_t *sg = pic_image_segments; sg->len; sg++)
+            printf("  0x%06lx +%lu %s\n", (unsigned long)sg->addr, (unsigned long)sg->len,
+                   sg->addr >= 0x800000u ? "code" : "config (UCA/UCB)");
+        return;
+    }
+    bool want_flash = !strcmp(arg, "flash"), want_verify = !strcmp(arg, "verify"), want_erase = !strcmp(arg, "erase"), want_id = !strcmp(arg, "id");
+    if (!(want_flash || want_verify || want_erase || want_id)) { printf("pic: unknown '%s' (pic help)\n", arg); return; }
+    if ((want_flash || want_verify) && pic_image_nseg == 0) { printf("no PIC image embedded (build with firmware/pic32/build/minus_pic.hex present)\n"); return; }
+
+    uint32_t devid = 0, revid = 0;
+    icsp_enter();
+    bool ok = pic_read_id(&devid, &revid);
+    printf("DEVID 0x%08lx REVID 0x%08lx -> %s\n", (unsigned long)devid, (unsigned long)revid,
+           ok ? "PIC32AK1216GC41048" : (devid == 0 || devid == 0xFFFFFFFFu ? "no response (check R53=0R, JP1 cut, J1 empty, PIC powered)" : "unexpected device"));
+    if (!ok) { icsp_exit(); return; }
+
+    if (want_erase || want_flash) {
+        absolute_time_t t0 = get_absolute_time();
+        bool e = pic_bulk_erase();
+        printf("bulk erase: %s (%lld ms)\n", e ? "ok" : "TIMEOUT", absolute_time_diff_us(t0, get_absolute_time()) / 1000);
+        if (!e) { icsp_exit(); return; }
+    }
+    if (want_flash) {
+        absolute_time_t t0 = get_absolute_time(); bool p = true;
+        for (const pic_segment_t *sg = pic_image_segments; sg->len && p; sg++) {
+            p = pic_program_quadwords(sg->addr, sg->data, sg->len);
+            printf("  program 0x%06lx +%lu: %s\n", (unsigned long)sg->addr, (unsigned long)sg->len, p ? "ok" : "TIMEOUT");
+        }
+        printf("program: %s (%lld ms, %lu PGC clocks)\n", p ? "ok" : "FAILED", absolute_time_diff_us(t0, get_absolute_time()) / 1000, (unsigned long)icsp_clocks());
+        if (!p) { icsp_exit(); return; }
+    }
+    if (want_flash || want_verify) {
+        unsigned bad = 0; bool v = pic_verify_image(&bad);
+        printf("verify: %s (%u bad words of %u)\n", v ? "ok" : "MISMATCH", bad, pic_image_bytes / 4);
+    }
+    icsp_exit();
+    printf("ICSP exit, PIC released (MCLR Hi-Z)%s\n", want_flash ? " — try 'ping'" : "");
+}
+
 static void help(void) {
     printf("minus devkit RP2354A link test\n"
            "  version     firmware version, chip id, unique id\n"
@@ -147,7 +221,8 @@ static void help(void) {
            "  rdy         read RDY (GPIO7 <- PIC RA7)\n"
            "  trig        2 us pulse on TRIG (GPIO6 -> PIC RA0)\n"
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
-           "  stat        counters\n");
+           "  stat        counters\n"
+           "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
 
 int main(void) {
@@ -173,6 +248,7 @@ int main(void) {
                     } else printf("usage: rgb R G B (0-255)\n");
                 }
                 else if (!strncmp(line, "reboot", 6)) cmd_reboot(line[6] == ' ' ? line + 7 : NULL);
+                else if (!strncmp(line, "pic", 3) && (line[3] == 0 || line[3] == ' ')) cmd_pic(line[3] == ' ' ? line + 4 : NULL);
                 else if (!strcmp(line, "ping")) do_ping(true);
                 else if (!strcmp(line, "auto")) { auto_ping = true; printf("auto ping on\n"); }
                 else if (!strcmp(line, "stop")) { auto_ping = false; printf("auto ping off\n"); }

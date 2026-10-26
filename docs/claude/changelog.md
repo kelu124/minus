@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  RP2354 ICSP programmer for the PIC32 (`pic id/image/flash/verify/erase`, `pic_icsp.c`,
+  `tools/hex2c.py`, hex embedded at build time); rp fw 0.1.2; README/STEP1/skills/memory/TODO.
 
 ## Committed
 

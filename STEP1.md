@@ -91,7 +91,13 @@ build. Keep ≥ 2 GB free; delete the installer tar once installed.
 2. **Open the console:** `picocom -b 115200 /dev/ttyACM0` (or `screen`, `minicom`; baud is
    ignored on USB CDC). Type `help`, then `version` (firmware version, chip id, unique id) and
    `rgb 255 255 255` to check the LED. `rgb` takes 0–255 per channel.
-3. **Flash the PIC32:** `make -C firmware/pic32 flash` (TOOL defaults to `SNAP`; `TOOL=PKBASIC` for PICkit Basic).
+3. **Flash the PIC32**, either way:
+   - with the Microchip tool on J1: `make -C firmware/pic32 flash` (TOOL defaults to `SNAP`;
+     `TOOL=PKBASIC` for PICkit Basic), **or**
+   - **from the RP2354** (board fixes #1 and #2 applied, J1 empty): on the RP console type
+     `pic id` first — it must print `DEVID 0x09da2053 … PIC32AK1216GC41048`. If it says
+     "no response", stop and check R53/JP1/J1. Then `pic flash` (erase, program, verify, ~1 s).
+     `pic image` shows what is embedded; rebuild the RP after rebuilding the PIC to refresh it.
    LED2 (red, next to the PIC) starts blinking ≈ once per second.
 4. **Link test:** on the RP console type `ping` → expect `ping 1: ok, ~1000 us, rdy=…`; `auto`
    pings every 500 ms (LED green = PONG ok, blue = no reply, red = garbage); `stat` shows

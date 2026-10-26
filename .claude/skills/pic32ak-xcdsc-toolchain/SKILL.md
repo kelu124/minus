@@ -41,6 +41,10 @@ Bitfield structs are `typedef struct tagU1CONBITS {...} U1CONBITS; extern volati
   clock (= FRC 8 MHz at reset, ±1.5 %). FIFO regs `U1TXB` / `U1RXB`, status `U1STATbits.TXBF/RXBE`.
 - ICSP (DS70005583): MCLR low → 32-bit key `0x8A12C2B2` LSB-first on PGD → MCLR high →
   2×34 clocks; VIL max 0.2·VDD on MCLR/PGx → any series R vs pull-up divider must reach that.
+  A working transcription of the transport + bulk erase + quadword program + read lives in
+  `firmware/rp2354/pic_icsp.c` (minus repo) — reuse it for any host MCU. Opcode helper:
+  `MOV.SL #lit24, Wn` = `0x80000003 | n<<26 | lit<<2`; poll NVMCON.WR via `MOV.L [W9],[W8]` + CMDRD.
+  Never program a quadword twice after an erase (ECC); OTP (0x7F2C00) is never erasable.
 - MCLR: datasheet wants any capacitor isolated during programming (entry pulse ≤ 2 µs).
 
 ## Common mistakes

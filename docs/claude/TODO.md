@@ -14,8 +14,9 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   - First flash: confirm `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F … -M -OL` works (codes verified
     in the installed readme; the option set itself is untested on hardware).
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
-  - Step 2: PIC SPI client + ADC capture → RP; RP-side **ICSP programmer** (DS70005583 §2–3,
-    PIO bit-bang on GPIO21/22/24).
+  - Bench-test the RP-side ICSP programmer (`pic id` → `pic flash`) once R53/JP1 are fixed; if
+    `pic id` fails, compare against the Snap on J1. Optional: row programming (§3.4) for speed.
+  - Step 2: PIC SPI client + ADC capture → RP.
   - Fold the 2026-10-26 flaws into `design/devkit/review-findings.md`; add `hardware/` to the
     docs conventions (design files now live there, not only `design/`).
 

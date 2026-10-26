@@ -4,7 +4,7 @@ Two MCUs, two firmwares:
 
 | Dir | Chip | Toolchain | Output | Status |
 |-----|------|-----------|--------|--------|
-| `rp2354/` | **RP2354A** (U1, QFN-60, 2 MB in-package flash) | pico-sdk ≥ 2.0 + arm-none-eabi-gcc + CMake/Ninja (all installed) | `build/minus_rp.uf2` | **builds** (pico-sdk 2.1.0, picotool 2.3.0) |
+| `rp2354/` | **RP2354A** (U1, QFN-60, 2 MB in-package flash) | pico-sdk ≥ 2.0 + arm-none-eabi-gcc + CMake/Ninja (all installed) | `build/minus_rp.uf2` (embeds the PIC hex) | **builds** (pico-sdk 2.1.0, picotool 2.3.0) |
 | `pic32/`  | **PIC32AK1216GC41048** (U2, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + MPLAB X 6.35 `ipecmd` + PIC32AK-GC_DFP 1.1.53 (all installed) | `build/minus_pic.hex` | **builds** (~7 kB code, 36 B RAM); not yet flashed |
 
 Step 1 (this code) only proves the two chips can talk: UART ping/pong + the GPIO handshake
@@ -40,8 +40,11 @@ Yes, three ways:
 2. **ICSP programming**: GPIO21 = PGC1, GPIO22 = PGD1, GPIO24 = MCLR. The protocol
    (DS70005583 §2–3) is a plain 2-wire bit-bang: entry = MCLR low → key 0x8A12C2B2 on PGD
    with 32 PGC clocks → MCLR high → 2×34 clocks; then 2-bit commands + 32-bit shifts that
-   execute CPU instructions / read VISI / write W0-indexed memory. Fully doable from RP GPIO
-   or PIO (timing mins are 20 ns setup, 1 ns hold). **Not implemented yet** (TODO).
+   execute CPU instructions / read VISI / write W0-indexed memory. **Implemented** in
+   `rp2354/pic_icsp.c` (bit-banged GPIO, ~1 MHz; bulk erase §3.1, quadword program §3.3,
+   read §3.5) and exposed as the `pic …` CLI commands. The PIC hex is converted by
+   `rp2354/tools/hex2c.py` into `build/pic_image.c` at RP build time, so one UF2 carries both
+   firmwares. **Untested on hardware** until a board with the R53/JP1 fixes exists.
 3. **Run-time**: TRIG/RDY GPIOs, UART, SPI (RP master), shared I²C.
 
 **But the as-built MCLR network defeats 1 and 2** (flaw 2 below) until R53 is changed.
@@ -91,6 +94,10 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help`.
 | `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |
 | `rdy`, `trig` | read RDY (GPIO7), 2 µs pulse on TRIG (GPIO6) |
 | `raw <text>` | send any line to the PIC, print its reply |
+| `pic id` | enter ICSP on GPIO21/22/24, read DEVID/REVID (expect `0x09DA2053`), exit. No write. |
+| `pic image` | list the PIC image embedded in this RP firmware (from `firmware/pic32/build/minus_pic.hex` at build time) |
+| `pic flash` | bulk erase, program by quadwords, read-back verify, release MCLR so the PIC boots |
+| `pic verify` / `pic erase` | compare flash with the image / blank the PIC |
 
 Status LED (until `rgb` is used): **blue** = no PIC reply, **green** = PONG ok, **red** = wrong reply.
 
