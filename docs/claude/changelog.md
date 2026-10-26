@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  STEP1/README/memory 0008: list all Microchip tools that support the PIC32AK1216GC41048
-  (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) from `Device_Support.pdf`.
+- (none)
 
 ## Committed
+
+- 2026-10-26  678fde8  STEP1/README/memory 0008: list all Microchip tools that support the PIC32AK1216GC41048
+  (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) from `Device_Support.pdf`.
 
 - 2026-10-26  ebb3e15  Commit-log skill: fix sha row, add self-sha rule.
 
