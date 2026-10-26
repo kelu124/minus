@@ -11,6 +11,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     compiler complains about (names were pre-checked against the DFP header).
   - Board fixes before the link test: **R68/R69 → one 1–4.7 kΩ** (MOSI–MISO), **R53 → 0 Ω**
     (MCLR drive), cut **JP1** (C31 on MCLR) when programming from the RP.
+  - After MPLAB X install: check `ipecmd.sh` flags (`-TPPK5 -P32AK1216GC41048 -F -M -OL`) against
+    `/opt/microchip/mplabx/v6.35/mplab_platform/mplab_ipe/Readme for IPECMD.htm`.
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
   - Step 2: PIC SPI client + ADC capture → RP; RP-side **ICSP programmer** (DS70005583 §2–3,
     PIO bit-bang on GPIO21/22/24).

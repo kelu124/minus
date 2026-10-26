@@ -8,7 +8,9 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  Skills: `kicad-netlist-reading` fixed after a subagent retrieval test (passive-tracing
+  step, path note, examples labelled); new `minus-commit-log` skill with `COMMITS.md` (every Claude
+  commit + purpose).
 
 ## Committed
 

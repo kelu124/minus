@@ -3,11 +3,12 @@
 
   python3 nets.py NETLIST.xml pins U1 U2 ...   # every pin of each ref: number, function, net, other nodes
   python3 nets.py NETLIST.xml shared U1 U2     # nets that touch BOTH refs (inter-chip links)
-  python3 nets.py NETLIST.xml net SPI_MOSI     # all nodes on named nets (substring match)
-  python3 nets.py NETLIST.xml comps            # ref -> value / footprint
+  python3 nets.py NETLIST.xml net SPI_MOSI     # all nodes on nets whose NAME contains the text (case-insensitive)
+  python3 nets.py NETLIST.xml comps            # one line per component: ref, value, footprint
 Power/ground nets are abbreviated to keep the output readable.
 """
-import sys, xml.etree.ElementTree as ET
+import sys, signal, xml.etree.ElementTree as ET
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)   # quiet exit when piped into head
 
 def load(path):
     r = ET.parse(path).getroot()
