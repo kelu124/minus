@@ -19,7 +19,8 @@ read without re-parsing the PDF. Generate it with the locally-installed **markit
 | `Current_Trends_in_Ultrasound_Wearables_Spotlight_on_System_Architecture_early_access.pdf` | Weik et al., *Current Trends in Ultrasound Wearables: Spotlight on System Architecture*, IEEE Reviews in Biomedical Engineering (early access, 2026). Peer-reviewed basis of the SIG-WUS catalog. |
 
 Component **datasheets** live in [`datasheets/`](datasheets/README.md) (pulser ICs
-etc. — see `analysis.md`).
+etc. — see `analysis.md`). **MPLAB tooling guides** (MPLAB X / IPE `ipecmd` / MDB) live in
+[`mplab/`](mplab/README.md) — the PIC32AK programming toolchain.
 
 Related: schematics and design files (KiCad/Gerber/PDF schematics) go in
 [`../design/<name>/`](../design/), one subfolder per design.

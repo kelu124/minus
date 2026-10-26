@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  Add `pdfs/mplab/` (MPLAB X / IPE / MDB / debug-features / device-support guides) with
+  markitdown `.md` siblings + index; pointer from `pdfs/README.md`.
 
 ## Committed
 
