@@ -22,6 +22,11 @@ Board header: `firmware/rp2354/board/minus_devkit.h` (`PICO_BOARD=minus_devkit`,
 `MINUS_PIN_*` names). Always rebuild the RP side before claiming a change works; the PIC side
 is uncompiled until XC-DSC is installed (**REQUIRED SUB-SKILL:** pic32ak-xcdsc-toolchain).
 
+## Bench driving
+`python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "cmd1" "cmd2" --wait=2` sends CLI lines and
+prints replies. Flash: `reboot dfu` on the CLI → UF2 drive appears at `/media/kelu/RP2350` → copy
+the `.uf2` there (picotool needs sudo on this machine). Wait for `/dev/ttyACM0` to come back.
+
 ## CLI (USB CDC on the RP) — keep it this shape
 One line in, text out, `help` lists everything. Existing: `version`, `rgb R G B`, `reboot [dfu]`,
 `ping/auto/stop/stat`, `reset`, `rdy`, `trig`, `raw <text>`, `pic id|image|flash|verify|erase`

@@ -14,8 +14,12 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   - First flash: confirm `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F … -M -OL` works (codes verified
     in the installed readme; the option set itself is untested on hardware).
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
-  - Bench-test the RP-side ICSP programmer (`pic id` → `pic flash`) once R53/JP1 are fixed; if
-    `pic id` fails, compare against the Snap on J1. Optional: row programming (§3.4) for speed.
+  - **RESUME HERE:** owner bridges **R53 → 0 Ω** (JP1 already cut; measured MCLR 2.88 V with
+    GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
+    `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping`. If `pic id` still
+    fails, debug `pic_icsp.c` entry timing (scope / slower clock) or compare with the Snap.
+  - Measure the real R53 / R5 values (board unpowered) and record them in
+    `design/devkit/review-findings.md`. Optional: row programming (§3.4) for speed.
   - Step 2: PIC SPI client + ADC capture → RP.
   - Fold the 2026-10-26 flaws into `design/devkit/review-findings.md`; add `hardware/` to the
     docs conventions (design files now live there, not only `design/`).

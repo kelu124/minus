@@ -83,7 +83,9 @@ cmake --build firmware/rp2354/build -j
 # flash: hold BOOTSEL (SW2, QSPI_SS→GND) while tapping RUN (SW1), then
 picotool load -x firmware/rp2354/build/minus_rp.uf2      # or copy the .uf2 to the RP2350 drive
 ```
-Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help`.
+Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or script it:
+`python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "version" "pic id" --wait=2`.
+(picotool needs sudo here: no `2e8a` udev rule; copying the UF2 to `/media/kelu/RP2350` works.)
 
 | Command | Does |
 |---------|------|
