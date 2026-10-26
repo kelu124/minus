@@ -8,14 +8,16 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Add `STEP1.md` (board fixes · Ubuntu install · link test); RP CLI `version` /
+- (none)
+
+## Committed
+
+- 2026-10-26  3e33b15  Add `STEP1.md` (board fixes · Ubuntu install · link test); RP CLI `version` /
   `rgb R G B` / `reboot [dfu]` (fw 0.2.0); PIC config pragmas + register names verified against
   PIC32AK-GC_DFP 1.1.53, Makefile points at the unpacked DFP; R68/R69 advice corrected (keep
   one at 1–4.7 kΩ; RP is sole digipot master); memory 0008 + log + TODO. Firmware semver
   rule (`firmware/VERSIONS.md`, `version.h` ×2: rp 0.1.1, pic 0.1.0) + memory 0009; repo skills
   `kicad-netlist-reading`, `pic32ak-xcdsc-toolchain`, `minus-firmware`.
-
-## Committed
 
 - 2026-10-26  67576a0  Add `hardware/minUS_10102026` (+ `08102026`) KiCad devkit; `firmware/` with
   RP2354A link-test firmware (builds, pico-sdk 2.1.0) + PIC32AK UART ping/pong source
