@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  PIC32 firmware builds with XC-DSC 3.31.01: Makefile passes the DFP linker script + `-mdfp` to
-  bin2hex, map-based size; STEP1/README/memory 0008/skill updated (toolchain complete, disk note).
+- (none)
 
 ## Committed
+
+- 2026-10-26  a28855d  PIC32 firmware builds with XC-DSC 3.31.01: Makefile passes the DFP linker script + `-mdfp` to
+  bin2hex, map-based size; STEP1/README/memory 0008/skill updated (toolchain complete, disk note).
 
 - 2026-10-26  9638149  Programmer decision (Snap / PICkit Basic): ipecmd tool codes from the installed MPLAB X
   6.35 readme, Makefile default TOOL=SNAP, STEP1 marks MPLAB X installed + udev note.
