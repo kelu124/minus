@@ -5,7 +5,7 @@ Two MCUs, two firmwares:
 | Dir | Chip | Toolchain | Output | Status |
 |-----|------|-----------|--------|--------|
 | `rp2354/` | **RP2354A** (U1, QFN-60, 2 MB in-package flash) | pico-sdk ≥ 2.0 + arm-none-eabi-gcc + CMake/Ninja (all installed) | `build/minus_rp.uf2` | **builds** (pico-sdk 2.1.0, picotool 2.3.0) |
-| `pic32/`  | **PIC32AK1216GC41048** (U2, TQFP-48, LCSC C46545915) | Microchip **XC-DSC** + MPLAB IPE `ipecmd` (**not installed**) | `build/minus_pic.hex` | written, **not compiled yet** |
+| `pic32/`  | **PIC32AK1216GC41048** (U2, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + MPLAB X 6.35 `ipecmd` + PIC32AK-GC_DFP 1.1.53 (all installed) | `build/minus_pic.hex` | **builds** (~7 kB code, 36 B RAM); not yet flashed |
 
 Step 1 (this code) only proves the two chips can talk: UART ping/pong + the GPIO handshake
 lines + the PIC reset tap. Everything else (ADC capture, SPI streaming, pulser, ICSP
@@ -110,7 +110,7 @@ The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.T
 `RPINR9bits.U1RXR`, `RPOR9bits.RP39R`, `RPCONbits.IOLOCK`, `PACCON2bits.RPCONWR`,
 `ANSELAbits.ANSELA0/7`) and the config pragmas (`JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`;
 there is no `ICS` setting in this family) were verified against the DFP's
-`p32AK1216GC41048.h` and `config_docs`. Not yet compiled.
+`p32AK1216GC41048.h` and `config_docs`; the source compiles clean (no warnings) with XC-DSC 3.31.01.
 
 ## Link protocol (step 1)
 

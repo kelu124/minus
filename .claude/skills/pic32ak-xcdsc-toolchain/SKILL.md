@@ -15,7 +15,9 @@ Flashing uses **`ipecmd`**, shipped inside **MPLAB X IDE** (`/opt/microchip/mpla
 ## Quick reference
 | Need | Do |
 |------|----|
-| Compiler | `xc-dsc-gcc -mcpu=32AK1216GC41048 -mdfp=<pack>/xc32 …`, hex via `xc-dsc-bin2hex` |
+| Compile | `xc-dsc-gcc -mcpu=32AK1216GC41048 -mdfp=<pack>/xc32 -c main.c` |
+| Link | add **`-T <pack>/xc32/support/PIC32A/gld/p32AK1216GC41048.gld`** — without it elf-ld targets "30Fxxxx" and fails |
+| Hex | `xc-dsc-bin2hex -mdfp=<pack>/xc32 fw.elf -a` (needs the DFP too); no `xc-dsc-size`: read sizes from the `.map` |
 | DFP without MPLAB X | `curl -o p.atpack https://packs.download.microchip.com/Microchip.PIC32AK-GC_DFP.<ver>.atpack && unzip p.atpack -d <pack>` |
 | Header / linker / config docs | `<pack>/xc32/support/PIC32A/{h,gld}/p32AK…`, `<pack>/xc32/docs/config_docs/32AK….html` |
 | Flash | `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F fw.hex -M -OL` — tool codes SNAP, PKBASIC, PK4, PK5, ICD4, ICD5, ICE4 (`docs/Readme for IPECMD.htm` in MPLAB X) |
@@ -44,4 +46,6 @@ Bitfield structs are `typedef struct tagU1CONBITS {...} U1CONBITS; extern volati
 ## Common mistakes
 - Looking for an "XC32 for PIC32A" download: retired; XC32 ≥ 5.10 notes redirect to XC-DSC.
 - Passing `-mdfp=<pack>/xc-dsc`: this pack has only `xc32/`. Try the root if `xc32/` fails.
-- Installing MPLAB X with < 4 GB free; the IDE+IPE is ~3 GB plus a 1.1 GB tar.
+- Installing MPLAB X with < 12 GB free: it pulls ~97 device packs (8 GB) + 2 GB platform + 2 GB
+  mplabcomm/xclm, plus the 1.1 GB tar. A full disk silently truncates files you are editing
+  (a `make` that says "No targets" = empty Makefile → `git checkout -- Makefile`).

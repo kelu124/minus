@@ -41,13 +41,11 @@ uses **`ipecmd`**, which ships inside **MPLAB X IDE** (the IPE is a component of
    #   keep "MPLAB IPE" ticked (ipecmd), keep the 16-bit/dsPIC + PIC32 device families ticked
    #   default path: /opt/microchip/mplabx/v6.35   (needs ~3 GB; / has 16 GB free)
    ```
-   Programmer access without root: no Microchip udev rule was found after the install
-   (`grep -l 04d8 /etc/udev/rules.d/*` is empty). If the tool is not detected as your user, run
-   `sudo /opt/microchip/mplabx/v6.35/MPLABCOMM-3.56.00-linux-installer.run`, or add
-   `/etc/udev/rules.d/99-microchip.rules` with
-   `SUBSYSTEM=="usb", ATTR{idVendor}=="04d8", MODE="0666"` then
-   `sudo udevadm control --reload && sudo udevadm trigger` and replug.
-2. **XC-DSC compiler** — **still to install** (current v4.00, free, no licence key — PRO optimisations included):
+   Programmer access without root: **done** — `/etc/udev/rules.d/z010_mchp_tools.rules` (from
+   MPLABCOMM) grants mode 666 to Microchip VID 04d8 PIDs 8xxx/9xxx/a0xx (Snap, PICkit Basic,
+   PICkit 4/5, ICD). If a tool is still not seen: `sudo udevadm control --reload && sudo udevadm trigger`, replug.
+2. **XC-DSC compiler** — **installed 2026-10-26: v3.31.01** at `/opt/microchip/xc-dsc/v3.31.01`
+   (supports `32AK1216GC41048`; v4.00 is current but not required). For reference:
    download the Linux `.run` from https://www.microchip.com/xcdsc (file like
    `xc-dsc-v4.00-full-install-linux-x64-installer.run`), then
    ```bash
@@ -73,11 +71,17 @@ uses **`ipecmd`**, which ships inside **MPLAB X IDE** (the IPE is a component of
    feasible per the programming spec, but keep a Microchip tool as the known-good reference
    while that code is being written.
 
-Check:
+Check — **both now build on this machine (2026-10-26)**:
 ```bash
 make -C firmware/pic32 info      # shows XC_DSC / MPLABX / DFP paths it will use
-make -C firmware/pic32           # -> firmware/pic32/build/minus_pic.hex
+make -C firmware/pic32           # -> firmware/pic32/build/minus_pic.hex (~7 kB code, 36 B RAM)
 ```
+Two XC-DSC gotchas are already handled in the Makefile: the device linker script must be passed
+explicitly (`-T <DFP>/xc32/support/PIC32A/gld/p32AK1216GC41048.gld`, else the linker targets
+"30Fxxxx"), and `xc-dsc-bin2hex` also needs `-mdfp=`.
+
+**Disk:** MPLAB X installs ~97 device packs (8 GB) — the root volume hit 0 MB during the first
+build. Keep ≥ 2 GB free; delete the installer tar once installed.
 
 ## 3. Test
 

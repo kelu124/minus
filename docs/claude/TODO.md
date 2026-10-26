@@ -6,13 +6,13 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 ## Now
 
 - **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
-  - Follow **`STEP1.md`**: install **MPLAB X 6.35** (tar downloaded) + **XC-DSC 4.00**; DFP
-    already in `~/microchip/packs/`; then `make -C firmware/pic32` and fix whatever the real
-    compiler complains about (names were pre-checked against the DFP header).
+  - ~~Install MPLAB X + XC-DSC~~ done 2026-10-26 (6.35 / 3.31.01); **both firmwares build**.
+  - Get an **MPLAB Snap or PICkit Basic** + TC2030-NL cable; flash `firmware/pic32/build/minus_pic.hex`
+    (`make -C firmware/pic32 flash`).
   - Board fixes before the link test: **R68/R69 → one 1–4.7 kΩ** (MOSI–MISO), **R53 → 0 Ω**
     (MCLR drive), cut **JP1** (C31 on MCLR) when programming from the RP.
-  - After MPLAB X install: check `ipecmd.sh` flags (`-TPPK5 -P32AK1216GC41048 -F -M -OL`) against
-    `/opt/microchip/mplabx/v6.35/mplab_platform/mplab_ipe/Readme for IPECMD.htm`.
+  - First flash: confirm `ipecmd.sh -TPSNAP -P32AK1216GC41048 -F … -M -OL` works (codes verified
+    in the installed readme; the option set itself is untested on hardware).
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
   - Step 2: PIC SPI client + ADC capture → RP; RP-side **ICSP programmer** (DS70005583 §2–3,
     PIO bit-bang on GPIO21/22/24).

@@ -18,7 +18,10 @@ BIN2HEX := $(XC_DSC)/bin/xc-dsc-bin2hex
 DFPSUB   ?= xc32
 CFLAGS := -mcpu=$(DEVICE) -O1 -Wall -std=gnu99 -msmart-io=1 \
           $(if $(DFP),-mdfp=$(DFP)/$(DFPSUB),)
-LDFLAGS := -mcpu=$(DEVICE) -Wl,--gc-sections,-Map=build/minus_pic.map \
+# The device linker script must be passed explicitly (otherwise elf-ld targets "30Fxxxx" and
+# fails with "architecture of input file is incompatible with 30Fxxxx output").
+GLD     := $(DFP)/$(DFPSUB)/support/PIC32A/gld/p$(DEVICE).gld
+LDFLAGS := -mcpu=$(DEVICE) -Wl,--gc-sections,-Map=build/minus_pic.map -T $(GLD) \
           $(if $(DFP),-mdfp=$(DFP)/$(DFPSUB),)
 
 SRC := main.c
@@ -38,9 +41,9 @@ build/minus_pic.elf: $(OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 build/minus_pic.hex: build/minus_pic.elf
-	$(BIN2HEX) $< -a -omf=elf
-	@mv -f build/minus_pic.hex $@ 2>/dev/null || true
+	$(BIN2HEX) $(if $(DFP),-mdfp=$(DFP)/$(DFPSUB),) $< -a
 	@ls -l $@
+	@awk '/^__ivt_0|^\.text|^\.data|^\.bss/ {printf "  %-8s %6d bytes\n", $$1, strtonum($$3)}' build/minus_pic.map
 
 build:
 	mkdir -p build

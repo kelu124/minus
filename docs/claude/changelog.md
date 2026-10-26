@@ -8,7 +8,8 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  PIC32 firmware builds with XC-DSC 3.31.01: Makefile passes the DFP linker script + `-mdfp` to
+  bin2hex, map-based size; STEP1/README/memory 0008/skill updated (toolchain complete, disk note).
 
 ## Committed
 
