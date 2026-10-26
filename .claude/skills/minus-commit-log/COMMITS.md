@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-26 | `f3ed78a` | feat(rp2354): ICSP programmer for the PIC32 — pic id/image/flash/verify/erase (fw 0.1.2) | One USB-C cable programs both chips: the RP carries the PIC image and flashes it over GPIO21/22/24 (owner asked; embed-at-build chosen). |
 | 2026-10-26 | `a28855d` | feat(pic32): first successful build with XC-DSC 3.31.01 (DFP linker script, bin2hex -mdfp) | Toolchain milestone: both firmwares build on this machine; the two XC-DSC link/hex gotchas are encoded in the Makefile. |
 | 2026-10-26 | `9638149` | chore: programmer = Snap/PICkit Basic; ipecmd tool codes from installed MPLAB X 6.35; udev note | Owner chose a cheap programmer; wire the right ipecmd code into the Makefile and docs. |
 | 2026-10-26 | `678fde8` | docs: list supported programmers for the PIC32AK (Snap, PICkit Basic, PICkit 4/5, ICD 4/5, ICE 4) | Answer "can I use something other than a PICkit?" from the MPLAB device-support list; cheaper Snap / PICkit Basic are valid. |
