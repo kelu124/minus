@@ -48,10 +48,12 @@ Yes, three ways:
 
 ## Hardware flaws found while reading the schematic (fix before trusting the link)
 
-1. **R68 ‖ R69 (2 × 100 Ω) tie SPI_MOSI to SPI_MISO = 50 Ω short.** Intended for the
-   MCP4131's single SDI/SDO pin, but when the PIC (or a digipot) drives MISO while the RP
-   drives MOSI they fight through 50 Ω (~66 mA). → **Remove R68/R69** (digipot writes still
-   work; only readback is lost) or fit ≥ 4.7 kΩ in one position only.
+1. **R68 ‖ R69 (2 × 100 Ω) tie SPI_MOSI to SPI_MISO = 50 Ω short.** They are there so the
+   MCP4131's single SDI/SDO pin (on MISO) receives MOSI data, but when the PIC drives MISO
+   while the RP drives MOSI they fight through 50 Ω (~66 mA). → **Keep one resistor, remove
+   the other, and raise it to 1–4.7 kΩ.** Do not remove both: the digipots would never see
+   MOSI and writes would stop working. (Bus ownership: RP is the only digipot master; the
+   PIC's SPI/I²C pins stay Hi-Z.)
 2. **MCLR cannot be pulled low by GPIO24.** R53 = 4.7 kΩ against R5 = 10 kΩ pull-up gives
    3.3·4.7/14.7 ≈ **1.05 V**, above the PIC's VIL max of 0.2·VDD = **0.66 V** (DS70005583
    Table 2-2). → **Fit R53 = 0 Ω (≤ 470 Ω)**. For ICSP also **cut JP1** to isolate C31
@@ -78,30 +80,37 @@ cmake --build firmware/rp2354/build -j
 # flash: hold BOOTSEL (SW2, QSPI_SS→GND) while tapping RUN (SW1), then
 picotool load -x firmware/rp2354/build/minus_rp.uf2      # or copy the .uf2 to the RP2350 drive
 ```
-Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help`, `ping`, `auto`.
-The RGB LED goes **blue** = no PIC reply, **green** = PONG ok, **red** = wrong reply.
+Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help`.
+
+| Command | Does |
+|---------|------|
+| `version` | firmware name/version, build date, pico-sdk version, chip id / package / revision, 64-bit unique id |
+| `rgb R G B` | set the WS2812/SK6812 colour, 0–255 per channel (`rgb 255 255 255` = white); disables status colours |
+| `reboot` / `reboot dfu` | reset the RP2354 / reboot into BOOTSEL so the UF2 drive appears (no button needed) |
+| `ping`, `auto`, `stop`, `stat` | one PING/PONG, PING every 500 ms, stop, counters |
+| `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |
+| `rdy`, `trig` | read RDY (GPIO7), 2 µs pulse on TRIG (GPIO6) |
+| `raw <text>` | send any line to the PIC, print its reply |
+
+Status LED (until `rgb` is used): **blue** = no PIC reply, **green** = PONG ok, **red** = wrong reply.
 
 The board header `rp2354/board/minus_devkit.h` (2 MB flash, our pin names) is selected with
 `PICO_BOARD=minus_devkit`.
 
-### PIC32AK (needs toolchain install)
-Install (Linux, headless):
-1. **XC-DSC** compiler (free licence is enough): https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers/xc-dsc
-   → `sudo ./xc-dsc-v3.xx-full-install-linux-x64-installer.run` → `/opt/microchip/xc-dsc/v3.xx`.
-2. **MPLAB X IDE** (for `ipecmd`, `mdb` and the pack manager): https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide
-   → `/opt/microchip/mplabx/v6.xx`. Then install the **PIC32A-K DFP** (device family pack)
-   from the IDE's Packs window (or `packs` dir) — it provides `pic32ak1216gc41048.h` and the
-   programmer's device support.
-3. A **PICkit 4/5 or ICD 4/5** on J1 (Tag-Connect TC2030, Microchip ICSP pinout:
-   1 MCLR · 2 VDD · 3 GND · 4 PGD · 5 PGC · 6 NC). Add the udev rule MPLAB X ships.
-Then:
+### PIC32AK (needs toolchain install — see [`../STEP1.md`](../STEP1.md) §2b)
+Short version: **MPLAB X 6.35** (gives `ipecmd`), **XC-DSC 4.00** (free; ≥ 3.31.01 supports
+`32AK1216GC41048`), and the **`Microchip.PIC32AK-GC_DFP` 1.1.53** device pack (already unpacked
+in `~/microchip/packs/`). Then:
 ```bash
-make -C firmware/pic32 XC_DSC=/opt/microchip/xc-dsc/v3.30 MPLABX=/opt/microchip/mplabx/v6.25
+make -C firmware/pic32 info      # paths it resolved
+make -C firmware/pic32           # -> build/minus_pic.hex
 make -C firmware/pic32 flash TOOL=PK5
 ```
-Open points before the first compile: the `#pragma config` names (`ICS`, `WDTEN`), the exact
-PPS unlock (PACCON2.RPCONWR → RPCON.IOLOCK) and the U1CON bit names come from the datasheet
-text and need checking against the DFP header.
+The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.TXBF/RXBE`,
+`RPINR9bits.U1RXR`, `RPOR9bits.RP39R`, `RPCONbits.IOLOCK`, `PACCON2bits.RPCONWR`,
+`ANSELAbits.ANSELA0/7`) and the config pragmas (`JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`;
+there is no `ICS` setting in this family) were verified against the DFP's
+`p32AK1216GC41048.h` and `config_docs`. Not yet compiled.
 
 ## Link protocol (step 1)
 
@@ -110,7 +119,7 @@ ASCII lines, `\n`-terminated, 115200 8N1:
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-devkit link v0.1` |
+| `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.0 proto 1` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
 | anything else | `ERR` |
 

@@ -6,9 +6,10 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 ## Now
 
 - **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
-  - Install **XC-DSC + MPLAB X (ipecmd, PIC32A-K DFP)**; compile `firmware/pic32/`; fix the
-    `#pragma config` / PPS / U1CON names against the DFP header.
-  - Board fixes before the link test: remove **R68/R69** (MOSI–MISO 50 Ω), **R53 → 0 Ω**
+  - Follow **`STEP1.md`**: install **MPLAB X 6.35** (tar downloaded) + **XC-DSC 4.00**; DFP
+    already in `~/microchip/packs/`; then `make -C firmware/pic32` and fix whatever the real
+    compiler complains about (names were pre-checked against the DFP header).
+  - Board fixes before the link test: **R68/R69 → one 1–4.7 kΩ** (MOSI–MISO), **R53 → 0 Ω**
     (MCLR drive), cut **JP1** (C31 on MCLR) when programming from the RP.
   - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
   - Step 2: PIC SPI client + ADC capture → RP; RP-side **ICSP programmer** (DS70005583 §2–3,

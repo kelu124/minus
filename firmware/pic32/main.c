@@ -8,19 +8,24 @@
 // for 115200 baud. UART clock = "standard speed peripheral clock" (CLKSEL = 0) = 8 MHz.
 //
 // *** NOT YET COMPILED: XC-DSC is not installed on this machine (see firmware/README.md).
-// *** Register/bitfield names follow DS70005592 and must be checked against the device
-// *** header <xc.h> -> pic32ak1216gc41048.h; the #pragma config names against the DFP's
-// *** config docs (xc-dsc/vX.YY/docs/config_docs/).
+// *** Register/bitfield names and #pragma config names were checked (2026-10-26) against the
+// *** PIC32AK-GC_DFP 1.1.53 device header p32AK1216GC41048.h and its config_docs.
+//
+// Bus ownership (decision 2026-10-26): the RP2354 is the only master of the digipots
+// (MCP4131 x2 on SPI, MCP4531 x2 + MCP4728 on I2C). The PIC's SPI pins (RD0/RD1/RD2/RC2) and
+// I2C pins (RD7/RD8) stay Hi-Z (inputs, reset default) in this step — do not enable SPI1/I2C2.
 #include <xc.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include "version.h"
 
 // ---------------------------------------------------------------- configuration bits
 // JTAG must be OFF: TCK/TDO/TDI/TMS sit on RD1 (SPI_CLK), RD2 (SPI_MOSI), RD3, RB1 (digipot).
-#pragma config JTAGEN = OFF        // FICD[5]
-#pragma config ICS    = PGx1       // debug on PGC1/PGD1 (= the RP2354 + J1 pair)   [name TBC]
-#pragma config WDTEN  = OFF        // FWDT: no watchdog during bring-up               [name TBC]
+#pragma config JTAGEN = OFF        // FICD: JTAG off (else TCK/TDO/TMS steal the SPI pins)
+#pragma config WDTEN  = SW         // FWDT: watchdog under software control (stays off)
+#pragma config WINDIS = ON         // FWDT: non-window mode
+// (this family has no ICS / debug-pair config setting: any PGCx/PGDx pair works for ICSP)
 
 // ---------------------------------------------------------------- pins
 #define LED2_LAT   LATCbits.LATC5
@@ -88,7 +93,7 @@ int main(void) {
                     char out[32]; snprintf(out, sizeof out, "TRIG %lu\n", (unsigned long)trig_edges);
                     uart1_puts(out);
                 } else if (!strcmp(line, "ID?")) {
-                    uart1_puts("PIC32AK1216GC41048 minus-devkit link v0.1\n");
+                    uart1_puts("PIC32AK1216GC41048 " FW_NAME " " FW_VERSION " proto " FW_STR(PROTO_VERSION) "\n");
                 } else if (len == 0 && line[0]) {
                     uart1_puts("ERR\n");
                 }

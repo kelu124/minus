@@ -12,7 +12,7 @@ pico_sdk_init()
 
 add_executable(minus_rp main.c)
 pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
-target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_pio hardware_gpio)
+target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_pio hardware_gpio pico_unique_id pico_bootrom)
 
 pico_enable_stdio_usb(minus_rp 1)    # CLI over USB-C CDC
 pico_enable_stdio_uart(minus_rp 0)   # UART0 is the PIC link, not a console

@@ -10,3 +10,4 @@ One line per memory file. Read this first to find the right topic.
 - [0006-pricing-basis.md](0006-pricing-basis.md) — Parts pricing basis: LCSC at qty ~20–50 (workshop batch), JLCPCB-stocked.
 - [0007-designA-devkit.md](0007-designA-devkit.md) — DesignA (cheap RP2354A+PIC32AK board) + DesignA-DK jumper-selected devkit; key decisions + the 2026-09-21 flaw review.
 - [0008-devkit-minUS_10102026.md](0008-devkit-minUS_10102026.md) — Devkit as built (KiCad, 48-pin PIC on LCSC), inter-MCU pin map, RP→PIC reset/ICSP taps, 2026-10-26 flaws (R68/R69, R53/MCLR, JTAG), toolchain status, firmware/ layout.
+- [0009-firmware-versioning.md](0009-firmware-versioning.md) — Firmware semver rule: owner = MAJOR.MINOR, Claude = PATCH; `version.h` + `firmware/VERSIONS.md`; repo skills list.

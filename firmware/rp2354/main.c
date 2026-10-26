@@ -8,7 +8,8 @@
 //   * PIC PGC1/PGD1 taps on GPIO21/22: kept Hi-Z (inputs, no pulls) so a PICkit on J1 works.
 //   * RGB status LED (U5 + LED1 in parallel on GPIO10): blue = no PIC, green = link ok, red = bad reply.
 //
-// Commands (type on the USB console):  help | ping | auto | stop | reset | rdy | trig | raw <text> | stat
+// Commands (type on the USB console):
+//   help | version | rgb R G B | reboot [dfu] | ping | auto | stop | reset | rdy | trig | raw <text> | stat
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,6 +18,11 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "ws2812.pio.h"
+#include "pico/unique_id.h"
+#include "pico/bootrom.h"
+#include "pico/version.h"
+#include "hardware/structs/sysinfo.h"
+#include "version.h"
 
 #define LINK_UART      uart0
 #define LINK_BAUD      115200
@@ -24,6 +30,7 @@
 
 static uint32_t stat_sent, stat_ok, stat_bad, stat_timeout;
 static bool auto_ping = false;
+static bool manual_led = false;   // set by "rgb": link status no longer drives the LED
 static PIO led_pio; static uint led_sm;
 
 // ---------------------------------------------------------------- RGB status LED
@@ -32,7 +39,10 @@ static void led_init(void) {
     uint off = pio_add_program(led_pio, &ws2812_program);
     ws2812_program_init(led_pio, led_sm, off, MINUS_PIN_RGB, 800000.f);
 }
-static void led_rgb(uint8_t r, uint8_t g, uint8_t b) {
+static void led_set(uint8_t r, uint8_t g, uint8_t b);
+static void led_status(uint8_t r, uint8_t g, uint8_t b) { if (!manual_led) led_set(r, g, b); }
+static void led_rgb(uint8_t r, uint8_t g, uint8_t b) { led_set(r, g, b); }
+static void led_set(uint8_t r, uint8_t g, uint8_t b) {
     // GRB order, left-aligned in the 32-bit FIFO word (out shift = 24 bits, MSB first)
     uint32_t grb = ((uint32_t)g << 16) | ((uint32_t)r << 8) | b;
     pio_sm_put_blocking(led_pio, led_sm, grb << 8);
@@ -98,15 +108,39 @@ static bool do_ping(bool verbose) {
     int n = link_readline(rx, sizeof rx, LINK_TIMEOUT_US);
     int64_t dt = absolute_time_diff_us(t0, get_absolute_time());
     char want[32]; snprintf(want, sizeof want, "PONG %lu", (unsigned long)seq);
-    if (n < 0) { stat_timeout++; led_rgb(0, 0, 40); if (verbose) printf("ping %lu: timeout (%lld us)\n", (unsigned long)seq, dt); return false; }
-    if (strcmp(rx, want) == 0) { stat_ok++; led_rgb(0, 40, 0); if (verbose) printf("ping %lu: ok, %lld us, rdy=%d\n", (unsigned long)seq, dt, gpio_get(MINUS_PIN_RDY)); return true; }
-    stat_bad++; led_rgb(40, 0, 0);
+    if (n < 0) { stat_timeout++; led_status(0, 0, 40); if (verbose) printf("ping %lu: timeout (%lld us)\n", (unsigned long)seq, dt); return false; }
+    if (strcmp(rx, want) == 0) { stat_ok++; led_status(0, 40, 0); if (verbose) printf("ping %lu: ok, %lld us, rdy=%d\n", (unsigned long)seq, dt, gpio_get(MINUS_PIN_RDY)); return true; }
+    stat_bad++; led_status(40, 0, 0);
     if (verbose) printf("ping %lu: bad reply '%s' (%lld us)\n", (unsigned long)seq, rx, dt);
     return false;
 }
 
+static void cmd_version(void) {
+    char uid[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
+    pico_get_unique_board_id_string(uid, sizeof uid);
+    printf("%s %s proto %d (built " __DATE__ " " __TIME__ ", pico-sdk " PICO_SDK_VERSION_STRING ")\n", FW_NAME, FW_VERSION, PROTO_VERSION);
+    printf("board: minus_devkit (hardware/minUS_10102026), flash %u kB\n", PICO_FLASH_SIZE_BYTES / 1024);
+    printf("chip: RP2354A  chip_id=0x%08lx package_sel=0x%lx version=A%u\n",
+           (unsigned long)sysinfo_hw->chip_id, (unsigned long)sysinfo_hw->package_sel, rp2350_chip_version());
+    printf("unique id: %s\n", uid);
+}
+
+static void cmd_reboot(const char *arg) {
+    if (arg && !strcmp(arg, "dfu")) {
+        printf("rebooting into BOOTSEL (UF2 drive)...\n"); sleep_ms(50);
+        rom_reset_usb_boot(0, 0);            // same as holding BOOTSEL: RP2350 USB mass-storage/PICOBOOT
+    }
+    printf("rebooting...\n"); sleep_ms(50);
+    // watchdog-free reboot via the ROM: AIRCR SYSRESETREQ
+    *(volatile uint32_t *)0xE000ED0C = (0x5FAUL << 16) | (1u << 2);
+    while (true) tight_loop_contents();
+}
+
 static void help(void) {
     printf("minus devkit RP2354A link test\n"
+           "  version     firmware version, chip id, unique id\n"
+           "  rgb R G B   set the WS2812/SK6812 colour (0-255 each), e.g. rgb 255 255 255\n"
+           "  reboot      reset the RP2354; 'reboot dfu' = reboot into BOOTSEL/UF2 mode\n"
            "  ping        send PING n over UART0 (GPIO16/17), expect PONG n from the PIC32\n"
            "  auto|stop   ping every 500 ms / stop\n"
            "  reset       pulse PIC MCLR low via GPIO24 (needs R53 <= 470R, see README)\n"
@@ -131,6 +165,14 @@ int main(void) {
             if (c == '\r' || c == '\n') {
                 line[len] = 0; len = 0;
                 if (!strcmp(line, "help") || !strcmp(line, "?")) help();
+                else if (!strcmp(line, "version")) cmd_version();
+                else if (!strncmp(line, "rgb", 3)) {
+                    int r, g, b;
+                    if (sscanf(line + 3, "%d %d %d", &r, &g, &b) == 3 && (unsigned)r < 256 && (unsigned)g < 256 && (unsigned)b < 256) {
+                        manual_led = true; led_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b); printf("rgb %d %d %d\n", r, g, b);
+                    } else printf("usage: rgb R G B (0-255)\n");
+                }
+                else if (!strncmp(line, "reboot", 6)) cmd_reboot(line[6] == ' ' ? line + 7 : NULL);
                 else if (!strcmp(line, "ping")) do_ping(true);
                 else if (!strcmp(line, "auto")) { auto_ping = true; printf("auto ping on\n"); }
                 else if (!strcmp(line, "stop")) { auto_ping = false; printf("auto ping off\n"); }

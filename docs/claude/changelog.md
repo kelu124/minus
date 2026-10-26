@@ -8,7 +8,12 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-26  Add `STEP1.md` (board fixes · Ubuntu install · link test); RP CLI `version` /
+  `rgb R G B` / `reboot [dfu]` (fw 0.2.0); PIC config pragmas + register names verified against
+  PIC32AK-GC_DFP 1.1.53, Makefile points at the unpacked DFP; R68/R69 advice corrected (keep
+  one at 1–4.7 kΩ; RP is sole digipot master); memory 0008 + log + TODO. Firmware semver
+  rule (`firmware/VERSIONS.md`, `version.h` ×2: rp 0.1.1, pic 0.1.0) + memory 0009; repo skills
+  `kicad-netlist-reading`, `pic32ak-xcdsc-toolchain`, `minus-firmware`.
 
 ## Committed
 
