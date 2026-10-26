@@ -1,0 +1,152 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "ab4f5dc4-4f01-406e-afa7-1b42ce716034")
+	(paper "A4")
+	(lib_symbols)
+	(sheet
+		(at 90.17 15.494)
+		(size 192.532 57.404)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 255 0 1)
+		)
+		(uuid "37244c81-f389-47bd-b2ad-28900ed8a6cb")
+		(property "Sheetname" "PUSH_PULL"
+			(at 99.568 57.404 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 20 20)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "untitled.kicad_sch"
+			(at 90.17 73.4826 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/393275de-e3f9-4800-99dc-bb7de891e8d2"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 91.44 95.25)
+		(size 190.246 65.024)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 0 255 1)
+		)
+		(uuid "65bf7192-b6bb-440e-8fd8-e0a07b873af9")
+		(property "Sheetname" "HV_PULSER"
+			(at 99.06 141.732 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 20 20)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "HV_PULSER.kicad_sch"
+			(at 91.44 160.8586 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/393275de-e3f9-4800-99dc-bb7de891e8d2"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 19.558 18.288)
+		(size 63.246 141.986)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 0 0 1)
+		)
+		(uuid "a1fe38f8-4670-4eca-a906-b3c4e8f12ad7")
+		(property "Sheetname" "HV"
+			(at 26.162 108.458 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 20 20)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "HV.kicad_sch"
+			(at 19.558 160.8586 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/393275de-e3f9-4800-99dc-bb7de891e8d2"
+					(page "14")
+				)
+			)
+		)
+	)
+)

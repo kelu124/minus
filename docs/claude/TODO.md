@@ -5,6 +5,17 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
+  - Install **XC-DSC + MPLAB X (ipecmd, PIC32A-K DFP)**; compile `firmware/pic32/`; fix the
+    `#pragma config` / PPS / U1CON names against the DFP header.
+  - Board fixes before the link test: remove **R68/R69** (MOSI–MISO 50 Ω), **R53 → 0 Ω**
+    (MCLR drive), cut **JP1** (C31 on MCLR) when programming from the RP.
+  - Run the UART PING/PONG test (`ping` / `auto` on the RP USB console); confirm RDY/TRIG.
+  - Step 2: PIC SPI client + ADC capture → RP; RP-side **ICSP programmer** (DS70005583 §2–3,
+    PIO bit-bang on GPIO21/22/24).
+  - Fold the 2026-10-26 flaws into `design/devkit/review-findings.md`; add `hardware/` to the
+    docs conventions (design files now live there, not only `design/`).
+
 - Requirements v0.3: NDT/workshop-badge, 3–4 MHz, unipolar, A-/M-mode, RP2350 + USB-C,
   provided piezo, coded excitation, multi-connector, derisk-by-reuse (DP5) all locked.
   Only ADEC (external ADC choice) + exact HV level remain open.
@@ -14,8 +25,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - Then draft a **costed BOM + block diagram** reusing un0rick/pic0rick blocks on RP2350.
 - **PIC32A concept** (`design/pic32/`): evaluate RP2350 + PIC32AK3208GC41064 (on-die
   40 Msps ADC + 100 MHz op-amps) as an alternative to external ADC+VGA. Open:
-  - Confirm **LCSC stock + JLCPCB assembly** for the PIC32A (Digikey ~$1.6–1.9 known;
-    LCSC/JLCPCB TBD — the go/no-go for the project's fab flow).
+  - ~~LCSC stock for the PIC32A~~ → resolved 2026-10-26: 48-pin PIC32AK1216GC41048 is LCSC C46545915 (in the devkit BOM).
   - Verify whether the PIC32A op-amp has an **internal PGA (GSEL) ladder** (→ per-line
     gain with zero extra parts) or needs an external **digipot/MDAC/resistor-mux**.
   - Check PIC32A op-amp **input noise** vs echo level → decide if a fixed **LNA** (A3a)

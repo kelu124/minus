@@ -1,0 +1,6 @@
+# build outputs
+firmware/*/build/
+# KiCad lock / autosave files
+*.lck
+~*.kicad_*
+*-backups/*.zip
