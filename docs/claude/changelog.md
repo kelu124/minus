@@ -8,12 +8,14 @@ the sha.
 
 ## Pending
 
-- 2026-10-26  Add `hardware/minUS_10102026` (+ `08102026`) KiCad devkit; `firmware/` with
+- (none)
+
+## Committed
+
+- 2026-10-26  67576a0  Add `hardware/minUS_10102026` (+ `08102026`) KiCad devkit; `firmware/` with
   RP2354A link-test firmware (builds, pico-sdk 2.1.0) + PIC32AK UART ping/pong source
   (XC-DSC, uncompiled) + README (pin map, flaws R68/R69 · R53/MCLR · JTAG, toolchains);
   memory `0008-devkit-minUS_10102026.md` (+INDEX); session log 04; TODO; `.gitignore`.
-
-## Committed
 
 - 2026-09-21  c8eb87d  Add `design/devkit/review-findings.md` (4-agent flaw review, ranked +
   fix tracker); apply datasheet corrections across pic32/designA/devkit/pcb-brief (VREF=AVDD,
