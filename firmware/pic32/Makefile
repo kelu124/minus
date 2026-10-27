@@ -24,7 +24,7 @@ GLD     := $(DFP)/$(DFPSUB)/support/PIC32A/gld/p$(DEVICE).gld
 LDFLAGS := -mcpu=$(DEVICE) -Wl,--gc-sections,-Map=build/minus_pic.map -T $(GLD) \
           $(if $(DFP),-mdfp=$(DFP)/$(DFPSUB),)
 
-SRC := main.c
+SRC := main.c acq.c
 OBJ := $(SRC:%.c=build/%.o)
 
 all: build/minus_pic.hex

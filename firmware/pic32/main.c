@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "version.h"
+#include "acq.h"
 
 // ---------------------------------------------------------------- configuration bits
 // JTAG must be OFF: TCK/TDO/TDI/TMS sit on RD1 (SPI_CLK), RD2 (SPI_MOSI), RD3, RB1 (digipot).
@@ -107,6 +108,7 @@ int main(void) {
     pins_init();
     pps_init();
     uart1_init();
+    acq_init();
 
     char line[64]; int len = 0;
     uint32_t beat = 0; int last_trig = TRIG_PORT;
@@ -127,6 +129,14 @@ int main(void) {
                 } else if (!strcmp(line, "TRIG?")) {
                     char out[32]; snprintf(out, sizeof out, "TRIG %lu\n", (unsigned long)trig_edges);
                     uart1_puts(out);
+                } else if (!strcmp(line, "ACQ")) {
+                    // one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
+                    uint32_t t = 0; acq_status_t st = acq_run(&t);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : "notready";
+                    char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
+                    uart1_puts(out);
+                    if (st == ACQ_OK)
+                        for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
                 } else if (!strcmp(line, "ID?")) {
                     uart1_puts("PIC32AK1216GC41048 " FW_NAME " " FW_VERSION " proto " FW_STR(PROTO_VERSION) "\n");
                 } else if (len == 0 && line[0]) {
