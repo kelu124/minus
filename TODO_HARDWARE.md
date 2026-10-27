@@ -23,6 +23,10 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - **[nice] Second ICSP pair reachable without a jumper:** PGD2 = RA0 is already the TRIG line
   (GPIO6); route PGC2 = RA1 to a spare RP GPIO (today it only reaches H2.16) so a board can be
   diagnosed on two pairs without a flying wire.
+- **[must] Remove the Tag-Connect footprint (J1).** Replace it with a plain 6-pin 2.54 mm ICSP
+  header (1 MCLR, 2 VDD, 3 GND, 4 PGD1, 5 PGC1, 6 NC — Snap / PICkit Basic pin order) so a
+  programmer, a meter or an analyser can be attached without a special cable or pogo pins.
+  (Owner decision 2026-10-28.)
 - **[nice] Test points** on MCLR (PIC side of R9), PGC1, PGD1: the Tag-Connect pads are 1 mm and
   hard to probe with hook clips; a 1 Hz MCLR blink was needed to find pad 1 on the analyser.
 
