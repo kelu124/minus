@@ -16,6 +16,10 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   shift (exact timing, as `pic32probe/src/probe.rs`); `pic raw` streaming mode so
   `tools/rpcli.py` can push a hex without rebuilding the RP image (pic32prog `adapter-bitbang`
   pattern); row programming (§3.4) for speed.
+- **MDFU bootloader option (decide after `ping` works):** Microchip `dspic-bootloader-mdfu`
+  (dsPIC33AK demos, UART/CAN-FD, `pymdfu` host) ported to the PIC32AK1216; RP ICSP then only
+  installs the bootloader once, app updates go over the existing UART with the RP as a
+  USB-CDC↔UART bridge. Check footprint, linker layout and MCC support for our part first.
 
 - **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
   - ~~Install MPLAB X + XC-DSC~~ done 2026-10-26 (6.35 / 3.31.01); **both firmwares build**.

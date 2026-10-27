@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- docs: MDFU bootloader assessment (log 05, TODO)
 
 ## Committed
 
