@@ -6,3 +6,5 @@ firmware/*/build/
 *-backups/*.zip
 # superpowers plan workspaces (ledgers, briefs)
 .superpowers/
+# host test binaries
+firmware/rp2354/tests/test_acq_parse
