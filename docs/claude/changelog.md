@@ -12,6 +12,7 @@ the sha.
 
 ## Committed
 
+- 2026-10-27  1185885  docs: R17/R18 decision — keep; optional isolation step before scoping (log 05, TODO).
 - 2026-10-27  6d40b42  fix(acq): review pass — SCCP1 T32 trigger, DMA status/overrun, bounded ADRDY, Makefile dep, capped link drain, parser bounds.
 - 2026-10-27  7995e59  docs: acq command, link protocol v2, bench plan (TODO/DONE/changelog/memory 0008).
 - 2026-10-27  49a2f66  tools: `rpcli.py --out=FILE` + pty test; untrack host test binary.
