@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-27 | `6d40b42` | fix(acq): review pass — SCCP1 32-bit timer trigger, DMA status clear + overrun reporting, bounded ADRDY wait, Makefile acq.h dep, capped link drain, parser bounds n | Fresh-reviewer findings before the bench: trigger mode per datasheet §27.4.2.2, dropped samples now reported as `overrun`, no boot hang if the ADC fails, 20 Msps fallback really rebuilds. |
 | 2026-10-27 | `7995e59` | docs: acq command (RP + PIC), link protocol v2, bench plan, TODO/DONE/changelog/memory | README/TODO/DONE/memory 0008 carry the new command and the bench expectation (fill ≈ 102 µs). |
 | 2026-10-27 | `49a2f66` | feat(tools): rpcli.py --out=FILE saves the last reply (acq captures); untrack host test binary | Captures land in a file for plotting; removed a committed binary. |
 | 2026-10-27 | `fbd29c7` | feat(rp2354): acq — fetch and print 4095 PIC ADC samples, host-tested header parser, link drain-until-idle, proto 2 (fw 0.1.4) | Owner-facing command; parser tested on the host (caught a rate-scaling bug); link recovery after timeouts. |

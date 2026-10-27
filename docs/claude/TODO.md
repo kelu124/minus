@@ -14,6 +14,9 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   - From the pic32probe study (`pic32prog/README.md`, memory 0010): first knob = slow the
     entry key to ~100 kHz (5 µs halves) + add `pic speed <khz>`; then scope PGC/PGD/MCLR.
 
+- **acq review minors (deferred):** read AD1CH0DATA before `CHEN=1` (stale sample 0); don't print `fs` on
+  non-ok status; `rpcli --out` should exit non-zero when the reply is not a capture; fix the
+  indentation of the `stat` dispatch line; heartbeat divider is a loop count.
 - **acq follow-ups (after the bench run):** `acq trig` (arm, start on the RP TRIG edge); rate /
   input arguments (FE-A path = AD2AN1); if DMA drops at 40 Msps: CPU-loop reader or 20 Msps;
   absolute rate check (RP-timed via RDY); faster link baud or packed 12-bit payload.
