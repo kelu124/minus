@@ -26,6 +26,9 @@ static unsigned samc_for_div(unsigned div) {
     return samc;
 }
 void acq_set_div(unsigned div) { if (div < 4) div = 4; if (div > 255) div = 255; acq_div = div; }
+static int acq_samc = 0;                  // default fixed 0 (6.25 ns) — deterministic; auto (-1) was found to skip triggers irregularly
+void acq_set_samc(int samc) { acq_samc = samc < 0 ? -1 : (samc > 7 ? 7 : samc); }
+int  acq_get_samc(void) { return acq_samc; }
 unsigned acq_get_div(void) { return acq_div; }
 
 void acq_init(void) {
@@ -79,7 +82,7 @@ void acq_init(void) {
 acq_status_t acq_run(uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
     CCP1PR = acq_div - 1u;                                // trigger period (see acq_set_div)
-    AD1CH0CONbits.SAMC = samc_for_div(acq_div);
+    AD1CH0CONbits.SAMC = acq_samc < 0 ? samc_for_div(acq_div) : (unsigned)acq_samc;
 
     // DMA0: one-shot, 16-bit, fixed source (AD1CH0DATA), incrementing destination (acq_buf).
     // Clear every status flag (DONE, HALF, OVERRUN, ADRERR, BRERR, BWERR are write-0-to-clear) so a
@@ -99,12 +102,14 @@ acq_status_t acq_run(uint32_t *ticks) {
     (void)AD1CH0DATA;                   // clear any stale channel-ready flag before arming the trigger
     CCP1TMR = 0;
     TMR1 = 0;
+    LATAbits.LATA7 = 1;                 // RDY high = capture window (RP times it with its own clock)
     T1CONbits.ON = 1;
-    CCP1CON1bits.ON = 1;                // triggers start: one conversion every ACQ_TRIG_DIV / 160 MHz
+    CCP1CON1bits.ON = 1;                // triggers start: one conversion every acq_div CLKGEN12 clocks
 
     while (DMA0STATbits.DONE == 0 && TMR1 < ACQ_DEADLINE_TICKS) ;
 
     uint32_t t = TMR1;
+    LATAbits.LATA7 = 0;                 // RDY low = capture done (or deadline)
     CCP1CON1bits.ON = 0;                // stop triggers
     T1CONbits.ON = 0;
     acq_status_t st = ACQ_OK;

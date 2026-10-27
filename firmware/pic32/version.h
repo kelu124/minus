@@ -4,7 +4,7 @@
 #define FW_NAME           "minus-devkit-pic32"
 #define FW_VERSION_MAJOR  0
 #define FW_VERSION_MINOR  1
-#define FW_VERSION_PATCH  3
+#define FW_VERSION_PATCH  7
 #define PROTO_VERSION     3   // 3: ACQ [div]   // 2: + ACQ (4095-sample capture, header + binary payload)
 #define _FW_STR(x) #x
 #define FW_STR(x) _FW_STR(x)

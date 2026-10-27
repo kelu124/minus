@@ -55,6 +55,19 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - **[nice] LED2 (red, PIC RC5)** is the only PIC sign of life; keep it. On board 1 it is lit steady
   with a blank/dead PIC (RC5 stuck high) — a useful symptom.
 
+## Analog path — first measurements (board 2, 2026-10-28)
+
+- **[should] The bare ADC node needs a low-impedance driver.** With no FE path connected the node
+  sits on the R43/R44 10 k‖10 k bias (≈ 5 kΩ source) and the 12-bit ADC cannot charge its hold
+  capacitor in a 6.25 ns sampling window: the reading settles over ~60 samples and the mean drops
+  from 1.58 V (slow rate, long sampling) to 1.07 V at 26 Msps. Every FE path (op-amp output
+  through 100 Ω) must stay connected, or add a buffer at the node; keep the bias divider but make
+  it ≤ 1 kΩ Thevenin or AC-couple into a buffered mid-rail.
+- **[nice] Trigger-rate observation:** the SCCP1-triggered ADC + DMA chain tops out at ~26.6 Msps
+  (one 16-bit DMA transfer per ~6 CPU clocks); 40 Msps needs a different data path (CPU loop or
+  the ADC's own buffering). Not a board issue, noted for the design (RP2350 PIO/SPI readout vs
+  PIC DMA).
+
 ## Analog path (from `design/devkit/review-findings.md`, not yet re-checked on hardware)
 
 - Gain distribution / digipot bandwidth, anti-alias RC corner (~6–8 MHz), LVP-only programming

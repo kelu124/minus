@@ -5,7 +5,14 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-10-28): replace U2** (PIC32AK1216GC41048-I/PT, LCSC C46545915). Bench
+- **RESUME HERE (2026-10-28 01:00): board 2 works end to end** (`pic id/flash`, `ping`, `acq`).
+    Next bench steps: (1) sweep `acq <div> 0` and get the true trigger period per count (expected
+    6.25 ns; measured ~4.7 ns — check CLKGEN12/SCCP semantics); (2) inject a 1 MHz signal at the
+    ADC SMA (DS203 generator) → samples/period = real fs, first waveform; (3) connect an FE path so
+    the node is buffered (bare node reads 1.07–1.58 V depending on rate, settling artefact);
+    (4) decide the default rate (DMA floor 26.6 Msps) and whether 40 Msps needs a CPU-loop reader.
+  - Board 1: replace U2 (dead PIC) when convenient; remove its H2.16–CN1.17 jumper first.
+- **Was: RESUME HERE (2026-10-28): replace U2** (PIC32AK1216GC41048-I/PT, LCSC C46545915). Bench
     proof 2026-10-27: R53 shorted, MCLR 0.2 V low / 3.13 V released at pin 48, 3.28 V at the chip,
     full ICSP entry sequence verified on the pins with a logic analyser, silent on pairs 1 and 2.
     Before the swap remove the H2.16–CN1.17 jumper. Then `pic id` (fw 0.1.7, pair 1 fast) →

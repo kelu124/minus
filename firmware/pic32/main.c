@@ -133,13 +133,22 @@ int main(void) {
                     uart1_puts(out);
                 } else if (!strncmp(line, "ACQ", 3) && (line[3] == 0 || line[3] == ' ')) {
                     // ACQ [div]: one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
-                    if (line[3] == ' ') acq_set_div((unsigned)strtoul(line + 4, NULL, 10));
+                    if (line[3] == ' ') { char *e; acq_set_div((unsigned)strtoul(line + 4, &e, 10)); if (*e == ' ') acq_set_samc((int)strtol(e + 1, NULL, 10)); }
+                    RDY_LAT = 0;                        // PONG may have left RDY high; the RP times the RDY pulse of this capture
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     uart1_puts(out);
                     if (st == ACQ_OK)
                         for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strncmp(line, "CLK12 ", 6)) {
+                    // diagnostic: re-source CLKGEN12 (SCCP1 trigger clock). 1 = FRC 8 MHz, 5 = PLL1 Fout (160 MHz), 7 = PLL1 VCO/2 (320 MHz)
+                    unsigned n = (unsigned)strtoul(line + 6, NULL, 10) & 0xF;
+                    CLK12CONbits.NOSC = n; CLK12CONbits.OSWEN = 1;
+                    uint32_t guard = 2000000; while (CLK12CONbits.OSWEN && --guard) ;
+                    guard = 2000000; while (CLK12CONbits.CLKRDY == 0 && --guard) ;
+                    char out[40]; snprintf(out, sizeof out, "CLK12 cosc=%u rdy=%u\n", (unsigned)CLK12CONbits.COSC, (unsigned)CLK12CONbits.CLKRDY);
+                    uart1_puts(out);
                 } else if (!strcmp(line, "ID?")) {
                     uart1_puts("PIC32AK1216GC41048 " FW_NAME " " FW_VERSION " proto " FW_STR(PROTO_VERSION) "\n");
                 } else if (len == 0 && line[0]) {

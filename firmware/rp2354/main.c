@@ -298,9 +298,22 @@ static void cmd_pic(const char *arg) {
 static void cmd_acq(const char *arg) {
     static uint8_t payload[2 * ACQ_MAX_N];
     char hdr[96];
-    unsigned div = (arg && *arg) ? (unsigned)strtoul(arg, NULL, 10) : 0;   // 0 = PIC default (4 = 40 Msps)
+    unsigned div = 0; int samc = -2;                                        // div 0 = PIC default; samc -2 = not given
+    if (arg && *arg) { char *e; div = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') samc = (int)strtol(e + 1, NULL, 10); }
     link_flush_rx();
-    if (div) { snprintf(hdr, sizeof hdr, "ACQ %u\n", div); link_puts(hdr); } else link_puts("ACQ\n");
+    if (div && samc != -2) snprintf(hdr, sizeof hdr, "ACQ %u %d\n", div, samc);
+    else if (div) snprintf(hdr, sizeof hdr, "ACQ %u\n", div);
+    else snprintf(hdr, sizeof hdr, "ACQ\n");
+    link_puts(hdr);
+    // RP-side timing of the capture window: the PIC holds RDY high from trigger start to DMA done.
+    absolute_time_t t_arm = make_timeout_time_ms(100); int64_t rp_fill_us = -1;
+    while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();     // PIC drops RDY when it parses ACQ
+    while (!gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();    // then raises it at trigger start
+    if (gpio_get(MINUS_PIN_RDY)) {
+        absolute_time_t t0 = get_absolute_time(), t_end = make_timeout_time_ms(20);
+        while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_end)) tight_loop_contents();
+        rp_fill_us = absolute_time_diff_us(t0, get_absolute_time());
+    }
     int n = link_readline(hdr, sizeof hdr, 500000);                  // capture itself takes ~0.1 ms, deadline 5 ms
     if (n < 0) { printf("acq: no reply from PIC\n"); return; }
     if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return; }
@@ -315,7 +328,7 @@ static void cmd_acq(const char *arg) {
     while (got < want && !time_reached(deadline))
         if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
     if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return; }
-    printf("# acq n=%u %s (trigger div %u -> nominal %.2f Msps from the PIC FRC+PLL, FRC +/-1.5%%; AD1AN9, 12-bit unsigned)\n", h.n, rate, div ? div : 4, 160.0 / (div ? div : 4));
+    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) trigger div %u; AD1AN9, 12-bit unsigned\n", h.n, rate, (long long)rp_fill_us, div ? div : 4);
     for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
 }
 
@@ -332,7 +345,7 @@ static void help(void) {
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
            "  lb          RP UART0 internal loopback self-test\n"
-           "  acq [div]   capture 4095 ADC samples on the PIC (AD1AN9) and print them; div = trigger period in 6.25 ns steps: 4 = 40 Msps (default), 6 = 26.7, 8 = 20, 16 = 10\n"
+           "  acq [div [samc]]  capture 4095 ADC samples on the PIC (AD1AN9) and print them; div = SCCP1 trigger period in counts (4 default), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
 
