@@ -26,7 +26,7 @@ add_custom_command(
   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/tools/hex2c.py ${PIC_HEX_DEP}
   COMMENT "Embedding PIC32 image from ${PIC_HEX_ARG}")
 
-add_executable(minus_rp main.c pic_icsp.c ${CMAKE_CURRENT_BINARY_DIR}/pic_image.c)
+add_executable(minus_rp main.c pic_icsp.c acq_parse.c ${CMAKE_CURRENT_BINARY_DIR}/pic_image.c)
 target_include_directories(minus_rp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_pio hardware_gpio pico_unique_id pico_bootrom)

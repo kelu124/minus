@@ -26,10 +26,12 @@
 #include "version.h"
 #include "pic_icsp.h"
 #include "pic_image.h"
+#include "acq_parse.h"
 
 #define LINK_UART      uart0
 #define LINK_BAUD      115200
-#define LINK_TIMEOUT_US 200000   // 200 ms: PIC runs from its 8 MHz FRC, reply is ~1 ms
+#define LINK_TIMEOUT_US 200000   // 200 ms for a one-line reply (PIC answers within ~1 ms)
+#define LINK_IDLE_US    50000    // link_flush_rx: drain until the PIC has been silent this long
 
 static uint32_t stat_sent, stat_ok, stat_bad, stat_timeout;
 static bool auto_ping = false;
@@ -59,7 +61,13 @@ static void link_init(void) {
     uart_set_format(LINK_UART, 8, 1, UART_PARITY_NONE);
     uart_set_fifo_enabled(LINK_UART, true);
 }
-static void link_flush_rx(void) { while (uart_is_readable(LINK_UART)) (void)uart_getc(LINK_UART); }
+// Drain the link until it has been idle for LINK_IDLE_US: a timed-out `acq` leaves the PIC still
+// clocking out its payload (up to ~0.7 s), and this keeps that from poisoning the next command.
+static void link_flush_rx(void) {
+    absolute_time_t idle = make_timeout_time_us(LINK_IDLE_US);
+    while (!time_reached(idle))
+        if (uart_is_readable(LINK_UART)) { (void)uart_getc(LINK_UART); idle = make_timeout_time_us(LINK_IDLE_US); }
+}
 static void link_puts(const char *s) { uart_puts(LINK_UART, s); }
 
 // read one '\n'-terminated line (without the newline) within timeout; returns length or -1
@@ -241,6 +249,31 @@ static void cmd_pic(const char *arg) {
     printf("ICSP exit, PIC released (MCLR Hi-Z)%s\n", want_flash ? " — try 'ping'" : "");
 }
 
+// ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
+#define ACQ_MAX_N 4095u
+static void cmd_acq(void) {
+    static uint8_t payload[2 * ACQ_MAX_N];
+    char hdr[96];
+    link_flush_rx();
+    link_puts("ACQ\n");
+    int n = link_readline(hdr, sizeof hdr, 500000);                  // capture itself takes ~0.1 ms, deadline 5 ms
+    if (n < 0) { printf("acq: no reply from PIC\n"); return; }
+    if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return; }
+    acq_hdr_t h;
+    if (!acq_parse_header(hdr, &h)) { printf("acq: bad header '%s'\n", hdr); return; }
+    char rate[64]; acq_format_rate(&h, rate, sizeof rate);
+    if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return; }
+    unsigned want = 2 * h.n;
+    if (h.n == 0 || want > sizeof payload) { printf("acq: n=%u out of range\n", h.n); return; }
+    absolute_time_t deadline = make_timeout_time_us(1500000);         // 8190 B at 115200 baud ~ 0.71 s
+    unsigned got = 0;
+    while (got < want && !time_reached(deadline))
+        if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
+    if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return; }
+    printf("# acq n=%u %s (nominal 40.00 Msps from the PIC FRC+PLL, FRC +/-1.5%%; AD1AN9, 12-bit unsigned)\n", h.n, rate);
+    for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
+}
+
 static void help(void) {
     printf("minus devkit RP2354A link test\n"
            "  version     firmware version, chip id, unique id\n"
@@ -253,6 +286,7 @@ static void help(void) {
            "  trig        2 us pulse on TRIG (GPIO6 -> PIC RA0)\n"
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
+           "  acq         capture 4095 ADC samples on the PIC (AD1AN9, 40 Msps) and print them one per line\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
 
@@ -291,7 +325,8 @@ int main(void) {
                     int n = link_readline(rx, sizeof rx, LINK_TIMEOUT_US);
                     printf(n < 0 ? "no reply ('%s' partial)\n" : "reply: '%s'\n", rx);
                 }
-                else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
+                else if (!strcmp(line, "acq")) cmd_acq();
+        else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);
                 else if (len == 0 && line[0]) printf("unknown '%s' — try help\n", line);
             } else if (len < (int)sizeof line - 1) line[len++] = (char)c;
