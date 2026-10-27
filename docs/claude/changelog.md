@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- docs: pic32prog study — vendor kiffie/pic32probe + pic32prog-kvh as submodules under `pic32prog/`, write-up + applicability (memory 0010, TODO, DONE, log 05)
+- (none)
 
 ## Committed
 
+- 2026-10-27  2651219  pic32prog study: kiffie/pic32probe + pic32prog-kvh vendored as submodules under `pic32prog/`;
+  write-up + applicability to our PIC32AK driver (memory 0010, TODO, DONE, log 05).
 - 2026-10-26  b874cfb  SessionStart resume hook (`.claude/hooks/session-resume.sh` + `.claude/settings.json`) and
   `minus-resume` skill; TODO RESUME HERE moved to the top.
 
