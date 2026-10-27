@@ -14,8 +14,14 @@
 #ifndef MINUS_PIN_PIC_PGC
 #include "boards/minus_devkit.h"
 #endif
-#define PGC  MINUS_PIN_PIC_PGC
-#define PGD  MINUS_PIN_PIC_PGD
+// ICSP pair selection (diagnostic, 2026-10-27): pair 1 = PGC1/PGD1 (RB4/RB3, GPIO21/22, the
+// designed path); pair 2 = PGC2/PGD2 (RA1/RA0): PGD2 is the TRIG line (GPIO6 direct), PGC2 (RA1)
+// only reaches header H2 and must be jumpered to GPIO21 (CN1.17) — then GPIO21 clocks both pairs.
+static uint pgc_pin = MINUS_PIN_PIC_PGC, pgd_pin = MINUS_PIN_PIC_PGD; static int icsp_pair = 1;
+void icsp_set_pair(int pair) { icsp_pair = pair == 2 ? 2 : 1; pgd_pin = icsp_pair == 2 ? MINUS_PIN_TRIG : MINUS_PIN_PIC_PGD; pgc_pin = MINUS_PIN_PIC_PGC; }
+int  icsp_get_pair(void) { return icsp_pair; }
+#define PGC  pgc_pin
+#define PGD  pgd_pin
 #define MCLR MINUS_PIN_PIC_MCLR
 
 #define VISI    0x0007C0u

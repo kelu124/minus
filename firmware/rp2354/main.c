@@ -186,6 +186,7 @@ static void cmd_pic(const char *arg) {
                "pic mclr low|hiz   hold the MCLR tap low for a meter check / release it\n"
                "pic mclr rise      measure the MCLR node rise time after release (< 5 us = C31 really off)\n"
                "pic slow|fast      ICSP clock ~100 kHz / ~1.2 MHz (diagnostic; default fast)\n"
+               "pic pair 1|2       ICSP pins: 1 = PGC1/PGD1 (GPIO21/22); 2 = PGC2/PGD2 (jumper H2.16 -> CN1.17, PGD2 = TRIG/GPIO6)\n"
                "pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
                "pic image   describe the PIC image embedded in this firmware\n"
                "pic flash   bulk erase + program + verify the embedded image, then run the PIC\n"
@@ -227,6 +228,7 @@ static void cmd_pic(const char *arg) {
         } else printf("usage: pic mclr low | hiz | rise\n");
         return;
     }
+    if (!strncmp(arg, "pair", 4)) { if (arg[4] == ' ') icsp_set_pair(arg[5] - '0'); printf("ICSP pair %d: PGC on GPIO21, PGD on GPIO%d%s\n", icsp_get_pair(), icsp_get_pair() == 2 ? MINUS_PIN_TRIG : MINUS_PIN_PIC_PGD, icsp_get_pair() == 2 ? " (TRIG line = PIC RA0/PGD2; jumper H2.16 (RA1/PGC2) to CN1.17)" : ""); return; }
     if (!strcmp(arg, "slow") || !strcmp(arg, "fast")) { icsp_set_slow(arg[0] == 's'); printf("ICSP clock: %s\n", icsp_get_slow() ? "slow (~100 kHz)" : "fast (~1.2 MHz)"); return; }
     if (!strcmp(arg, "image")) {
         printf("image '%s': %u segment(s), %u bytes\n", pic_image_name, pic_image_nseg, pic_image_bytes);
@@ -242,7 +244,7 @@ static void cmd_pic(const char *arg) {
     uint32_t devid = 0, revid = 0;
     icsp_enter();
     bool ok = pic_read_id(&devid, &revid);
-    printf("ICSP %s, %lu PGC clocks. ", icsp_get_slow() ? "slow" : "fast", (unsigned long)icsp_clocks());
+    printf("ICSP pair %d %s, %lu PGC clocks. ", icsp_get_pair(), icsp_get_slow() ? "slow" : "fast", (unsigned long)icsp_clocks());
     printf("DEVID 0x%08lx REVID 0x%08lx -> %s\n", (unsigned long)devid, (unsigned long)revid,
            ok ? "PIC32AK1216GC41048" : (devid == 0 || devid == 0xFFFFFFFFu ? "no response (check R53=0R, JP1 cut, J1 empty, PIC powered)" : "unexpected device"));
     if (!ok) { icsp_exit(); return; }

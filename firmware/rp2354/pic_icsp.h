@@ -17,4 +17,6 @@ bool     pic_program_quadwords(uint32_t addr, const uint8_t *data, unsigned len)
 uint32_t icsp_clocks(void);                      // statistics: PGC edges issued since enter
 void     icsp_set_slow(bool on);                 // diagnostic: ~100 kHz PGC (entry key + all commands)
 bool     icsp_get_slow(void);
+void     icsp_set_pair(int pair);                // diagnostic: 1 = PGC1/PGD1 (GPIO21/22), 2 = PGC2/PGD2 (GPIO21 jumpered to H2.16 / GPIO6)
+int      icsp_get_pair(void);
 uint32_t icsp_mclr_rise_us(void);                // diagnostic: MCLR node rise time after release (C31 check)
