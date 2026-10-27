@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-27 | `3823ffa` | docs: assess Microchip MDFU bootloader as an update path for the PIC32AK (log 05, TODO) | Owner asked whether a bootloader beats raw ICSP: relevant for field updates via UART + pymdfu, but blank boards and bootloader entry still need ICSP/MCLR, so the R53 + pic id path stays first. |
 | 2026-10-27 | `2651219` | docs: pic32prog study — vendor kiffie/pic32probe + pic32prog-kvh as submodules, applicability to the PIC32AK ICSP driver | Owner asked how an RP programs a PIC32 (kiffie repos): confirmed pic32probe is MIPS/EJTAG-only, our dsPIC33A-style driver stays, slow-key knob queued for the bench. |
 | 2026-10-26 | `b874cfb` | feat(claude): SessionStart resume hook + minus-resume skill; TODO RESUME HERE on top | Owner wants the next session to pick up from the last exchanges automatically: hook injects the context, skill says how to use it. |
 | 2026-10-26 | `872b0df` | docs: persist bench findings + resume plan (MCLR 2.88 V, R53 -> 0R); add tools/rpcli.py | Session handoff: everything needed to resume the PIC flash after the R53 rework is in memory 0008, TODO and the private memory. |

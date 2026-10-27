@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- docs: MDFU bootloader assessment (log 05, TODO)
+- (none)
 
 ## Committed
 
+- 2026-10-27  3823ffa  MDFU bootloader assessment: complement to RP ICSP (UART + pymdfu via RP bridge), decide after ping works (log 05, TODO).
 - 2026-10-27  2651219  pic32prog study: kiffie/pic32probe + pic32prog-kvh vendored as submodules under `pic32prog/`;
   write-up + applicability to our PIC32AK driver (memory 0010, TODO, DONE, log 05).
 - 2026-10-26  b874cfb  SessionStart resume hook (`.claude/hooks/session-resume.sh` + `.claude/settings.json`) and
