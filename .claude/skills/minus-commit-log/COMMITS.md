@@ -6,6 +6,13 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-27 | `7995e59` | docs: acq command (RP + PIC), link protocol v2, bench plan, TODO/DONE/changelog/memory | README/TODO/DONE/memory 0008 carry the new command and the bench expectation (fill ≈ 102 µs). |
+| 2026-10-27 | `49a2f66` | feat(tools): rpcli.py --out=FILE saves the last reply (acq captures); untrack host test binary | Captures land in a file for plotting; removed a committed binary. |
+| 2026-10-27 | `fbd29c7` | feat(rp2354): acq — fetch and print 4095 PIC ADC samples, host-tested header parser, link drain-until-idle, proto 2 (fw 0.1.4) | Owner-facing command; parser tested on the host (caught a rate-scaling bug); link recovery after timeouts. |
+| 2026-10-27 | `c4cf6ca` | feat(pic32): ACQ — 4095-sample ADC1 capture via SCCP1 trigger + DMA0, proto 2 (fw 0.1.1) | The capture engine step 1: trigger/ADC/DMA/Timer1 chain + header/payload reply. |
+| 2026-10-27 | `10d72d5` | feat(pic32): PLL 160/320 MHz clocks, UART baud clock fix (fw 0.1.1 wip) | ADC needs 320 MHz; found and fixed the 0.1.0 UART divisor (FUART = Fsys/2). |
+| 2026-10-27 | `f647df4` | docs: acq implementation plan | Five-task plan (PIC clocks, PIC ACQ, RP acq + host tests, rpcli --out, docs) for inline execution. |
+| 2026-10-27 | `5e07f2b` | docs: acq design (4095-sample ADC capture PIC -> RP), approved; log session 05 | Owner asked for a PIC ADC capture command; brainstormed (40 Msps, AN9, immediate start, values on console), datasheet-grounded design, builder-checked. |
 | 2026-10-27 | `3823ffa` | docs: assess Microchip MDFU bootloader as an update path for the PIC32AK (log 05, TODO) | Owner asked whether a bootloader beats raw ICSP: relevant for field updates via UART + pymdfu, but blank boards and bootloader entry still need ICSP/MCLR, so the R53 + pic id path stays first. |
 | 2026-10-27 | `2651219` | docs: pic32prog study — vendor kiffie/pic32probe + pic32prog-kvh as submodules, applicability to the PIC32AK ICSP driver | Owner asked how an RP programs a PIC32 (kiffie repos): confirmed pic32probe is MIPS/EJTAG-only, our dsPIC33A-style driver stays, slow-key knob queued for the bench. |
 | 2026-10-26 | `b874cfb` | feat(claude): SessionStart resume hook + minus-resume skill; TODO RESUME HERE on top | Owner wants the next session to pick up from the last exchanges automatically: hook injects the context, skill says how to use it. |

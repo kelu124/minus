@@ -8,10 +8,17 @@ the sha.
 
 ## Pending
 
-- feat: `acq` 4095-sample ADC capture (pic32 0.1.1: PLL/ADC/SCCP/DMA + UART baud fix; rp2354 0.1.4: `acq`, acq_parse tests, link drain; rpcli --out; proto 2) + docs
+- (none)
 
 ## Committed
 
+- 2026-10-27  7995e59  docs: acq command, link protocol v2, bench plan (TODO/DONE/changelog/memory 0008).
+- 2026-10-27  49a2f66  tools: `rpcli.py --out=FILE` + pty test; untrack host test binary.
+- 2026-10-27  fbd29c7  rp2354 0.1.4: `acq` command, `acq_parse.c` + host tests, link drain-until-idle, proto 2.
+- 2026-10-27  c4cf6ca  pic32 0.1.1: `ACQ` — SCCP1-triggered ADC1/AN9 + DMA0 4095-sample capture, Timer1 fill time, proto 2.
+- 2026-10-27  10d72d5  pic32: PLL 160 MHz CPU / 320 MHz ADC clocks; UART baud clock fix (FUART = Fsys/2).
+- 2026-10-27  f647df4  docs: acq implementation plan (`docs/claude/plans/2026-10-27-acq.md`).
+- 2026-10-27  5e07f2b  docs: acq design spec approved (`docs/claude/specs/2026-10-27-acq-design.md`); log 05.
 - 2026-10-27  3823ffa  MDFU bootloader assessment: complement to RP ICSP (UART + pymdfu via RP bridge), decide after ping works (log 05, TODO).
 - 2026-10-27  2651219  pic32prog study: kiffie/pic32probe + pic32prog-kvh vendored as submodules under `pic32prog/`;
   write-up + applicability to our PIC32AK driver (memory 0010, TODO, DONE, log 05).
