@@ -96,6 +96,7 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |
 | `rdy`, `trig` | read RDY (GPIO7), 2 µs pulse on TRIG (GPIO6) |
 | `raw <text>` | send any line to the PIC, print its reply |
+| `acq` | PIC captures **4095 samples of AD1AN9 (the ADC node) at a nominal 40 Msps** (SCCP1-triggered ADC1 + DMA), sends them back; RP prints a `# acq n=4095 fill=…us fs=…Msps` line then one value per line (12-bit unsigned). `rpcli.py … acq --wait=3 --out=capture.csv` saves it. Design: `docs/claude/specs/2026-10-27-acq-design.md` |
 | `pic id` | enter ICSP on GPIO21/22/24, read DEVID/REVID (expect `0x09DA2053`), exit. No write. |
 | `pic image` | list the PIC image embedded in this RP firmware (from `firmware/pic32/build/minus_pic.hex` at build time) |
 | `pic flash` | bulk erase, program by quadwords, read-back verify, release MCLR so the PIC boots |
@@ -121,16 +122,21 @@ The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.T
 there is no `ICS` setting in this family) were verified against the DFP's
 `p32AK1216GC41048.h` and `config_docs`; the source compiles clean (no warnings) with XC-DSC 3.31.01.
 
-## Link protocol (step 1)
+## Link protocol (proto 2)
 
-ASCII lines, `\n`-terminated, 115200 8N1:
+ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG` 694):
 
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.0 proto 1` |
+| `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.1 proto 2` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
+| `ACQ` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
 | anything else | `ERR` |
+
+PIC clocking since fw 0.1.1: PLL1 from the FRC → CPU 160 MHz (CLKGEN1), ADC 320 MHz (CLKGEN6 → TAD
+80 MHz → 40 Msps), SCCP 160 MHz (CLKGEN12). `acq` fallback if the DMA cannot keep 40 M transfers/s
+(unspecified): `ACQ_TRIG_DIV 8` in `pic32/acq.h` → 20 Msps.
 
 Once this works, step 2 is the real data path: PIC = SPI client (SS1 ← RP49, SCK1 ← RP50,
 SDI1 ← RP51, SDO1 → RP35), RDY = "A-line captured", TRIG = capture start; and the RP-side

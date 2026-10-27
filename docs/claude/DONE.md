@@ -2,6 +2,7 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-10-27 — `acq`: PIC32 fw 0.1.1 (PLL 160/320 MHz, SCCP1-triggered ADC1 AN9 + DMA0 4095-sample capture, Timer1 fill time, UART baud fix) + RP fw 0.1.4 (`acq` prints values, host-tested header parser, link drain) + `rpcli.py --out`; proto 2. Design + plan in `docs/claude/specs|plans/2026-10-27-acq*.md`. Builds; bench pending.
 - 2026-10-27 — Studied kiffie/pic32probe + pic32prog-kvh (RP2040 ICSP dongle for MIPS PIC32), vendored as submodules in `pic32prog/`; write-up + applicability to our dsPIC33A-core PIC32AK in `pic32prog/README.md`, memory 0010.
 - 2026-10-26 — PIC32A LCSC/JLCPCB sourcing confirmed: 48-pin PIC32AK1216GC41048-I/PT = LCSC C46545915 (devkit BOM).
 - 2026-10-26 — Devkit schematic (`hardware/minUS_10102026`) read via netlist; inter-MCU pin map + RP→PIC reset/ICSP taps documented; RP2354A link-test firmware builds.

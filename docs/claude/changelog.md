@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- feat: `acq` 4095-sample ADC capture (pic32 0.1.1: PLL/ADC/SCCP/DMA + UART baud fix; rp2354 0.1.4: `acq`, acq_parse tests, link drain; rpcli --out; proto 2) + docs
 
 ## Committed
 

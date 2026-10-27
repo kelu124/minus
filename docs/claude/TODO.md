@@ -7,11 +7,16 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 - **RESUME HERE:** owner bridges **R53 → 0 Ω** (JP1 already cut; measured MCLR 2.88 V with
     GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
-    `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping`. If `pic id` still
-    fails, debug `pic_icsp.c` entry timing (scope / slower clock) or compare with the Snap.
+    `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping` → **`acq`** (expect
+    `fill≈102us fs≈40Msps`; if lower or `status=timeout`, set `ACQ_TRIG_DIV 8` = 20 Msps and
+    rebuild both). If `pic id` still fails, debug `pic_icsp.c` entry timing (scope / slower
+    clock) or compare with the Snap.
   - From the pic32probe study (`pic32prog/README.md`, memory 0010): first knob = slow the
     entry key to ~100 kHz (5 µs halves) + add `pic speed <khz>`; then scope PGC/PGD/MCLR.
 
+- **acq follow-ups (after the bench run):** `acq trig` (arm, start on the RP TRIG edge); rate /
+  input arguments (FE-A path = AD2AN1); if DMA drops at 40 Msps: CPU-loop reader or 20 Msps;
+  absolute rate check (RP-timed via RDY); faster link baud or packed 12-bit payload.
 - **pic32prog follow-ups (optional, after `pic id` works):** PIO port of the 2-bit-cmd + 32-bit
   shift (exact timing, as `pic32probe/src/probe.rs`); `pic raw` streaming mode so
   `tools/rpcli.py` can push a hex without rebuilding the RP image (pic32prog `adapter-bitbang`
