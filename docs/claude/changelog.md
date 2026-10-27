@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- docs: pic32prog study — vendor kiffie/pic32probe + pic32prog-kvh as submodules under `pic32prog/`, write-up + applicability (memory 0010, TODO, DONE, log 05)
 
 ## Committed
 

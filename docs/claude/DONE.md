@@ -2,6 +2,7 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-10-27 — Studied kiffie/pic32probe + pic32prog-kvh (RP2040 ICSP dongle for MIPS PIC32), vendored as submodules in `pic32prog/`; write-up + applicability to our dsPIC33A-core PIC32AK in `pic32prog/README.md`, memory 0010.
 - 2026-10-26 — PIC32A LCSC/JLCPCB sourcing confirmed: 48-pin PIC32AK1216GC41048-I/PT = LCSC C46545915 (devkit BOM).
 - 2026-10-26 — Devkit schematic (`hardware/minUS_10102026`) read via netlist; inter-MCU pin map + RP→PIC reset/ICSP taps documented; RP2354A link-test firmware builds.
 - 2026-09-17 — Surveyed gain (VGA/TGC) alternatives to AD8331 (AD8338/AD8330/AD603/

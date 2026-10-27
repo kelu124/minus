@@ -1,0 +1,7 @@
+[submodule "pic32prog/pic32probe"]
+	path = pic32prog/pic32probe
+	url = https://github.com/kiffie/pic32probe.git
+[submodule "pic32prog/pic32prog-kvh"]
+	path = pic32prog/pic32prog-kvh
+	url = https://github.com/kiffie/pic32prog-kvh.git
+	branch = pic32probe

@@ -9,6 +9,13 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
     `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping`. If `pic id` still
     fails, debug `pic_icsp.c` entry timing (scope / slower clock) or compare with the Snap.
+  - From the pic32probe study (`pic32prog/README.md`, memory 0010): first knob = slow the
+    entry key to ~100 kHz (5 µs halves) + add `pic speed <khz>`; then scope PGC/PGD/MCLR.
+
+- **pic32prog follow-ups (optional, after `pic id` works):** PIO port of the 2-bit-cmd + 32-bit
+  shift (exact timing, as `pic32probe/src/probe.rs`); `pic raw` streaming mode so
+  `tools/rpcli.py` can push a hex without rebuilding the RP image (pic32prog `adapter-bitbang`
+  pattern); row programming (§3.4) for speed.
 
 - **Devkit firmware bring-up** (`firmware/`, see `firmware/README.md`, memory 0008):
   - ~~Install MPLAB X + XC-DSC~~ done 2026-10-26 (6.35 / 3.31.01); **both firmwares build**.
