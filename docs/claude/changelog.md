@@ -12,6 +12,13 @@ the sha.
 
 ## Committed
 
+- 2026-10-28  d43320b  feat(pic32): CLK12 <nosc> diagnostic (pic 0.1.7 / rp 0.1.18); log trigger-period measurements and handoff
+- 2026-10-28  fbea3e3  feat: acq [div [samc]] + RDY capture window timed by the RP (pic 0.1.6 / rp 0.1.17); board-2 bring-up logged; TODO_HARDWARE analog findings
+- 2026-10-28  cad3e91  feat: first working RP<->PIC link and acq on board 2 — PIC UART pins fixed (pic 0.1.2), ACQ [div] with period-matched SAMC (pic 0.1.3 / rp 0.1.14, pro
+- 2026-10-28  d955c6d  docs(TODO_HARDWARE): remove the Tag-Connect, use a plain 6-pin ICSP header
+- 2026-10-28  2e8d175  docs: TODO_HARDWARE.md — corrections for the next devkit revision (ICSP reset path, JP1 default, SWD/J1, bus, LEDs, batch notes)
+- 2026-10-28  2ab4282  docs: changelog/commit log — record the 2026-10-27 bench-debug commits; TODO RESUME HERE = replace U2
+- 2026-10-28  a225141  docs: changelog — record 1185885 under Committed
 - 2026-10-27  1bb6e51  docs: bench conclusion — replace U2 (log 05).
 - 2026-10-27  8c472d4  docs: pair-2 ICSP test silent.
 - 2026-10-27  6776397  rp2354 0.1.7: `pic pair 1|2` (ICSP via PGC2/PGD2).
