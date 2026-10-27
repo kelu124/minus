@@ -17,6 +17,8 @@
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
+#include "hardware/regs/pads_bank0.h"
+#include "hardware/address_mapped.h"
 #include "hardware/pio.h"
 #include "ws2812.pio.h"
 #include "pico/unique_id.h"
@@ -93,6 +95,11 @@ static int link_readline(char *buf, int max, uint32_t timeout_us) {
 
 // ---------------------------------------------------------------- PIC control taps
 static void pic_taps_init(void) {
+    // The RP's own SWCLK/SWDIO pads sit on PGD1/PGC1 (R17/R18 0R + R8/R10 47R to J1.4/J1.5) and
+    // default to pull-ups (PADS_BANK0 SWCLK/SWD PUE=1): they would make the ICSP lines read HIGH
+    // even with no PIC at all (seen 2026-10-27). Disable those pulls so `pic pins` and reads are honest.
+    hw_clear_bits((io_rw_32 *)(PADS_BANK0_BASE + PADS_BANK0_SWCLK_OFFSET), PADS_BANK0_SWCLK_PUE_BITS | PADS_BANK0_SWCLK_PDE_BITS);
+    hw_clear_bits((io_rw_32 *)(PADS_BANK0_BASE + PADS_BANK0_SWD_OFFSET),   PADS_BANK0_SWD_PUE_BITS   | PADS_BANK0_SWD_PDE_BITS);
     // MCLR: Hi-Z (R5 10k pull-up holds the PIC running). Never drive it high: J1/PICkit may.
     gpio_init(MINUS_PIN_PIC_MCLR); gpio_set_dir(MINUS_PIN_PIC_MCLR, GPIO_IN); gpio_disable_pulls(MINUS_PIN_PIC_MCLR);
     // PGC1/PGD1: Hi-Z so an external programmer on J1 is not disturbed.
@@ -177,6 +184,8 @@ static void cmd_pic(const char *arg) {
     if (!arg || !*arg || !strcmp(arg, "help")) {
         printf("pic pins    read PGC/PGD/MCLR/RDY/UART_RX levels (who drives what)\n"
                "pic mclr low|hiz   hold the MCLR tap low for a meter check / release it\n"
+               "pic mclr rise      measure the MCLR node rise time after release (< 5 us = C31 really off)\n"
+               "pic slow|fast      ICSP clock ~100 kHz / ~1.2 MHz (diagnostic; default fast)\n"
                "pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
                "pic image   describe the PIC image embedded in this firmware\n"
                "pic flash   bulk erase + program + verify the embedded image, then run the PIC\n"
@@ -201,7 +210,7 @@ static void cmd_pic(const char *arg) {
             if (was_out) gpio_set_dir(L[i].pin, GPIO_OUT);
             gpio_set_function(L[i].pin, fn);
         }
-        printf("expect: PGC/PGD driven HIGH by the PIC's internal pull-ups when it is powered and erased; MCLR HIGH via R5.\n");
+        printf("note: RP SWD pad pulls are OFF (fw >= 0.1.6); a blank PIC leaves PGC1/PGD1 floating. MCLR must be HIGH via R5.\n");
         return;
     }
     if (!strncmp(arg, "mclr", 4)) {
@@ -211,9 +220,14 @@ static void cmd_pic(const char *arg) {
             printf("GPIO24 driving LOW. Measure J1 pin 1 (PIC MCLR): must be < 0.66 V (stock R53 4k7 gives ~1.05 V). 'pic mclr hiz' to release.\n");
         } else if (!strcmp(m, "hiz")) {
             gpio_set_dir(MINUS_PIN_PIC_MCLR, GPIO_IN); gpio_disable_pulls(MINUS_PIN_PIC_MCLR); printf("GPIO24 released (Hi-Z)\n");
-        } else printf("usage: pic mclr low | hiz\n");
+        } else if (!strcmp(m, "rise")) {
+            uint32_t us = icsp_mclr_rise_us();
+            printf("MCLR rise after release: %lu us -> %s\n", (unsigned long)us,
+                   us < 20 ? "C31 is off the node (JP1 cut OK)" : us < 50000 ? "slow: C31 (470 nF) still on the node?" : "never rose: no pull-up / shorted low?");
+        } else printf("usage: pic mclr low | hiz | rise\n");
         return;
     }
+    if (!strcmp(arg, "slow") || !strcmp(arg, "fast")) { icsp_set_slow(arg[0] == 's'); printf("ICSP clock: %s\n", icsp_get_slow() ? "slow (~100 kHz)" : "fast (~1.2 MHz)"); return; }
     if (!strcmp(arg, "image")) {
         printf("image '%s': %u segment(s), %u bytes\n", pic_image_name, pic_image_nseg, pic_image_bytes);
         for (const pic_segment_t *sg = pic_image_segments; sg->len; sg++)
@@ -228,6 +242,7 @@ static void cmd_pic(const char *arg) {
     uint32_t devid = 0, revid = 0;
     icsp_enter();
     bool ok = pic_read_id(&devid, &revid);
+    printf("ICSP %s, %lu PGC clocks. ", icsp_get_slow() ? "slow" : "fast", (unsigned long)icsp_clocks());
     printf("DEVID 0x%08lx REVID 0x%08lx -> %s\n", (unsigned long)devid, (unsigned long)revid,
            ok ? "PIC32AK1216GC41048" : (devid == 0 || devid == 0xFFFFFFFFu ? "no response (check R53=0R, JP1 cut, J1 empty, PIC powered)" : "unexpected device"));
     if (!ok) { icsp_exit(); return; }

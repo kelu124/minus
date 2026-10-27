@@ -23,9 +23,12 @@
 
 static uint32_t clocks;
 uint32_t icsp_clocks(void) { return clocks; }
+static bool slow_mode;                       // diagnostic: ~100 kHz instead of ~1.2 MHz (pic32probe uses 100 kHz for the key)
+void icsp_set_slow(bool on) { slow_mode = on; }
+bool icsp_get_slow(void) { return slow_mode; }
 
 // ---------------------------------------------------------------- bit level
-static inline void half(void) { busy_wait_at_least_cycles(60); }     // ~0.4 µs at 150 MHz
+static inline void half(void) { if (slow_mode) busy_wait_us(5); else busy_wait_at_least_cycles(60); }   // ~0.4 µs at 150 MHz
 static inline void clk_pulse(void) { gpio_put(PGC, 1); half(); gpio_put(PGC, 0); half(); clocks++; }
 
 static void shift_out(uint32_t v, unsigned nbits) {   // LSB first, data valid before rising edge
@@ -84,6 +87,17 @@ void icsp_enter(void) {
     sleep_us(600);                                                     // 8. >= 500 µs, PGC low
     shift_out(0u, 2); shift_out(0x00801000u, 32);                      // 9. 34 clocks
     shift_out(0u, 2); shift_out(0x00801000u, 32);                      // 10. 34 clocks
+}
+
+// Diagnostic: how long does the MCLR node take to rise after the RP releases it? R5 10k against
+// the node capacitance: < 5 us if C31 (470 nF) is really off the node (JP1 cut), ~3 ms if not.
+uint32_t icsp_mclr_rise_us(void) {
+    gpio_init(MCLR); gpio_put(MCLR, 0); gpio_set_dir(MCLR, GPIO_OUT);
+    sleep_ms(20);                                                      // discharge whatever is there
+    absolute_time_t t0 = get_absolute_time();
+    gpio_set_dir(MCLR, GPIO_IN); gpio_disable_pulls(MCLR);
+    while (!gpio_get(MCLR)) { if (absolute_time_diff_us(t0, get_absolute_time()) > 50000) break; }
+    return (uint32_t)absolute_time_diff_us(t0, get_absolute_time());
 }
 
 void icsp_exit(void) {

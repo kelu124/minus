@@ -15,3 +15,6 @@ void     pic_read_block(uint32_t addr, uint32_t *words, unsigned n);   // §3.5,
 bool     pic_bulk_erase(void);                   // §3.1 (code + UCA + UCB), false on timeout
 bool     pic_program_quadwords(uint32_t addr, const uint8_t *data, unsigned len);   // §3.3, len % 16 == 0
 uint32_t icsp_clocks(void);                      // statistics: PGC edges issued since enter
+void     icsp_set_slow(bool on);                 // diagnostic: ~100 kHz PGC (entry key + all commands)
+bool     icsp_get_slow(void);
+uint32_t icsp_mclr_rise_us(void);                // diagnostic: MCLR node rise time after release (C31 check)
