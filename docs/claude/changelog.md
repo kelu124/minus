@@ -12,6 +12,13 @@ the sha.
 
 ## Committed
 
+- 2026-10-27  1bb6e51  docs: bench conclusion — replace U2 (log 05).
+- 2026-10-27  8c472d4  docs: pair-2 ICSP test silent.
+- 2026-10-27  6776397  rp2354 0.1.7: `pic pair 1|2` (ICSP via PGC2/PGD2).
+- 2026-10-27  053bba5  docs: LA capture prog1 proves the entry sequence at the PIC pins.
+- 2026-10-27  6fe5854  tools: `la_decode_icsp.py` (sigrok capture decoder); LA findings.
+- 2026-10-27  d3b8b36  docs: bench debug log, RP SWD pad pull-up finding.
+- 2026-10-27  8462b2a  rp2354 0.1.5/0.1.6: `pic mclr rise`, `pic slow|fast`, SWD pad pulls off.
 - 2026-10-27  1185885  docs: R17/R18 decision — keep; optional isolation step before scoping (log 05, TODO).
 - 2026-10-27  6d40b42  fix(acq): review pass — SCCP1 T32 trigger, DMA status/overrun, bounded ADRDY, Makefile dep, capped link drain, parser bounds.
 - 2026-10-27  7995e59  docs: acq command, link protocol v2, bench plan (TODO/DONE/changelog/memory 0008).

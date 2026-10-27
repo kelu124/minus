@@ -5,8 +5,12 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE:** owner bridges **R53 → 0 Ω** (JP1 already cut; measured MCLR 2.88 V with
-    GPIO24 low → ratio wrong on the board). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
+- **RESUME HERE (2026-10-28): replace U2** (PIC32AK1216GC41048-I/PT, LCSC C46545915). Bench
+    proof 2026-10-27: R53 shorted, MCLR 0.2 V low / 3.13 V released at pin 48, 3.28 V at the chip,
+    full ICSP entry sequence verified on the pins with a logic analyser, silent on pairs 1 and 2.
+    Before the swap remove the H2.16–CN1.17 jumper. Then `pic id` (fw 0.1.7, pair 1 fast) →
+    `pic flash` → `ping` → `acq`.
+  - Previous resume text: owner bridges **R53 → 0 Ω** (done 2026-10-27; JP1 already cut). Then `pic mclr low` + meter on J1.1 (≈ 0 V) →
     `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping` → **`acq`** (expect
     `fill≈102us fs≈40Msps`; if lower or `status=timeout`, set `ACQ_TRIG_DIV 8` = 20 Msps and
     rebuild both). If `pic id` still fails, debug `pic_icsp.c` entry timing (scope / slower

@@ -6,6 +6,13 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-27 | `1bb6e51` | docs: bench conclusion — U2 silent with power/reset/sequence verified at its pins; replace the PIC | Power 3.28 V and MCLR 3.13 V at the chip: conclusion = replace U2. |
+| 2026-10-27 | `8c472d4` | docs: pair-2 ICSP test also silent; remaining physical checks | Second pair silent too. |
+| 2026-10-27 | `6776397` | feat(rp2354): pic pair 1|2 — ICSP via the PIC's second pair (fw 0.1.7) | Bypass pins 21/22 with one jumper to separate joints from a dead chip. |
+| 2026-10-27 | `053bba5` | docs: LA capture prog1 proves the full ICSP entry at the PIC pins; PIC silent -> physical suspects | MCLR probe fixed; entire §2.2 sequence verified at J1 incl. the reset blip. |
+| 2026-10-27 | `6fe5854` | tools: la_decode_icsp.py (decode sigrok captures of the ICSP entry); log LA findings | Owner's logic-analyser dump decoded bit by bit: key/opcodes correct on the wire. |
+| 2026-10-27 | `d3b8b36` | docs: bench debug log — pic id still silent with R53 shorted; SWD pad pull-up finding | Systematic-debugging evidence trail. |
+| 2026-10-27 | `8462b2a` | feat(rp2354): ICSP bench diagnostics — pic mclr rise, pic slow|fast, SWD pad pulls off (fw 0.1.6) | pic id still silent after the R53 fix; found the RP SWD pad pull-ups faking 'PIC alive'. |
 | 2026-10-27 | `1185885` | docs: R17/R18 decision (keep; remove only as an isolation step if pic id still fails) | Owner asked whether to pull the RP-SWD↔J1 links with the R53 rework; netlist says they only add the RP's passive SWD pads to PGC1/PGD1. |
 | 2026-10-27 | `6d40b42` | fix(acq): review pass — SCCP1 32-bit timer trigger, DMA status clear + overrun reporting, bounded ADRDY wait, Makefile acq.h dep, capped link drain, parser bounds n | Fresh-reviewer findings before the bench: trigger mode per datasheet §27.4.2.2, dropped samples now reported as `overrun`, no boot hang if the ADC fails, 20 Msps fallback really rebuilds. |
 | 2026-10-27 | `7995e59` | docs: acq command (RP + PIC), link protocol v2, bench plan, TODO/DONE/changelog/memory | README/TODO/DONE/memory 0008 carry the new command and the bench expectation (fill ≈ 102 µs). |
