@@ -39,13 +39,12 @@ real echo later) can be plotted on the PC. This is the first step of "PIC = capt
 
 ```
 RP → PIC:  ACQ\n
-PIC → RP:  ACQ <n> <ticks> <tick_ns> <status>\n      status: ok | timeout | dmaerr
+PIC → RP:  ACQ <n> <ticks> <tick_ns> <status>\n      status: ok | timeout | dmaerr | overrun | notready
            <n × u16 little-endian>                     only when status == ok
-PIC → RP:  ERR acq <reason>\n                          ADC not ready, busy, …
 ```
 - `n` = 4095 (constant `ACQ_N`), samples **unsigned 12-bit right-aligned** (0–4095, full scale AVDD).
 - `ticks` = Timer1 count between "trigger timer started" and "DMA done", `tick_ns` = Timer1 period
-  in ns × 1000 (integer) so the RP prints the **effective sample rate** = n / (ticks·tick) without
+  in ns (100) so the RP prints the **effective sample rate** = n / (ticks·tick) without
   trusting the nominal 40 Msps. Expected fill time ≈ 102.4 µs.
 - `timeout` = DMA did not finish within 5 ms (trigger or DMA path broken) → no payload.
 - Binary payload at 115200 baud ≈ 0.71 s; the RP reads it with a 1.5 s deadline and reports a
@@ -76,8 +75,10 @@ PIC → RP:  ERR acq <reason>\n                          ADC not ready, busy, �
    Timer is **ON only during a capture**. One `#define` to drop to 20 Msps (`8`).
 5. **DMA0:** `DMACON.ON`, `DMALOW/DMAHIGH` = RAM span, `DMA0SRC = &AD1CH0DATA`,
    `DMA0DST = acq_buf`, `DMA0CNT = 4095`, `SIZE 1` (16-bit), `SAMODE 0`, `DAMODE 1`,
-   `TRMODE 0` (one-shot), `DMA0SEL.CHSEL = 0x2B` (ADC1 channel 0 ready). `CHEN 1`, then start the
-   SCCP timer, then poll `DMA0STAT.DONE` with a 5 ms deadline; stop timer; read Timer1.
+   `TRMODE 0` (one-shot), `DMA0SEL.CHSEL = 0x2B` (ADC1 channel 0 ready). Clear all DMA0STAT flags,
+   `CHEN 1`, then start the SCCP timer, then poll `DMA0STAT.DONE` with a 5 ms deadline; stop timer;
+   read Timer1; report `dmaerr` (ADRERR/BRERR/BWERR), `timeout`, or `overrun` (OVERRUN = a trigger
+   arrived mid-transfer = dropped samples) before `ok`.
    `static uint16_t acq_buf[4095]` (8190 B of 16 KB RAM).
 6. **Timer1** free-running 16-bit, prescaler **1:8** on the 80 MHz peripheral clock (100 ns/tick,
    6.5 ms range > the 5 ms DMA deadline, so a slow-but-completing capture cannot wrap and report a
@@ -111,9 +112,10 @@ PIC → RP:  ERR acq <reason>\n                          ADC not ready, busy, �
 ## 8. Risks / unknowns (checked on hardware, not resolvable from the docs)
 
 - **DMA throughput at 40 M transfers/s** is not specified; the measured fill time decides.
-- **SCCP "Trigger out"** is taken to be the time-base rollover/sync event each period (block
-  diagram "Special Event Trigger Out (A/D)"); if no conversions happen, fall back to TRG1SRC
-  `SCCP1 OCMP out` (10100) with the timer in output-compare toggle mode.
+- **SCCP "Trigger out"**: implemented as the 32-bit Timer mode (T32 = 1) TMR == PR match, which
+  the datasheet (§27.4.2.2, Example 18-10) says raises the Special Event Trigger; the dual-16-bit
+  mode would instead need CCPxRB (§27.4.2.1.1). If the bench shows 32 MHz instead of 40, the period
+  is PR + 2 → `CCP1PR = ACQ_TRIG_DIV - 2`.
 - **DMA CHSEL** = 0x2B assumes "ADC1 – AN0" means channel 0; if DMA never triggers, try 0x34 (AN9).
 - **PLL/clock bring-up** is untested on this board (FRC-only so far); PING at the new clock is the
   first proof. BIST/WDT untouched.

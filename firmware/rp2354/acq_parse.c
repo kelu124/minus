@@ -6,7 +6,9 @@ int acq_parse_header(const char *line, acq_hdr_t *h) {
     if (!line || !h) return 0;
     memset(h, 0, sizeof *h);
     int got = sscanf(line, "ACQ %u %lu %u %11s", &h->n, &h->ticks, &h->tick_ns, h->status);
-    return got == 4 && strncmp(line, "ACQ ", 4) == 0;
+    if (got != 4 || strncmp(line, "ACQ ", 4) != 0) return 0;
+    if (h->n == 0 || h->n > ACQ_PARSE_MAX_N) return 0;     // a corrupt n must never size a buffer read
+    return 1;
 }
 
 int acq_format_rate(const acq_hdr_t *h, char *buf, unsigned len) {

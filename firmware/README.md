@@ -131,7 +131,7 @@ ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
 | `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.1 proto 2` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
-| `ACQ` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
+| `ACQ` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
 | anything else | `ERR` |
 
 PIC clocking since fw 0.1.1: PLL1 from the FRC → CPU 160 MHz (CLKGEN1), ADC 320 MHz (CLKGEN6 → TAD

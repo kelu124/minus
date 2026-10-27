@@ -34,7 +34,7 @@ info:
 	@test -x "$(CC)" && $(CC) --version | head -1 || echo "xc-dsc-gcc not found"
 	@grep -h "FW_VERSION_\(MAJOR\|MINOR\|PATCH\)" version.h | tr -s ' ' | cut -d' ' -f2,3 | tr '\n' ' '; echo
 
-build/%.o: %.c version.h | build
+build/%.o: %.c version.h acq.h | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/minus_pic.elf: $(OBJ)

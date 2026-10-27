@@ -132,7 +132,7 @@ int main(void) {
                 } else if (!strcmp(line, "ACQ")) {
                     // one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
-                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : "notready";
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     uart1_puts(out);
                     if (st == ACQ_OK)

@@ -5,6 +5,8 @@
 // 0 ready (DMA trigger 0x2B "ADC1 - AN0", channel-numbered)--> DMA0 copies AD1CH0DATA (16-bit) into
 // acq_buf[ACQ_N], one-shot. Timer1 (FPB/8 = 100 ns) measures start -> DMA DONE so the RP can print
 // the effective sample rate and detect dropped triggers (DMA throughput at 40 M/s is unspecified).
+// Status: ok | timeout (DONE not reached in 5 ms) | dmaerr (address/bus fault) | overrun (dropped
+// trigger = dropped samples, the anti-goal) | notready (ADC calibration never finished).
 // All register/bitfield names from p32AK1216GC41048.h (DFP 1.1.53); sequences from DS70005592
 // §18.5 (ADC examples), Example 16-1 (DMA one-shot), §27.4 (SCCP time base).
 #include <xc.h>
@@ -17,9 +19,10 @@ void acq_init(void) {
     ANSELAbits.ANSELA9 = 1;
     TRISAbits.TRISA9 = 1;
 
-    // ADC1 core on (CLKGEN6 = 320 MHz must be running); startup calibration ~5000 ADC clocks
+    // ADC1 core on (CLKGEN6 = 320 MHz must be running); startup calibration ~5000 ADC clocks.
+    // Bounded wait: if the ADC never comes up the link must still work and ACQ reports "notready".
     AD1CONbits.ON = 1;
-    while (AD1CONbits.ADRDY == 0) ;
+    for (uint32_t i = 0; i < ACQ_ADRDY_SPINS && AD1CONbits.ADRDY == 0; i++) ;
 
     // Channel 0: AN9, single-ended, unsigned right-aligned, one conversion per trigger,
     // sampling 0.5 TAD (6.25 ns) — the node is driven through 100 R / 56 pF, see pcb-brief.
@@ -30,15 +33,19 @@ void acq_init(void) {
     AD1CH0CONbits.DIFF    = 0;
     AD1CH0CONbits.TRG1SRC = 12;         // 01100 = SCCP1 Trigger out (Table 18-3)
 
-    // SCCP1: dual 16-bit timer mode, primary time base = CLKGEN12 / 1, period ACQ_TRIG_DIV counts.
-    // Its sync/rollover event each period is the ADC trigger. Left OFF until a capture.
+    // SCCP1 in 32-bit Timer mode (DS70005592 §27.4.2.2, same as the ADC Example 18-10): a
+    // CCP1TMR == CCP1PR match raises the Special Event Trigger (= "SCCP1 Trigger out", ADC
+    // TRG1SRC 12) and the Sync output, and resets the timer. (Dual 16-bit mode would need CCP1RB
+    // for the trigger instead.) Clock = CLKGEN12 160 MHz. Left OFF until a capture.
     CCP1CON1 = 0;
-    CCP1CON1bits.MOD    = 0;            // timer mode, outputs disabled
-    CCP1CON1bits.T32    = 0;
+    CCP1CON1bits.CCSEL  = 0;            // time base / output compare block
+    CCP1CON1bits.T32    = 1;            // single 32-bit timer
+    CCP1CON1bits.MOD    = 0;            // timer mode, no output functions
     CCP1CON1bits.CLKSEL = 1;            // 001 = CLKGEN12 (Table 27-2)
     CCP1CON1bits.TMRPS  = 0;            // 1:1
-    CCP1CON1bits.SYNC   = 0;            // self-synchronised: rolls over at CCP1PR
-    CCP1PR  = ACQ_TRIG_DIV - 1u;        // PRL = period - 1 (PRH = 0, secondary timer unused)
+    CCP1CON1bits.SYNC   = 0;            // self-synchronised: period set by CCP1PR
+    CCP1PR  = ACQ_TRIG_DIV - 1u;        // match at PR, reset -> period = PR + 1 counts (if the bench shows
+                                        // 32 MHz instead of 40, the period is PR + 2: use ACQ_TRIG_DIV - 2)
     CCP1TMR = 0;
 
     // Timer1: FPB / 8 = 10 MHz -> 100 ns per tick, free-running to 0xFFFF (6.55 ms)
@@ -58,10 +65,12 @@ void acq_init(void) {
 acq_status_t acq_run(uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
 
-    // DMA0: one-shot, 16-bit, fixed source (AD1CH0DATA), incrementing destination (acq_buf)
+    // DMA0: one-shot, 16-bit, fixed source (AD1CH0DATA), incrementing destination (acq_buf).
+    // Clear every status flag (DONE, HALF, OVERRUN, ADRERR, BRERR, BWERR are write-0-to-clear) so a
+    // previous fault cannot stick to this run.
     IFS2bits.DMA0IF = 0;
     DMA0CH = 0;
-    DMA0STATbits.DONE = 0;
+    DMA0STAT = 0;
     DMA0SRC = (uint32_t)&AD1CH0DATA;
     DMA0DST = (uint32_t)acq_buf;
     DMA0CNT = ACQ_N;
@@ -83,8 +92,9 @@ acq_status_t acq_run(uint32_t *ticks) {
     CCP1CON1bits.ON = 0;                // stop triggers
     T1CONbits.ON = 0;
     acq_status_t st = ACQ_OK;
-    if (DMA0STATbits.DONE == 0) st = ACQ_TIMEOUT;
-    else if (DMA0STATbits.ADRERR != 0) st = ACQ_DMAERR;
+    if (DMA0STATbits.ADRERR != 0 || DMA0STATbits.BRERR || DMA0STATbits.BWERR) st = ACQ_DMAERR;   // faults stop the channel before DONE
+    else if (DMA0STATbits.DONE == 0) st = ACQ_TIMEOUT;
+    else if (DMA0STATbits.OVERRUN) st = ACQ_OVERRUN;   // a trigger arrived while the previous transfer was still running: samples dropped
     DMA0CHbits.CHEN = 0;
     if (ticks) *ticks = t;
     return st;

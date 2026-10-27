@@ -2,6 +2,8 @@
 // PIC reply: "ACQ <n> <ticks> <tick_ns> <status>"  (status: ok | timeout | dmaerr | notready)
 #pragma once
 
+#define ACQ_PARSE_MAX_N 4095u   // largest n the RP accepts (its payload buffer size); 0 or more is rejected
+
 typedef struct {
     unsigned      n;         // samples announced
     unsigned long ticks;     // Timer1 ticks from trigger start to DMA done

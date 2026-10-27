@@ -29,6 +29,17 @@ static void test_rejects_truncated_header(void) {
     acq_hdr_t h;
     assert(acq_parse_header("ACQ 4095 1024", &h) == 0);
 }
+static void test_rejects_oversized_n(void) {
+    acq_hdr_t h;
+    assert(acq_parse_header("ACQ 2147483649 1024 100 ok", &h) == 0);   // 2*n would wrap to 2 on the RP
+    assert(acq_parse_header("ACQ 4096 1024 100 ok", &h) == 0);         // above ACQ_PARSE_MAX_N
+    assert(acq_parse_header("ACQ 0 1024 100 ok", &h) == 0);
+}
+static void test_accepts_overrun_status(void) {
+    acq_hdr_t h;
+    assert(acq_parse_header("ACQ 4095 1100 100 overrun", &h) == 1);
+    assert(strcmp(h.status, "overrun") == 0);
+}
 static void test_formats_rate(void) {
     acq_hdr_t h = { 4095, 1024, 100, "ok" };
     char buf[64];
@@ -50,8 +61,10 @@ int main(void) {
     test_rejects_err_line();
     test_rejects_pong();
     test_rejects_truncated_header();
+    test_rejects_oversized_n();
+    test_accepts_overrun_status();
     test_formats_rate();
     test_formats_rate_zero_ticks();
-    puts("PASS test_acq_parse (7 tests)");
+    puts("PASS test_acq_parse (9 tests)");
     return 0;
 }

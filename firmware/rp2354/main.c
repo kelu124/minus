@@ -32,6 +32,7 @@
 #define LINK_BAUD      115200
 #define LINK_TIMEOUT_US 200000   // 200 ms for a one-line reply (PIC answers within ~1 ms)
 #define LINK_IDLE_US    50000    // link_flush_rx: drain until the PIC has been silent this long
+#define LINK_DRAIN_MAX_US 2000000 // ... but never longer than this (a PIC that never goes quiet must not hang the CLI)
 
 static uint32_t stat_sent, stat_ok, stat_bad, stat_timeout;
 static bool auto_ping = false;
@@ -63,10 +64,15 @@ static void link_init(void) {
 }
 // Drain the link until it has been idle for LINK_IDLE_US: a timed-out `acq` leaves the PIC still
 // clocking out its payload (up to ~0.7 s), and this keeps that from poisoning the next command.
-static void link_flush_rx(void) {
-    absolute_time_t idle = make_timeout_time_us(LINK_IDLE_US);
-    while (!time_reached(idle))
+// Bounded by LINK_DRAIN_MAX_US: if the PIC chatters continuously (reset loop, wrong baud, floating
+// RX) we give up and report it rather than trap every command. Returns false in that case.
+static bool link_flush_rx(void) {
+    absolute_time_t idle = make_timeout_time_us(LINK_IDLE_US), cap = make_timeout_time_us(LINK_DRAIN_MAX_US);
+    while (!time_reached(idle)) {
+        if (time_reached(cap)) { printf("link: PIC never idle for %d ms (chatter?), continuing anyway\n", LINK_IDLE_US / 1000); return false; }
         if (uart_is_readable(LINK_UART)) { (void)uart_getc(LINK_UART); idle = make_timeout_time_us(LINK_IDLE_US); }
+    }
+    return true;
 }
 static void link_puts(const char *s) { uart_puts(LINK_UART, s); }
 
@@ -263,8 +269,8 @@ static void cmd_acq(void) {
     if (!acq_parse_header(hdr, &h)) { printf("acq: bad header '%s'\n", hdr); return; }
     char rate[64]; acq_format_rate(&h, rate, sizeof rate);
     if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return; }
+    if (h.n == 0 || h.n > ACQ_MAX_N) { printf("acq: n=%u out of range\n", h.n); return; }   // parser already bounds it
     unsigned want = 2 * h.n;
-    if (h.n == 0 || want > sizeof payload) { printf("acq: n=%u out of range\n", h.n); return; }
     absolute_time_t deadline = make_timeout_time_us(1500000);         // 8190 B at 115200 baud ~ 0.71 s
     unsigned got = 0;
     while (got < want && !time_reached(deadline))
