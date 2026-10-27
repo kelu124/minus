@@ -1,7 +1,8 @@
 // minus devkit — PIC32AK1216GC41048 "capture engine" firmware, step 1: inter-MCU link bring-up.
 //
-// Answers "PING n\n" received on UART1 (RP40/RC7 <- RP2354 GPIO16) with "PONG n\n" on
-// RP39/RC6 (-> RP2354 GPIO17). Toggles RDY (RA7 -> RP2354 GPIO7) on every reply, mirrors
+// Answers "PING n\n" received on UART1 (U1RX = RP39/RC6, pin 25, net UART_TX <- RP2354 GPIO16)
+// with "PONG n\n" on U1TX = RP40/RC7 (pin 26, net UART_RX -> RP2354 GPIO17). Net names are from
+// the RP's point of view (fw 0.1.1 had them swapped: both chips drove UART_TX, RP saw nothing). Toggles RDY (RA7 -> RP2354 GPIO7) on every reply, mirrors
 // TRIG (RA0 <- RP2354 GPIO6) edges into a counter, blinks LED2 (RC5) as a heartbeat.
 //
 // Clocking (fw 0.1.1): PLL1 from the 8 MHz FRC -> VCO 640 MHz -> Fout 160 MHz = CLKGEN1 (CPU +
@@ -19,6 +20,7 @@
 #include <xc.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "version.h"
 #include "acq.h"
@@ -75,16 +77,16 @@ static void pins_init(void) {
     TRISAbits.TRISA0 = 1;           // TRIG input
     RDY_LAT = 0; TRISAbits.TRISA7 = 0;   // RDY output
     LED2_LAT = 0; TRISCbits.TRISC5 = 0;  // LED2 output
-    TRISCbits.TRISC6 = 0;           // RC6 = U1TX (RP39)
-    TRISCbits.TRISC7 = 1;           // RC7 = U1RX (RP40)
+    TRISCbits.TRISC6 = 1;           // RC6 = RP39 = U1RX  (net UART_TX, driven by the RP)
+    TRISCbits.TRISC7 = 0;           // RC7 = RP40 = U1TX  (net UART_RX, read by the RP)
 }
 
 static void pps_init(void) {
     // Unlock: PACCON2.RPCONWR enables writes to RPCON, then clear RPCON.IOLOCK.
     PACCON2bits.RPCONWR = 1;
     RPCONbits.IOLOCK = 0;
-    RPINR9bits.U1RXR = 40;          // U1RX <- RP40 (RC7)
-    RPOR9bits.RP39R  = 9;           // RP39 (RC6) -> U1TX (output function code 9, Table 14-13)
+    RPINR9bits.U1RXR = 39;          // U1RX <- RP39 (RC6, pin 25, net UART_TX)
+    RPOR9bits.RP40R  = 9;           // RP40 (RC7, pin 26, net UART_RX) -> U1TX (output function 9, Table 14-13)
     RPCONbits.IOLOCK = 1;
 }
 
@@ -129,8 +131,9 @@ int main(void) {
                 } else if (!strcmp(line, "TRIG?")) {
                     char out[32]; snprintf(out, sizeof out, "TRIG %lu\n", (unsigned long)trig_edges);
                     uart1_puts(out);
-                } else if (!strcmp(line, "ACQ")) {
-                    // one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
+                } else if (!strncmp(line, "ACQ", 3) && (line[3] == 0 || line[3] == ' ')) {
+                    // ACQ [div]: one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
+                    if (line[3] == ' ') acq_set_div((unsigned)strtoul(line + 4, NULL, 10));
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);

@@ -39,6 +39,12 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - **[should] Bus ownership:** the RP is the only master of the digipots (SPI MCP4131, I²C
   MCP4531/MCP4728); the PIC's SPI/I²C pins must stay Hi-Z or get their own bus.
 
+## Naming
+
+- **[nice] Name the UART nets by direction** (e.g. `RP_TX_PIC_RX`, `PIC_TX_RP_RX`): `UART_TX`/`UART_RX`
+  are RP-side names and the first PIC firmware mapped them the wrong way round (both chips drove
+  the same wire until it was caught on 2026-10-28). Same for `SPI_MOSI/MISO`, `TRIG`, `RDY`.
+
 ## Power / clocks / LEDs
 
 - **[should] PIC crystal:** no crystal on the PIC (OSC pins only on H2); everything runs on the

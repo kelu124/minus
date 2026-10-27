@@ -15,8 +15,8 @@ programmer) comes after the link is confirmed on real hardware.
 
 | Net | RP2354A | PIC32AK | Notes |
 |-----|---------|---------|-------|
-| `UART_TX` | GPIO16 (UART0 TX) | RC7 / **RP40** (→ U1RX via PPS) | also on H2.7 and CN1.7 (sniff with a USB-UART) |
-| `UART_RX` | GPIO17 (UART0 RX) | RC6 / **RP39** (← U1TX via PPS) | also on H2.8 and CN1.9 |
+| `UART_TX` | GPIO16 (UART0 TX) | RC6 / **RP39**, pin 25 (→ PIC U1RX via PPS) | also on H2.7 and CN1.7 (sniff with a USB-UART). Net names are RP-side! |
+| `UART_RX` | GPIO17 (UART0 RX) | RC7 / **RP40**, pin 26 (← PIC U1TX via PPS) | also on H2.8 and CN1.9 |
 | `SPI_CLK` | GPIO2 (SPI0 SCK) | RD1 / RP50 (**TCK**) | shared with MCP4131 U12/U14 |
 | `SPI_MOSI` | GPIO3 (SPI0 TX) | RD2 / RP51 (**TDO**) | **R68‖R69 = 50 Ω to MISO — see flaw 1** |
 | `SPI_MISO` | GPIO4 (SPI0 RX) | RC2 / RP35 (PGC3) | MCP4131 SDI/SDO also here |

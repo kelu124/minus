@@ -126,7 +126,55 @@ bool pic_read_id(uint32_t *devid, uint32_t *revid) {
     pic_read_block(PIC_DEVID_ADDR, w, 2);
     if (devid) *devid = w[0];
     if (revid) *revid = w[1];
-    return w[0] == PIC_DEVID_EXPECT;
+    return (w[0] & PIC_DEVID_MASK) == PIC_DEVID_EXPECT;
+}
+
+// ---------------------------------------------------------------- diagnostic: raw read stream
+// After MOV.SL #VISI,W8 / MOV.SL #addr,W0, issue ncmd CMDSEQRD, each as: "11", `idle` idle clocks
+// (PGD tri-stated with a weak pull-DOWN so floating reads 0 and only device-driven 1s show),
+// then `nbits` sampled clocks. Standard framing = idle 1, nbits 33 (32 data + trailing idle).
+void pic_read_raw(uint32_t addr, unsigned ncmd, unsigned idle, unsigned nbits, char *out, unsigned outlen) {
+    cmd_exec(op_movsl(8, VISI));
+    cmd_exec(op_movsl(0, addr));
+    unsigned pos = 0;
+    for (unsigned c = 0; c < ncmd && pos + nbits + idle + 4 < outlen; c++) {
+        shift_out(3u, 2);                               // "11"
+        out[pos++] = '|';
+        gpio_set_dir(PGD, GPIO_IN); gpio_set_pulls(PGD, false, true);
+        for (unsigned i = 0; i < idle; i++) { gpio_put(PGC, 1); half(); out[pos++] = gpio_get(PGD) ? 'I' : 'i'; gpio_put(PGC, 0); half(); clocks++; }
+        for (unsigned i = 0; i < nbits; i++) {
+            gpio_put(PGC, 1); half(); out[pos++] = gpio_get(PGD) ? '1' : '0'; gpio_put(PGC, 0); half(); clocks++;
+            if (i == 31) out[pos++] = '.';
+        }
+        gpio_disable_pulls(PGD); gpio_put(PGD, 0); gpio_set_dir(PGD, GPIO_OUT);
+    }
+    out[pos] = 0;
+}
+
+// Diagnostic: run a sequence of ICSP commands after MOV.SL #VISI,W8 / MOV.SL #addr,W0 and record
+// the PGD stream of every read window. ops: 'S' = CMDSEQRD (11), 'R' = CMDRD (01), 'N' = CMDEXEC NOP
+// (00 + 32 zero bits), 'W' = CMDEXEC "MOV.L [W9],[W8]" (0x83892400, needs W9), 'E'<hex8> = CMDEXEC
+// with that opcode. Windows: 2 cmd bits, 1 idle (PGD pulled down), 32 data + 1 trailing, all sampled.
+void pic_seq_raw(uint32_t addr, const char *ops, char *out, unsigned outlen) {
+    cmd_exec(op_movsl(8, VISI));
+    cmd_exec(op_movsl(0, addr));
+    unsigned pos = 0;
+    for (const char *o = ops; *o && pos + 48 < outlen; o++) {
+        if (*o == 'N') { cmd_exec(0x00000000u); out[pos++] = 'N'; continue; }
+        if (*o == 'W') { cmd_exec(0x83892400u); out[pos++] = 'W'; continue; }
+        if (*o == 'E') { uint32_t op = 0; int k; for (k = 1; k <= 8 && o[k]; k++) { char c = o[k]; op = op << 4 | (uint32_t)(c <= '9' ? c - '0' : (c | 32) - 'a' + 10); } cmd_exec(op); o += k - 1; out[pos++] = 'E'; continue; }
+        if (*o != 'S' && *o != 'R') continue;
+        shift_out(*o == 'S' ? 3u : 1u, 2);
+        out[pos++] = *o; out[pos++] = ':';
+        gpio_set_dir(PGD, GPIO_IN); gpio_set_pulls(PGD, false, true);
+        for (unsigned i = 0; i < 34; i++) {
+            gpio_put(PGC, 1); half(); out[pos++] = gpio_get(PGD) ? '1' : '0'; gpio_put(PGC, 0); half(); clocks++;
+            if (i == 0 || i == 32) out[pos++] = '.';
+        }
+        gpio_disable_pulls(PGD); gpio_put(PGD, 0); gpio_set_dir(PGD, GPIO_OUT);
+        out[pos++] = ' ';
+    }
+    out[pos] = 0;
 }
 
 // ---------------------------------------------------------------- WR polling (shared)

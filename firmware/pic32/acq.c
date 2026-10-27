@@ -13,6 +13,20 @@
 #include "acq.h"
 
 uint16_t acq_buf[ACQ_N] __attribute__((aligned(4)));
+static unsigned acq_div = ACQ_TRIG_DIV;
+
+// Sampling time (SAMC, 0.5 + n*2 TAD at 80 MHz TAD) chosen to fit the trigger period: conversion
+// takes 1.5 TAD = 18.75 ns, so sample time <= period - 18.75 ns - margin. Longer sampling helps the
+// bare ADC node (10k||10k bias, no FE buffer) charge the hold capacitor.
+static unsigned samc_for_div(unsigned div) {
+    unsigned period_ns = div * 25u / 4u;                  // div x 6.25 ns
+    unsigned budget_ns = period_ns > 25u ? period_ns - 25u : 0;   // 18.75 ns conversion + ~6 ns margin
+    unsigned samc = 0;
+    while (samc < 7 && (625u + 2500u * (samc + 1)) / 100u <= budget_ns) samc++;   // 6.25 + 25*samc ns
+    return samc;
+}
+void acq_set_div(unsigned div) { if (div < 4) div = 4; if (div > 255) div = 255; acq_div = div; }
+unsigned acq_get_div(void) { return acq_div; }
 
 void acq_init(void) {
     // Analog input: RA9 = AD1AN9 (reset default is analog+input; make it explicit)
@@ -64,6 +78,8 @@ void acq_init(void) {
 
 acq_status_t acq_run(uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
+    CCP1PR = acq_div - 1u;                                // trigger period (see acq_set_div)
+    AD1CH0CONbits.SAMC = samc_for_div(acq_div);
 
     // DMA0: one-shot, 16-bit, fixed source (AD1CH0DATA), incrementing destination (acq_buf).
     // Clear every status flag (DONE, HALF, OVERRUN, ADRERR, BRERR, BWERR are write-0-to-clear) so a

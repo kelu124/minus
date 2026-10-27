@@ -15,6 +15,8 @@ typedef enum { ACQ_OK = 0, ACQ_TIMEOUT, ACQ_DMAERR, ACQ_OVERRUN, ACQ_NOTREADY } 
 
 void         acq_init(void);               // ADC1 on + ready, CH0 config, SCCP1/Timer1/DMA set up; once, after clocks_init()
 acq_status_t acq_run(uint32_t *ticks);     // one capture into acq_buf; *ticks = Timer1 count at DMA DONE (or deadline)
+void         acq_set_div(unsigned div);    // trigger period in CLKGEN12 clocks (4 = 40 Msps, 6 = 26.7, 8 = 20, 16 = 10); clamps 4..255
+unsigned     acq_get_div(void);
 extern uint16_t acq_buf[ACQ_N];            // unsigned 12-bit right-aligned samples
 
 #endif

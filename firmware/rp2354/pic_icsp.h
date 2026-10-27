@@ -6,7 +6,8 @@
 
 #define PIC_DEVID_ADDR   0x7C2000u
 #define PIC_REVID_ADDR   0x7C2004u
-#define PIC_DEVID_EXPECT 0x09DA2053u   // PIC32AK1216GC41048 (Table 1-5)
+#define PIC_DEVID_EXPECT 0x9DA2u       // DEVID register value, PIC32AK1216GC41048 (DS70005592 Table 10-4; 0x09DA2053 is the JTAG ID)
+#define PIC_DEVID_MASK   0xFFFFu       // DEVID[15:0]; DEVREV[3:0] at PIC_REVID_ADDR
 
 void     icsp_enter(void);                       // §2.2: MCLR low, key 0x8A12C2B2, MCLR high, 2x34 clocks
 void     icsp_exit(void);                        // §2.3: MCLR low 1 ms, release everything to Hi-Z
@@ -19,4 +20,6 @@ void     icsp_set_slow(bool on);                 // diagnostic: ~100 kHz PGC (en
 bool     icsp_get_slow(void);
 void     icsp_set_pair(int pair);                // diagnostic: 1 = PGC1/PGD1 (GPIO21/22), 2 = PGC2/PGD2 (GPIO21 jumpered to H2.16 / GPIO6)
 int      icsp_get_pair(void);
-uint32_t icsp_mclr_rise_us(void);                // diagnostic: MCLR node rise time after release (C31 check)
+uint32_t icsp_mclr_rise_us(void);
+void     pic_seq_raw(uint32_t addr, const char *ops, char *out, unsigned outlen);   // diagnostic: command sequence streams
+void     pic_read_raw(uint32_t addr, unsigned ncmd, unsigned idle, unsigned nbits, char *out, unsigned outlen);   // diagnostic: raw CMDSEQRD bit streams                // diagnostic: MCLR node rise time after release (C31 check)

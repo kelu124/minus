@@ -186,6 +186,8 @@ static void cmd_pic(const char *arg) {
                "pic mclr low|hiz   hold the MCLR tap low for a meter check / release it\n"
                "pic mclr rise      measure the MCLR node rise time after release (< 5 us = C31 really off)\n"
                "pic slow|fast      ICSP clock ~100 kHz / ~1.2 MHz (diagnostic; default fast)\n"
+               "pic rdraw [addr [idle [nbits [ncmd]]]]  diagnostic: raw CMDSEQRD bit streams (defaults DEVID 1 33 4)\n"
+               "pic seq <ops> [addr]   diagnostic: S=CMDSEQRD R=CMDRD N=NOP-exec W=MOV.L[W9],[W8] E<hex8>=exec; prints read windows\n"
                "pic pair 1|2       ICSP pins: 1 = PGC1/PGD1 (GPIO21/22); 2 = PGC2/PGD2 (jumper H2.16 -> CN1.17, PGD2 = TRIG/GPIO6)\n"
                "pic id      enter ICSP, read DEVID/REVID, exit (no write)\n"
                "pic image   describe the PIC image embedded in this firmware\n"
@@ -228,6 +230,25 @@ static void cmd_pic(const char *arg) {
         } else printf("usage: pic mclr low | hiz | rise\n");
         return;
     }
+    if (!strncmp(arg, "seq ", 4)) {
+        // pic seq <ops> [addr]   e.g. pic seq SRRR  /  pic seq SNS 0x7C2000
+        char ops[32] = {0}; uint32_t a = 0x7C2000u; const char *e = arg + 4; unsigned k = 0;
+        while (*e && *e != ' ' && k < sizeof ops - 1) ops[k++] = *e++;
+        if (*e == ' ') a = strtoul(e + 1, NULL, 0);
+        static char raw[1200];
+        icsp_enter(); pic_seq_raw(a, ops, raw, sizeof raw); icsp_exit();
+        printf("seq %s @0x%06lx (window = idle bit '.' 32 data LSB-first '.' trailing):\n%s\n", ops, (unsigned long)a, raw);
+        return;
+    }
+    if (!strncmp(arg, "rdraw", 5)) {
+        uint32_t a = 0x7C2000u; unsigned idle = 1, nbits = 33, ncmd = 4; char *e = (char *)arg + 5;
+        if (*e == ' ') { a = strtoul(e, &e, 0); if (*e == ' ') { idle = strtoul(e, &e, 0); if (*e == ' ') { nbits = strtoul(e, &e, 0); if (*e == ' ') ncmd = strtoul(e, &e, 0); } } }
+        if (nbits > 96) nbits = 96; if (ncmd > 6) ncmd = 6;
+        static char raw[6 * 110];
+        icsp_enter(); pic_read_raw(a, ncmd, idle, nbits, raw, sizeof raw); icsp_exit();
+        printf("raw CMDSEQRD @0x%06lx idle=%u nbits=%u: '|' = after the 11 command, i/I = idle clock level, then sampled bits LSB first ('.' after bit 31); PGD pull-down while listening\n%s\n", (unsigned long)a, idle, nbits, raw);
+        return;
+    }
     if (!strncmp(arg, "pair", 4)) { if (arg[4] == ' ') icsp_set_pair(arg[5] - '0'); printf("ICSP pair %d: PGC on GPIO21, PGD on GPIO%d%s\n", icsp_get_pair(), icsp_get_pair() == 2 ? MINUS_PIN_TRIG : MINUS_PIN_PIC_PGD, icsp_get_pair() == 2 ? " (TRIG line = PIC RA0/PGD2; jumper H2.16 (RA1/PGC2) to CN1.17)" : ""); return; }
     if (!strcmp(arg, "slow") || !strcmp(arg, "fast")) { icsp_set_slow(arg[0] == 's'); printf("ICSP clock: %s\n", icsp_get_slow() ? "slow (~100 kHz)" : "fast (~1.2 MHz)"); return; }
     if (!strcmp(arg, "image")) {
@@ -245,7 +266,7 @@ static void cmd_pic(const char *arg) {
     icsp_enter();
     bool ok = pic_read_id(&devid, &revid);
     printf("ICSP pair %d %s, %lu PGC clocks. ", icsp_get_pair(), icsp_get_slow() ? "slow" : "fast", (unsigned long)icsp_clocks());
-    printf("DEVID 0x%08lx REVID 0x%08lx -> %s\n", (unsigned long)devid, (unsigned long)revid,
+    printf("DEVID 0x%04lx DEVREV %lu -> %s\n", (unsigned long)(devid & 0xFFFF), (unsigned long)(revid & 0xF),
            ok ? "PIC32AK1216GC41048" : (devid == 0 || devid == 0xFFFFFFFFu ? "no response (check R53=0R, JP1 cut, J1 empty, PIC powered)" : "unexpected device"));
     if (!ok) { icsp_exit(); return; }
 
@@ -274,11 +295,12 @@ static void cmd_pic(const char *arg) {
 
 // ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
 #define ACQ_MAX_N 4095u
-static void cmd_acq(void) {
+static void cmd_acq(const char *arg) {
     static uint8_t payload[2 * ACQ_MAX_N];
     char hdr[96];
+    unsigned div = (arg && *arg) ? (unsigned)strtoul(arg, NULL, 10) : 0;   // 0 = PIC default (4 = 40 Msps)
     link_flush_rx();
-    link_puts("ACQ\n");
+    if (div) { snprintf(hdr, sizeof hdr, "ACQ %u\n", div); link_puts(hdr); } else link_puts("ACQ\n");
     int n = link_readline(hdr, sizeof hdr, 500000);                  // capture itself takes ~0.1 ms, deadline 5 ms
     if (n < 0) { printf("acq: no reply from PIC\n"); return; }
     if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return; }
@@ -293,7 +315,7 @@ static void cmd_acq(void) {
     while (got < want && !time_reached(deadline))
         if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
     if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return; }
-    printf("# acq n=%u %s (nominal 40.00 Msps from the PIC FRC+PLL, FRC +/-1.5%%; AD1AN9, 12-bit unsigned)\n", h.n, rate);
+    printf("# acq n=%u %s (trigger div %u -> nominal %.2f Msps from the PIC FRC+PLL, FRC +/-1.5%%; AD1AN9, 12-bit unsigned)\n", h.n, rate, div ? div : 4, 160.0 / (div ? div : 4));
     for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
 }
 
@@ -309,7 +331,8 @@ static void help(void) {
            "  trig        2 us pulse on TRIG (GPIO6 -> PIC RA0)\n"
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
-           "  acq         capture 4095 ADC samples on the PIC (AD1AN9, 40 Msps) and print them one per line\n"
+           "  lb          RP UART0 internal loopback self-test\n"
+           "  acq [div]   capture 4095 ADC samples on the PIC (AD1AN9) and print them; div = trigger period in 6.25 ns steps: 4 = 40 Msps (default), 6 = 26.7, 8 = 20, 16 = 10\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
 
@@ -348,7 +371,15 @@ int main(void) {
                     int n = link_readline(rx, sizeof rx, LINK_TIMEOUT_US);
                     printf(n < 0 ? "no reply ('%s' partial)\n" : "reply: '%s'\n", rx);
                 }
-                else if (!strcmp(line, "acq")) cmd_acq();
+                else if (!strcmp(line, "lb")) {
+            // RP UART0 internal loopback (UARTCR.LBE): proves the RP's own TX->RX path and link_readline
+            hw_set_bits(&uart_get_hw(LINK_UART)->cr, UART_UARTCR_LBE_BITS);
+            char rx[64]; link_flush_rx(); link_puts("LOOP 42\n");
+            int n = link_readline(rx, sizeof rx, LINK_TIMEOUT_US);
+            hw_clear_bits(&uart_get_hw(LINK_UART)->cr, UART_UARTCR_LBE_BITS);
+            printf("uart0 loopback: %s\n", n < 0 ? "FAILED (nothing received)" : !strcmp(rx, "LOOP 42") ? "ok" : rx);
+        }
+        else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);
                 else if (len == 0 && line[0]) printf("unknown '%s' — try help\n", line);

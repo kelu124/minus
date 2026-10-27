@@ -21,8 +21,8 @@
 #define MINUS_PIN_SPI_CS1   11   // MCP4131 U12 CS
 #define MINUS_PIN_SPI_CS2   12   // MCP4131 U14 CS
 #define MINUS_PIN_PWM       13   // "RP2354_PWM" -> R50
-#define MINUS_PIN_UART_TX   16   // UART0 TX -> PIC RC7/RP40 (net UART_TX; also H2.7, CN1.7)
-#define MINUS_PIN_UART_RX   17   // UART0 RX <- PIC RC6/RP39 (net UART_RX; also H2.8, CN1.9)
+#define MINUS_PIN_UART_TX   16   // UART0 TX -> PIC RC6/RP39 = U1RX (net UART_TX; also H2.7, CN1.7)
+#define MINUS_PIN_UART_RX   17   // UART0 RX <- PIC RC7/RP40 = U1TX (net UART_RX; also H2.8, CN1.9)
 #define MINUS_PIN_PIC_PGC   21   // -> R56 (0R) -> PIC PGC1 (RB4)  [also J1.5 via 47R]
 #define MINUS_PIN_PIC_PGD   22   // -> R57 (0R) -> PIC PGD1 (RB3)  [also J1.4 via 47R]
 #define MINUS_PIN_PIC_MCLR  24   // -> R53 (4k7) -> MCLR node (R5 10k pull-up, C31 via JP1, R9 442R -> PIC MCLR)

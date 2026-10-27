@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-10-28 | rp2354 | 0.1.13 | embeds pic 0.1.2; `lb` UART0 loopback self-test (0.1.12); DEVID expected = 0x9DA2 register value (0.1.11); `pic seq` / `pic rdraw` ICSP stream diagnostics (0.1.8–0.1.10) |
+| 2026-10-28 | pic32  | 0.1.2 | **UART pins swapped to match the board**: U1RX = RP39/RC6 (net UART_TX), U1TX = RP40/RC7 (net UART_RX) |
 | 2026-10-27 | rp2354 | 0.1.7 | `pic pair 1|2`: ICSP through PGC2/PGD2 (RA1 via jumper H2.16→CN1.17, RA0 = TRIG/GPIO6) to bypass pins 21/22 |
 | 2026-10-27 | rp2354 | 0.1.6 | RP SWD pad pull-ups disabled at boot (they held PGC1/PGD1 high through R17/R18 + 47R and faked a 'PIC alive' reading) |
 | 2026-10-27 | rp2354 | 0.1.5 | diagnostics: `pic mclr rise` (C31 check), `pic slow|fast` ICSP clock, PGC clock count in `pic id` |
