@@ -16,6 +16,7 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-10-27 | pic32  | 0.1.1 | PLL 160 MHz CPU / 320 MHz ADC, UART baud clock fix (FPB = Fsys/2), `ACQ` 4095-sample capture, proto 2 |
 | 2026-10-26 | rp2354 | 0.1.3 | `pic pins`, `pic mclr low|hiz` bench diagnostics |
 | 2026-10-26 | rp2354 | 0.1.2 | `pic id/image/flash/verify/erase`: ICSP programmer on GPIO21/22/24, PIC hex embedded at build time |
 | 2026-10-26 | rp2354 | 0.1.1 | CLI: `version`, `rgb R G B`, `reboot [dfu]`; status LED override |

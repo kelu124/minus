@@ -4,7 +4,7 @@
 #define FW_NAME           "minus-devkit-pic32"
 #define FW_VERSION_MAJOR  0
 #define FW_VERSION_MINOR  1
-#define FW_VERSION_PATCH  0
+#define FW_VERSION_PATCH  1
 #define PROTO_VERSION     1
 #define _FW_STR(x) #x
 #define FW_STR(x) _FW_STR(x)

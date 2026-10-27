@@ -4,12 +4,14 @@
 // RP39/RC6 (-> RP2354 GPIO17). Toggles RDY (RA7 -> RP2354 GPIO7) on every reply, mirrors
 // TRIG (RA0 <- RP2354 GPIO6) edges into a counter, blinks LED2 (RC5) as a heartbeat.
 //
-// Clocking: left at the reset default (CLKGEN1 = FRC 8 MHz, no PLL). FRC is +/-1.5 %, fine
-// for 115200 baud. UART clock = "standard speed peripheral clock" (CLKSEL = 0) = 8 MHz.
+// Clocking (fw 0.1.1): PLL1 from the 8 MHz FRC -> VCO 640 MHz -> Fout 160 MHz = CLKGEN1 (CPU +
+// peripherals, FCY) and VCO/2 = 320 MHz = CLKGEN6 (ADC) / CLKGEN12 = 160 MHz (SCCP). Same recipe
+// as datasheet DS70005592 Example 18-3. The "standard speed peripheral clock" (UART CLKSEL = 0,
+// Timer1, SCCP CLKSEL = 0) is the system clock / 2 = FPB (Table 21-2, Table 26-2).
+// FRC is +/-1.5 %, fine for 115200 baud.
 //
-// *** NOT YET COMPILED: XC-DSC is not installed on this machine (see firmware/README.md).
-// *** Register/bitfield names and #pragma config names were checked (2026-10-26) against the
-// *** PIC32AK-GC_DFP 1.1.53 device header p32AK1216GC41048.h and its config_docs.
+// Register/bitfield names and #pragma config names are checked against the PIC32AK-GC_DFP
+// 1.1.53 device header p32AK1216GC41048.h; the source compiles with XC-DSC 3.31.01.
 //
 // Bus ownership (decision 2026-10-26): the RP2354 is the only master of the digipots
 // (MCP4131 x2 on SPI, MCP4531 x2 + MCP4728 on I2C). The PIC's SPI pins (RD0/RD1/RD2/RC2) and
@@ -26,6 +28,37 @@
 #pragma config WDTEN  = SW         // FWDT: watchdog under software control (stays off)
 #pragma config WINDIS = ON         // FWDT: non-window mode
 // (this family has no ICS / debug-pair config setting: any PGCx/PGDx pair works for ICSP)
+
+// ---------------------------------------------------------------- clocks
+#define FCY 160000000UL          // CLKGEN1 = PLL1 Fout
+#define FPB (FCY / 2)            // standard speed peripheral clock = system clock / 2
+
+static void clocks_init(void) {
+    // DS70005592 Example 18-3 ("OscillatorInitialization"): FRC 8 MHz, PLLPRE 1, FBDIV 80 -> VCO
+    // 640 MHz (OS51: 500-1600 MHz); POSTDIV1 4, POSTDIV2 1 -> Fout 160 MHz; VCO1DIV INTDIV 1 ->
+    // VCO/(2*1) = 320 MHz for the ADC (CLKGEN6 max input 320 MHz, TAD = 80 MHz -> 40 Msps).
+    PLL1CONbits.ON = 1;
+    OSCCTRLbits.PLL1EN = 1;
+    while (OSCCTRLbits.PLL1RDY == 0) ;
+    PLL1CONbits.FSCMEN = 0;                 // no fail-safe clock monitor during bring-up
+    VCO1DIVbits.INTDIV = 1;                 // VCO div output = 640 / (2*1) = 320 MHz
+    PLL1DIVbits.PLLFBDIV = 80;              // 8 MHz * 80 = 640 MHz
+    PLL1DIVbits.PLLPRE = 1;
+    PLL1DIVbits.POSTDIV1 = 4;               // 640 / 4 = 160 MHz
+    PLL1DIVbits.POSTDIV2 = 1;
+    PLL1CONbits.DIVSWEN = 1;  while (PLL1CONbits.DIVSWEN) ;    // latch VCO divider
+    PLL1CONbits.NOSC = 1;                   // PLL input = FRC
+    PLL1CONbits.OSWEN = 1;    while (PLL1CONbits.OSWEN) ;
+    PLL1CONbits.FOUTSWEN = 1; while (PLL1CONbits.FOUTSWEN) ;   // latch output dividers
+    PLL1CONbits.PLLSWEN = 1;  while (PLL1CONbits.PLLSWEN) ;    // latch input/feedback dividers
+    while (PLL1CONbits.CLKRDY == 0) ;
+    // CLKGEN1 (CPU + peripherals) <- PLL1 Fout (NOSC 5) = 160 MHz
+    CLK1CONbits.NOSC = 5;  CLK1CONbits.OSWEN = 1;  while (CLK1CONbits.OSWEN) ;  while (CLK1CONbits.CLKRDY == 0) ;
+    // CLKGEN6 (ADC) <- PLL1 VCO divider (NOSC 7) = 320 MHz
+    CLK6CONbits.ON = 1;  CLK6CONbits.NOSC = 7;  CLK6CONbits.OSWEN = 1;  while (CLK6CONbits.OSWEN) ;  while (CLK6CONbits.CLKRDY == 0) ;
+    // CLKGEN12 (SCCP / REFO1) <- PLL1 Fout (NOSC 5) = 160 MHz
+    CLK12CONbits.ON = 1; CLK12CONbits.NOSC = 5; CLK12CONbits.OSWEN = 1; while (CLK12CONbits.OSWEN) ; while (CLK12CONbits.CLKRDY == 0) ;
+}
 
 // ---------------------------------------------------------------- pins
 #define LED2_LAT   LATCbits.LATC5
@@ -56,8 +89,9 @@ static void pps_init(void) {
 
 static void uart1_init(void) {
     U1CON = 0;
-    // CLKSEL[1:0]=0 (peripheral clock, 8 MHz), CLKMOD=1 (fractional): baud = FUART / BRG
-    U1BRG = 8000000UL / 115200UL;   // 69 -> 115 942 baud (+0.6 %)
+    // CLKSEL[1:0]=0: FUART = standard speed peripheral clock = FPB (system clock / 2, Table 21-2);
+    // CLKMOD=1 (fractional): baud = FUART / BRG.  (0.1.0 wrongly assumed FUART = 8 MHz.)
+    U1BRG = FPB / 115200UL;         // 694 -> 115 274 baud (+0.06 %)
     U1CONbits.CLKMOD = 1;
     U1CONbits.MODE   = 0;           // 8N1, asynchronous
     U1CONbits.TXEN   = 1;
@@ -69,6 +103,7 @@ static void uart1_puts(const char *s) { while (*s) uart1_putc(*s++); }
 static int  uart1_getc_nb(void) { return U1STATbits.RXBE ? -1 : (int)(uint8_t)U1RXB; }
 
 int main(void) {
+    clocks_init();
     pins_init();
     pps_init();
     uart1_init();
@@ -99,6 +134,6 @@ int main(void) {
                 }
             } else if (len < (int)sizeof line - 1) line[len++] = (char)c;
         }
-        if (++beat == 200000UL) { beat = 0; LED2_LAT ^= 1; }   // ~heartbeat at 8 MHz
+        if (++beat == 4000000UL) { beat = 0; LED2_LAT ^= 1; }   // ~heartbeat at 160 MHz
     }
 }

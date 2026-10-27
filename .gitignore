@@ -4,3 +4,5 @@ firmware/*/build/
 *.lck
 ~*.kicad_*
 *-backups/*.zip
+# superpowers plan workspaces (ledgers, briefs)
+.superpowers/
