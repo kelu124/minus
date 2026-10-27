@@ -10,7 +10,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     `pic mclr hiz` → `pic id` (DEVID 0x09DA2053) → `pic flash` → `ping` → **`acq`** (expect
     `fill≈102us fs≈40Msps`; if lower or `status=timeout`, set `ACQ_TRIG_DIV 8` = 20 Msps and
     rebuild both). If `pic id` still fails, debug `pic_icsp.c` entry timing (scope / slower
-    clock) or compare with the Snap.
+    clock) or compare with the Snap. Optional isolation step before scoping: remove **R17/R18**
+    (RP SWD ↔ J1/PGC1/PGD1 links); costs only RP SWD on J1.
   - From the pic32probe study (`pic32prog/README.md`, memory 0010): first knob = slow the
     entry key to ~100 kHz (5 µs halves) + add `pic speed <khz>`; then scope PGC/PGD/MCLR.
 
