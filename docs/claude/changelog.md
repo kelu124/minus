@@ -7,11 +7,13 @@ Uncommitted work sits at the top under "Pending" until it lands, then it gets
 the sha.
 
 ## Pending
+- 2026-10-28  (pending)  docs: datasheet check — TRG1SRC 2/3 are Reserved (only TRG2SRC); 2-sum at 20 M/s not possible on one channel (memory 0011, log 06, TODO)
 
 - (none)
 
 ## Committed
 
+- 2026-10-28  77d725a  docs: changelog — record 84ea839 / d17d0fc under Committed (fix the missed edit)
 - 2026-10-28  d17d0fc  docs: changelog/commit log — record 84ea839 under Committed
 - 2026-10-28  84ea839  feat(firmware): `acq … in navg` input select (node / OA1OUT / OA1IN+) + op amp 1 + integration mode; bus-quiet DMA wait (the tight poll duplicated samples: DMA ceiling is 20 Msps, default div 8); `acqcpu` CPU-loop 40 Msps experiment; `ADCBB` ADC core timing test; docs: memory 0011 throughput facts, spec §11, session 06 log, TODO/DONE/TODO_HARDWARE (rp 0.1.26 / pic 0.1.18, proto 4)
 - 2026-10-28  7b7dae4  feat(claude): SessionStart hook also shows the user a 'where we left off' summary (systemMessage)

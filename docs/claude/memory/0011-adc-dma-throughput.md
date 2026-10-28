@@ -11,7 +11,8 @@
 | CPU loop `dst[i] = AD1CH0DATA` | exactly **4 cycles = 25 ns per read**, phase-locked to the ADC (same PLL) | at 50 ns triggers every sample is seen once (gap 4) / twice (gap 0) — perfect; at 25 ns triggers marginal: phases 0/1/5 ≈ 10 % duplicated pairs, other phases every other result lost (CPU read beats the ADC result write) |
 | Integration mode (`navg` N, back-to-back re-trigger) | sum arrives after ≈ 25·N + 40 ns per trigger | per-sequence overhead ≈ 40 ns; `navg 2` at div 8 → 88 ns → use div ≥ 15 |
 | SCCP1 trigger period | **div × 6.25 ns** (div 8 → 50.3, 16 → 100.5, 32 → 195 ns, RP crystal) | FRC ≈ +0.5 % slow; the old "0.6–0.75 × div" numbers were the duplicate artefact |
-| ADC trigger sources 2 (back-to-back) and 3 (repeat timer) as TRG1SRC in single-sample mode | **never fire** (DATA stays stale) | back-to-back only works as TRG2SRC inside integration/oversampling; RPTCNT ignored? (set before ON too) |
+| ADC trigger sources 2 (immediate re-trigger) and 3 (repeat timer) as TRG1SRC | **never fire** (DATA stays stale) | **Datasheet Table 18-3: TRG1SRC 00010/00011 are Reserved** — both sources exist only as TRG2SRC (Table 18-4), i.e. inside a multi-sample sequence. No free-running single-sample mode exists |
+| 20 M sums/s ("20 Msps integrated over 2") on one channel | **not possible as measured**: CNT=2 sequence = 88 ns → 11.4 M sums/s max (div 15) | oversampling mode starts at ACCNUM=4, so CNT=2 integration is the only hardware 2-sum; the ≈ 40 ns per-trigger overhead cannot be skipped (no self-retrigger for TRG1SRC). Untested route: CH0 + CH1 on the same input, each CNT=2 at 100 ns, triggered 50 ns apart (SCCP1 trigger-out vs SCCP1 OCMP-out), two DMA channels = 20 M transfers/s total = exactly the DMA ceiling |
 
 ## What it means for minus
 - **Default capture = `acq` at div 8 = 20 Msps via DMA**, clean. Nyquist 10 MHz covers 3–5 MHz probes.

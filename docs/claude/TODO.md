@@ -13,6 +13,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     D7/R28/R36) so OA1 stops sitting at the rail, then `acq 8 0 0` with the transducer; (3) decide the
     40 Msps route: CPU at 200 MHz (5-cycle loop, needs PLL2 for the 320 MHz ADC clock) vs accept 20 Msps
     (Nyquist 10 MHz, fine for 3–5 MHz probes) vs `navg 2` at div 15 (10.7 M sums/s). See memory 0011.
+  - Optional experiment (asked 2026-10-28): 20 M 2-sums/s via CH0+CH1 interleave (each `CNT=2` at 100 ns,
+    50 ns apart, two DMA channels) — see memory 0011 / session 06 log. Single-channel `navg 2` tops at 11.4 M/s.
   - Also: the wait loop could use the DMA0 interrupt + `pwrsav #1` instead of the NOP poll (zero SFR
     traffic during the capture); `acq` default input should be settable once (`acq in <n>`).
   - Board 1: replace U2 (dead PIC) when convenient; remove its H2.16–CN1.17 jumper first.
