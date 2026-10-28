@@ -9,7 +9,8 @@ description: Use at the start of any minus session, or whenever the user says "p
 The SessionStart hook (`.claude/hooks/session-resume.sh`, wired in `.claude/settings.json`)
 injects a "RESUME CONTEXT" block: last 5 commits, uncommitted files, `TODO.md` "Now" block,
 tail of the newest `docs/claude/log/*.md`, memory 0008 "Bench state", and what is on USB.
-This skill is what to do with it.
+This skill is what to do with it. The same hook also prints a short **summary to the user**
+(hook `systemMessage`: last commit, unpushed count, RESUME HERE, the last log section, USB).
 
 ## Steps (in order, before any other work)
 1. Read the injected RESUME CONTEXT. If it is missing (hook did not fire), produce it yourself:

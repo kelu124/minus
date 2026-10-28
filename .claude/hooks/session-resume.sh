@@ -29,10 +29,26 @@ cd "$ROOT" || exit 0
   ls /dev/ttyACM* 2>/dev/null || echo "no /dev/ttyACM*"
   echo "=== end resume context ==="
 } > /tmp/minus-resume-context.txt 2>&1
-# Emit as additionalContext (JSON-escape via jq if available, else plain stdout which Claude Code also injects)
+# Short summary SHOWN TO THE USER at session start (hook "systemMessage"): where we left off.
+{
+  echo "minus — where we left off (auto summary, .claude/hooks/session-resume.sh)"
+  echo "last commit: $(git -c color.ui=never log -1 --format='%h %ad %s' --date=short 2>/dev/null | cut -c1-110)"
+  ahead=$(git rev-list --count @{upstream}..HEAD 2>/dev/null); [ -n "$ahead" ] && [ "$ahead" != "0" ] && echo "unpushed commits: $ahead"
+  echo "RESUME HERE: $(awk '/^- \*\*RESUME HERE/{p=1} p&&/^- \*\*Was:|^- \*\*[^R]/{exit} p' docs/claude/TODO.md | sed 's/^- \*\*RESUME HERE[^:]*:\*\*//; s/^    //' | tr '\n' ' ' | cut -c1-420)"
+  LOG=$(ls docs/claude/log/*.md 2>/dev/null | sort | tail -1)
+  if [ -n "$LOG" ]; then
+    echo "last log: $LOG — final section:"
+    awk '/^## /{sec=$0; buf=""} {buf=buf"\n"$0} END{print buf}' "$LOG" | sed '/^$/d' | head -14 | cut -c1-160 | sed 's/^/  /'
+  fi
+  if command -v lsusb >/dev/null; then
+    lsusb 2>/dev/null | grep -q -i -E "2e8a|04d8" && echo "USB: a minus board is attached ($(ls /dev/ttyACM* 2>/dev/null | tr '\n' ' '))" || echo "USB: no board attached"
+  fi
+} > /tmp/minus-resume-summary.txt 2>&1
+# Emit: additionalContext for Claude + systemMessage for the user (JSON via jq; plain text fallback)
 if command -v jq >/dev/null; then
-  jq -Rs '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:.}}' /tmp/minus-resume-context.txt
+  jq -n --rawfile ctx /tmp/minus-resume-context.txt --rawfile msg /tmp/minus-resume-summary.txt \
+     '{systemMessage:$msg, hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$ctx}}'
 else
-  cat /tmp/minus-resume-context.txt
+  cat /tmp/minus-resume-summary.txt /tmp/minus-resume-context.txt
 fi
 exit 0
