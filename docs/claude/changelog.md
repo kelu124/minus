@@ -7,6 +7,7 @@ Uncommitted work sits at the top under "Pending" until it lands, then it gets
 the sha.
 
 ## Pending
+- 2026-10-28  (pending)  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)
 
 - (none)
 
