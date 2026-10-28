@@ -2,6 +2,7 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-10-28 — **20 M 2-sums/s reached with a two-channel interleave** (`acqil`, session 06 follow-up): ADC1 CH0 + CH1 on the same input, 2-sums each, SCCP1/SCCP2 triggers, DMA0 + DMA1, merged on the PIC; 4094 sums in 206 µs = 19.87 M/s, channel means equal to 0.1 LSB at div 16. Datasheet: TRG1SRC 2/3 Reserved, ACCNUM ≥ 4, so one channel tops at 11.4 M/s. rp 0.1.27 / pic 0.1.19, proto 5.
 - 2026-10-28 — **ADC/DMA throughput understood + OA1 capture** (session 06): DMA ceiling = 20 Msps (50 ns per 16-bit transfer), tight SFR polling duplicated samples (the "26.6 Msps" was an artefact), SCCP period = div × 6.25 ns confirmed, ADC core 25.05 ns/conversion proven (`ADCBB`), `acq [div [samc [in [navg]]]]` with input select (node / OA1OUT / OA1IN+) and integration mode, op amp 1 enabled, `acqcpu` 40 Msps CPU-loop experiment (marginal). OA1OUT measured at the rail (RX node = 0.60 V clamp × 11). rp 0.1.26 / pic 0.1.18, proto 4.
 - 2026-10-28 — **Board 2 bring-up complete**: `pic id` (DEVID 0x9DA2), `pic flash` (verify 0 bad), `ping` 1.2 ms, `acq` 4095 samples at 26.6 Msps effective (DMA floor), `acq [div [samc]]`, RP-timed capture window. PIC UART pins fixed (pic 0.1.2); DEVID expectation fixed (rp 0.1.11); `lb` loopback, `pic seq/rdraw/pair/slow/mclr rise` diagnostics; `tools/la_decode_icsp.py`.
 - 2026-10-28 — Board 1 diagnosed: PIC32AK U2 dead (full ICSP entry proven at its pins by logic analyser, silent on two pairs); TODO_HARDWARE.md created.

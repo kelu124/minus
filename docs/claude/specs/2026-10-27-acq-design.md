@@ -157,3 +157,17 @@ faster link baud, continuous mode, TX/RX sequencing.
 - **CPU-loop reader (`ACQCPU`):** 4 cycles per read, phase-locked; clean at 50 ns triggers, marginal at
   25 ns (CPU reads collide with the ADC result write). Back-to-back / repeat-timer trigger sources do
   not fire in single-sample mode on this part.
+
+## 12. Two-channel interleave (2026-10-28, `acqil`, pic 0.1.19 / rp 0.1.27)
+- Goal: "20 Msps integrated over 2 samples". One channel cannot (§11: 88 ns per 2-sum; TRG1SRC 2/3 are
+  Reserved so no self-retrigger; oversampling starts at 4).
+- Build: ADC1 CH0 (TRG1SRC 12 = SCCP1) and CH1 (TRG1SRC 13 = SCCP2) both PINSEL = last input, MODE 2,
+  TRG2SRC 2, CNT = navg (2). SCCP2 = copy of SCCP1 with CCP2TMR preloaded `off` (default div/2+1) so it
+  fires about half a period after/before CH0. DMA0 ← AD1CH0DATA → acq_buf[0..2047), DMA1 (CHSEL 0x2C) ←
+  AD1CH1DATA → acq_buf1[2047]; after both DONE the halves are merged backwards in place into acq_buf
+  (CH0[i], CH1[i]). Reply = `ACQ 4094 …` so the RP path is unchanged.
+- Measured (`acqil 16`): 206.0 µs → 19.87 M sums/s, no overrun; `acq 16 0 9 2` single channel 9.94 M/s.
+  Even/odd tail means equal (−0.0 / +0.1 LSB) for off 5, 9, 12 → the saturated ADC core packs the four
+  conversions per 100 ns on its 25 ns grid, so the trigger phase does not matter. div 20 → 10–22 LSB
+  channel offset (5 slots per channel cannot split evenly); `acqil 32 0 4` 4-sums 9.94 M/s clean;
+  `acqil 24 0 4` overload (fill 929 µs, scrambled order). Pending: tone test.

@@ -98,6 +98,7 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | `raw <text>` | send any line to the PIC, print its reply |
 | `acq [div [samc [in [navg]]]]` | PIC captures **4095 samples via DMA** and sends them back; RP prints a `# acq n=4095 fill=…us fs=…Msps rp_fill=…` line then one value per line. `div` = SCCP1 trigger period in 6.25 ns counts (**8 = 20 Msps = the DMA ceiling**, default; 4 loses every other trigger), `samc` = sampling 0..7 (0.5 + 2n TAD) or -1 auto, `in` = ADC1 input (**9** PIC32_ADC node, **0** OA1OUT = op amp 1 ×11 on the RX node, **1** OA1IN+ = raw RX node), `navg` = 1 single conversion or 2..16 back-to-back conversions summed per trigger (ADC core at 40 Msps, result 12+log2(navg) bits; needs trigger period ≥ 25·navg + 40 ns). `rpcli.py … acq --wait=3 --out=capture.csv` saves it. Design: `docs/claude/specs/2026-10-27-acq-design.md`; throughput findings: memory 0011 |
 | `acqcpu [trg [rptcnt [gap [phase]]]]` | **Experiment**: CPU-loop capture, no DMA — the CPU copies `AD1CH0DATA` to RAM every 4 cycles (25 ns), phase-locked to the ADC (same PLL). `trg` 12 (default) = SCCP1 at the last `acq` div (`acq 4 …` first → 40 Msps triggers); `gap` = extra NOPs per read (4 → 50 ns reads); `phase` = NOPs before the loop. Bench 2026-10-28: at 50 ns triggers every sample is caught exactly once/twice as expected; at 25 ns it is **marginal** (phase 0/1/5 ≈ 10 % duplicated pairs, other phases every other result lost: CPU reads win the bus over the ADC's result write). trg 2 (back-to-back) / 3 (repeat timer) never fire in single-sample mode |
+| `acqil [div [off [navg]]]` | **Two-channel interleave = 20 M 2-sums/s** (the "20 Msps integrated over 2 samples" route). ADC1 CH0 and CH1 both read the last `acq` input, each summing `navg` (default 2) back-to-back 25 ns conversions per trigger; CH0 is triggered by SCCP1, CH1 by SCCP2 (same period, timer preloaded by `off` counts, 0 = div/2+1); two one-shot DMA channels (DMA0/DMA1, 0x2B/0x2C) fill two halves that the PIC merges into one stream (CH0[i], CH1[i], …). `div` = **per-channel** period in 6.25 ns counts (default 16 = 100 ns). Reply as `acq` with n = 4094. Bench 2026-10-28: `acqil 16` → 4094 sums in 206.0 µs = **19.87 M sums/s** (single channel `acq 16 0 9 2` = 9.94 M/s); the ADC core is then saturated (4 conversions per 100 ns) and packs them on its 25 ns grid, so the even/odd channel means agree to 0.1 LSB for any `off` (5, 9, 12), i.e. a uniform 40 Msps comb summed in pairs (13-bit). At div 20 (5 slots per channel) the two channels cannot be spaced evenly: means differ by 10–22 LSB. `acqil 32 0 4` = 4-sums at 9.94 M/s (same packing); `acqil 24 0 4` overloads the core (fill doubles, order scrambled). Decisive check still pending: a known tone at the ADC SMA |
 | `raw AMP1 0\|1` | op amp 1 off/on (on at boot, high-power mode, external gain R47/R48) |
 | `raw ADCBB n [ovs]` | **Experiment**: time `n` back-to-back conversions without DMA (integration mode; `ovs` 1 = oversampling burst, n = 4/16/64/256). Reply `ADCBB n ovs ticks 100 sum`. Bench: 4095 → 1026 ticks = **25.05 ns per conversion**, the ADC core really does 40 Msps on one channel |
 | `pic id` | enter ICSP on GPIO21/22/24, read DEVID/REVID (expect `0x09DA2053`), exit. No write. |
@@ -125,7 +126,7 @@ The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.T
 there is no `ICS` setting in this family) were verified against the DFP's
 `p32AK1216GC41048.h` and `config_docs`; the source compiles clean (no warnings) with XC-DSC 3.31.01.
 
-## Link protocol (proto 4)
+## Link protocol (proto 5)
 
 ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG` 694):
 
@@ -135,6 +136,7 @@ ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG
 | `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.1 proto 2` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
 | `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. Arguments persist on the PIC between calls. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
+| `ACQIL [div [off [navg]]]` | same reply format as `ACQ` with n = 4094 (two 2047-sample halves interleaved on the PIC); two-channel interleaved integration capture (see `acqil`). proto 5 |
 | `ACQCPU <trg> [rptcnt [gap [phase]]]` | same reply format as `ACQ`; CPU-loop capture (see `acqcpu`) |
 | `AMP1 0\|1` | `AMP1 <0\|1>` — op amp 1 enable |
 | `ADCBB <n> [ovs]` | `ADCBB <n> <ovs> <ticks> <tick_ns> <sum>` — DMA-free ADC throughput test |

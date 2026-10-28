@@ -13,6 +13,7 @@
 #include "acq.h"
 
 uint16_t acq_buf[ACQ_N] __attribute__((aligned(4)));
+static uint16_t acq_buf1[ACQ_IL_HALF] __attribute__((aligned(4)));   // ACQIL: channel-1 half (DMA1), merged into acq_buf afterwards
 static unsigned acq_div = ACQ_TRIG_DIV;
 static unsigned acq_input = ACQ_INPUT_NODE;   // ADC1 PINSEL: 9 = PIC32_ADC node (RA9), 0 = OA1OUT (RA2), 1 = OA1IN+ (RA4, RX node)
 void     acq_set_input(unsigned pinsel) { acq_input = pinsel & 0xF; }
@@ -97,6 +98,7 @@ void acq_init(void) {
     DMALOW  = 0x4000;
     DMAHIGH = 0x7FFF;
     DMA0SELbits.CHSEL = 0x2B;           // Table 16-2: 0x2B "ADC1 - AN0" (channel 0); try 0x34 if silent
+    DMA1SELbits.CHSEL = 0x2C;           // Table 16-2: 0x2C "ADC1 - AN1" (channel 1) — used by acq_il_run
 }
 
 acq_status_t acq_run(uint32_t *ticks) {
@@ -218,4 +220,83 @@ acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned p
     (void)AD1CH0DATA; (void)AD1CH1DATA;
     if (ticks) *ticks = t;
     return ACQ_OK;
+}
+
+// Two-channel interleaved integration capture (link command "ACQIL [div [off [navg]]]"), the "20 M
+// 2-sums/s" experiment (session 06 follow-up). One channel cannot deliver 2-sample sums faster than
+// ~88 ns each (every triggered sequence costs ~40 ns on top of 25 ns per conversion, and the ADC has no
+// self-retriggering start: TRG1SRC 2/3 are Reserved). So two channels share the same input pin:
+//   CH0: integration navg (default 2), started by SCCP1 Trigger out (TRG1SRC 12), period div counts;
+//   CH1: identical, started by SCCP2 Trigger out (TRG1SRC 13), same period, SCCP2 preloaded with
+//        CCP2TMR = off so it fires (div - off) counts after start, i.e. half a period later for
+//        off = div/2 (+1 to compensate CCP2 being switched on one instruction after CCP1).
+//   DMA0: AD1CH0DATA -> acq_buf[0..ACQ_IL_HALF), DMA1: AD1CH1DATA -> acq_buf1, both one-shot 16-bit.
+// Afterwards the two halves are merged in place into acq_buf (CH0[i], CH1[i], CH0[i+1], ...), so the
+// reply is the usual ACQ stream with n = ACQ_IL_N and each value a (12 + log2(navg))-bit sum. With
+// div 16 (100 ns per channel) a clean result is 4094 sums in ~204.7 us = 20 M sums/s, the DMA ceiling
+// shared by two channels; if the ADC serialises the two sequences the fill time doubles.
+acq_status_t acq_il_run(unsigned off, unsigned navg, uint32_t *ticks) {
+    if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
+    if (navg < 1) navg = 1;
+    if (navg > 16) navg = 16;
+    unsigned div = acq_div;
+    if (off == 0 || off >= div) off = div / 2u + 1u;
+    unsigned samc = acq_samc < 0 ? 0 : (unsigned)acq_samc;
+
+    AD1CH0CONbits.PINSEL = acq_input;  AD1CH0CONbits.SAMC = samc;
+    AD1CH1CON = 0;
+    AD1CH1CONbits.PINSEL = acq_input;  AD1CH1CONbits.SAMC = samc;
+    if (navg > 1) {
+        AD1CH0CONbits.MODE = 2; AD1CH0CONbits.TRG2SRC = 2; AD1CH0CNT = navg; AD1CH0CONbits.ACCRO = 0;
+        AD1CH1CONbits.MODE = 2; AD1CH1CONbits.TRG2SRC = 2; AD1CH1CNT = navg; AD1CH1CONbits.ACCRO = 0;
+    } else {
+        AD1CH0CONbits.MODE = 0; AD1CH0CONbits.TRG2SRC = 0;
+        AD1CH1CONbits.MODE = 0; AD1CH1CONbits.TRG2SRC = 0;
+    }
+    AD1CH0CONbits.TRG1SRC = 12;         // SCCP1 Trigger out
+    AD1CH1CONbits.TRG1SRC = 13;         // SCCP2 Trigger out (Table 18-3: 01101)
+
+    // SCCP2 = a copy of SCCP1 (32-bit timer, CLKGEN12, self-synchronised at PR), preloaded for the offset
+    CCP2CON1 = 0;
+    CCP2CON1bits.CCSEL = 0; CCP2CON1bits.T32 = 1; CCP2CON1bits.MOD = 0;
+    CCP2CON1bits.CLKSEL = 1; CCP2CON1bits.TMRPS = 0; CCP2CON1bits.SYNC = 0;
+    CCP1PR = div - 1u;  CCP1TMR = 0;
+    CCP2PR = div - 1u;  CCP2TMR = off;
+
+    IFS2bits.DMA0IF = 0;
+    DMA0CH = 0; DMA0STAT = 0;
+    DMA0SRC = (uint32_t)&AD1CH0DATA; DMA0DST = (uint32_t)acq_buf;  DMA0CNT = ACQ_IL_HALF;
+    DMA0CHbits.SIZE = 1; DMA0CHbits.SAMODE = 0; DMA0CHbits.DAMODE = 1; DMA0CHbits.TRMODE = 0;
+    DMA1CH = 0; DMA1STAT = 0;
+    DMA1SRC = (uint32_t)&AD1CH1DATA; DMA1DST = (uint32_t)acq_buf1; DMA1CNT = ACQ_IL_HALF;
+    DMA1CHbits.SIZE = 1; DMA1CHbits.SAMODE = 0; DMA1CHbits.DAMODE = 1; DMA1CHbits.TRMODE = 0;
+    (void)AD1CH0DATA; (void)AD1CH1DATA;   // clear stale ready flags
+    DMA0CHbits.CHEN = 1;
+    DMA1CHbits.CHEN = 1;
+
+    TMR1 = 0;
+    LATAbits.LATA7 = 1;
+    T1CONbits.ON = 1;
+    CCP1CON1bits.ON = 1;
+    CCP2CON1bits.ON = 1;                // one instruction later than CCP1 (see off)
+
+    for (uint32_t spins = 0; (DMA0STATbits.DONE == 0 || DMA1STATbits.DONE == 0) && spins < ACQ_DEADLINE_SPINS; spins++)
+        for (int k = 0; k < ACQ_POLL_NOPS; k++) __builtin_nop();
+
+    uint32_t t = TMR1;
+    LATAbits.LATA7 = 0;
+    CCP1CON1bits.ON = 0; CCP2CON1bits.ON = 0;
+    T1CONbits.ON = 0;
+    acq_status_t st = ACQ_OK;
+    if (DMA0STATbits.ADRERR || DMA0STATbits.BRERR || DMA0STATbits.BWERR ||
+        DMA1STATbits.ADRERR || DMA1STATbits.BRERR || DMA1STATbits.BWERR) st = ACQ_DMAERR;
+    else if (DMA0STATbits.DONE == 0 || DMA1STATbits.DONE == 0) st = ACQ_TIMEOUT;
+    else if (DMA0STATbits.OVERRUN || DMA1STATbits.OVERRUN) st = ACQ_OVERRUN;
+    DMA0CHbits.CHEN = 0; DMA1CHbits.CHEN = 0;
+    AD1CH1CON = 0;                      // channel 1 back to idle (no trigger)
+    (void)AD1CH0DATA; (void)AD1CH1DATA;
+    // merge in place, backwards: acq_buf[2i] <- CH0[i] (= acq_buf[i], still intact since 2i >= i), acq_buf[2i+1] <- CH1[i]
+    for (unsigned i = ACQ_IL_HALF; i-- > 0; ) { acq_buf[2u * i + 1u] = acq_buf1[i]; acq_buf[2u * i] = acq_buf[i]; }
+    if (ticks) *ticks = t;
+    return st;
 }

@@ -334,6 +334,22 @@ static void cmd_acqcpu(const char *arg) {
     else snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read, phase %u), trigger %u (12 = SCCP1 at the last acq div; 2 back-to-back / 3 repeat timer are dead); last input/samc", gap, phase, trg);
     acq_receive(hdr, sizeof hdr, note);
 }
+static void cmd_acqil(const char *arg) {
+    // acqil [div [off [navg]]]: two ADC1 channels on the same input, each summing navg (default 2) 25 ns
+    // conversions per trigger, triggered half a period apart (CH0 SCCP1, CH1 SCCP2 preloaded by off counts),
+    // two DMA channels; the PIC interleaves the halves. div = per-channel period (default 16 = 100 ns ->
+    // 20 M sums/s total if the ADC interleaves the two sequences). Uses the last acq input/samc.
+    char hdr[96]; unsigned div = 16, off = 0, navg = 2;
+    if (arg && *arg) { char *e; div = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') { off = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
+    if (div < 4 || div > 255 || off > 255 || navg < 1 || navg > 16) { printf("acqil: div 4..255, off 0..255 (0 = div/2+1), navg 1..16\n"); return; }
+    link_flush_rx();
+    snprintf(hdr, sizeof hdr, "ACQIL %u %u %u\n", div, off, navg);
+    link_puts(hdr);
+    char note[200];
+    snprintf(note, sizeof note, "two-channel interleave: per-channel period %u x 6.25 ns = %.1f ns, CH1 offset %s counts, each value = sum of %u conversions (%u bits); last input/samc",
+             div, div * 6.25, off ? "given" : "div/2+1", navg, 12 + (navg >= 16 ? 4 : navg >= 8 ? 3 : navg >= 4 ? 2 : navg >= 2 ? 1 : 0));
+    acq_receive(hdr, sizeof hdr, note);
+}
 static void acq_receive(char *hdr, unsigned hdrlen, const char *note) {
     static uint8_t payload[2 * ACQ_MAX_N];
     // RP-side timing of the capture window: the PIC holds RDY high from trigger start to DMA done.
@@ -378,6 +394,7 @@ static void help(void) {
            "  lb          RP UART0 internal loopback self-test\n"
            "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 6.25 ns counts (8 = 20 Msps = the DMA ceiling; 4 default = half the triggers lost), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = ADC1 input: 9 node (default), 0 OA1OUT (op amp 1), 1 OA1IN+ (raw RX node), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
            "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 25 ns per read + gap NOPs; trg 12 (default) = SCCP1 at the last acq div (acq 4 first -> 40 Msps), trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
+           "  acqil [div [off [navg]]]  experiment: two ADC1 channels on the same input, navg-sums (default 2) each, triggered half a period apart (div = per-channel period, default 16 = 100 ns -> 20 M sums/s total), two DMA channels, interleaved; off = CH1 timer preload in counts (0 = div/2+1)\n"
            "  raw AMP1 0|1  op amp 1 off/on on the PIC (on at boot)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
@@ -426,6 +443,7 @@ int main(void) {
             hw_clear_bits(&uart_get_hw(LINK_UART)->cr, UART_UARTCR_LBE_BITS);
             printf("uart0 loopback: %s\n", n < 0 ? "FAILED (nothing received)" : !strcmp(rx, "LOOP 42") ? "ok" : rx);
         }
+        else if (!strncmp(line, "acqil", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqil(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",

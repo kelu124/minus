@@ -7,6 +7,7 @@ Uncommitted work sits at the top under "Pending" until it lands, then it gets
 the sha.
 
 ## Pending
+- 2026-10-28  (pending)  feat(firmware): `acqil` two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5); docs: memory 0011/0008, spec §12, log, TODO/DONE
 
 - (none)
 

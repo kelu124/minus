@@ -161,6 +161,19 @@ int main(void) {
                     uart1_puts(out);
                     if (st == ACQ_OK)
                         for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strncmp(line, "ACQIL", 5) && (line[5] == 0 || line[5] == ' ')) {
+                    // ACQIL [div [off [navg]]]: two-channel interleaved integration capture (CH0 SCCP1, CH1 SCCP2
+                    // offset by off counts, navg-sums each); same reply format as ACQ with n = ACQ_IL_N
+                    unsigned off = 0, navg = 2;
+                    if (line[5] == ' ') { char *e; acq_set_div((unsigned)strtoul(line + 6, &e, 10));
+                        if (*e == ' ') { off = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
+                    RDY_LAT = 0;
+                    uint32_t t = 0; acq_status_t st = acq_il_run(off, navg, &t);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
+                    char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_IL_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
+                    uart1_puts(out);
+                    if (st == ACQ_OK)
+                        for (unsigned i = 0; i < ACQ_IL_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
                 } else if (!strncmp(line, "ADCBB ", 6)) {
                     // ADCBB <n> [ovs]: time n back-to-back conversions (no DMA); reply "ADCBB n ovs ticks tick_ns data"
                     char *e; unsigned n = (unsigned)strtoul(line + 6, &e, 10); unsigned ovs = *e == ' ' ? (unsigned)strtoul(e + 1, NULL, 10) : 0;
