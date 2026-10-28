@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-28 | `84ea839` | feat(firmware): acq input select (node/OA1OUT/OA1IN+) + op amp 1, bus-quiet DMA wait (20 Msps ceiling), acqcpu 40 Msps experiment, ADC throughput tests | Answers the two session-06 questions with bench proof: DMA = 50 ns/transfer (20 Msps), the old 26.6 Msps was duplicated samples from a tight SFR poll, ADC core = 25 ns; first OA1 capture (saturated at the rail until the RX-node bias is fixed). |
 | 2026-10-27 | `1bb6e51` | docs: bench conclusion — U2 silent with power/reset/sequence verified at its pins; replace the PIC | Power 3.28 V and MCLR 3.13 V at the chip: conclusion = replace U2. |
 | 2026-10-27 | `8c472d4` | docs: pair-2 ICSP test also silent; remaining physical checks | Second pair silent too. |
 | 2026-10-27 | `6776397` | feat(rp2354): pic pair 1|2 — ICSP via the PIC's second pair (fw 0.1.7) | Bypass pins 21/22 with one jumper to separate joints from a dead chip. |
