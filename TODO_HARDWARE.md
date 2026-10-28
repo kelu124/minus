@@ -68,6 +68,15 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
   the ADC's own buffering). Not a board issue, noted for the design (RP2350 PIO/SPI readout vs
   PIC DMA).
 
+- **[should] FE-A (PIC op-amps) is ground-referenced:** the RX node (`OA1IN+`) is clamped to ±0.6 V
+  around GND by D7 and OA1's gain leg R47 goes to GND, so on the single 3.3 V supply OA1 (×11) and
+  OA2 can only reproduce the positive half of the echo. Next revision: AC-couple the RX node into
+  OA1IN+ with a mid-rail bias (2 × R to 1.65 V), reference R47 to the same mid-rail, and clamp D7
+  around that bias instead of GND. Same for OA2/OA3 if used as gain stages.
+- **[nice] OA1OUT is also AD1AN0**: the op-amp output can be sampled with no external wiring
+  (`PINSEL 0`), which bypasses the node's clamp and anti-alias filter; a 0 Ω option from OA1OUT to
+  the ADC-node input (H5) would make the filtered path jumper-free too.
+
 ## Analog path (from `design/devkit/review-findings.md`, not yet re-checked on hardware)
 
 - Gain distribution / digipot bandwidth, anti-alias RC corner (~6–8 MHz), LVP-only programming
