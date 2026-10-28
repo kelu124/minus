@@ -8,10 +8,12 @@ the sha.
 
 ## Pending
 
-- 2026-10-28  (pending)  feat(firmware): `acq … in navg` input select (node / OA1OUT / OA1IN+) + op amp 1 + integration mode; bus-quiet DMA wait (the tight poll duplicated samples: DMA ceiling is 20 Msps, default div 8); `acqcpu` CPU-loop 40 Msps experiment; `ADCBB` ADC core timing test; docs: memory 0011 throughput facts, spec §11, session 06 log, TODO/DONE/TODO_HARDWARE (rp 0.1.26 / pic 0.1.18, proto 4)
+- (none)
 
 ## Committed
 
+- 2026-10-28  d17d0fc  docs: changelog/commit log — record 84ea839 under Committed
+- 2026-10-28  84ea839  feat(firmware): `acq … in navg` input select (node / OA1OUT / OA1IN+) + op amp 1 + integration mode; bus-quiet DMA wait (the tight poll duplicated samples: DMA ceiling is 20 Msps, default div 8); `acqcpu` CPU-loop 40 Msps experiment; `ADCBB` ADC core timing test; docs: memory 0011 throughput facts, spec §11, session 06 log, TODO/DONE/TODO_HARDWARE (rp 0.1.26 / pic 0.1.18, proto 4)
 - 2026-10-28  7b7dae4  feat(claude): SessionStart hook also shows the user a 'where we left off' summary (systemMessage)
 - 2026-10-28  781b799  docs: park 2026-10-28 — RX-node bias question answered, R28/R36 vs D7 bias conflict added to TODO_HARDWARE, handoff
 - 2026-10-28  8c0acdc  docs: FE-A (OA1) wiring analysis — RX node is OA1IN+, half-wave on single supply; TODO_HARDWARE items
