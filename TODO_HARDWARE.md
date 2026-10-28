@@ -73,6 +73,12 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
   OA2 can only reproduce the positive half of the echo. Next revision: AC-couple the RX node into
   OA1IN+ with a mid-rail bias (2 × R to 1.65 V), reference R47 to the same mid-rail, and clamp D7
   around that bias instead of GND. Same for OA2/OA3 if used as gain stages.
+- **[must] RX node bias conflict:** R28/R36 (50 Ω) DC-couple the RX node to the OPA847/LMH6629
+  non-inverting inputs, which are biased at 2.5 V (10k/10k from 5 V), while D7 clamps the node to
+  ±0.6 V around GND: as built, the node sits at ≈ +0.6 V and both external op-amp inputs are
+  pulled off their bias. Fix: one bias domain for the node (series cap after the T/R switch, 2 × R
+  to a mid-rail, clamp D7 around that rail) and AC-couple every FE input to it (R28/R36 → C + R);
+  OA1/OA2 gain legs R47/R49 get a series cap (DC gain 1) or the same mid-rail reference.
 - **[nice] OA1OUT is also AD1AN0**: the op-amp output can be sampled with no external wiring
   (`PINSEL 0`), which bypasses the node's clamp and anti-alias filter; a 0 Ω option from OA1OUT to
   the ADC-node input (H5) would make the filtered path jumper-free too.
