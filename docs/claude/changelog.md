@@ -7,12 +7,12 @@ Uncommitted work sits at the top under "Pending" until it lands, then it gets
 the sha.
 
 ## Pending
-- 2026-10-28  (pending)  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)
 
 - (none)
 
 ## Committed
 
+- 2026-10-28  ebfb38c  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)
 - 2026-10-28  6374b00  feat(firmware): `acqil` two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5); docs: memory 0011/0008, spec §12, log, TODO/DONE
 - 2026-10-28  d7cc0a3  docs: datasheet check — TRG1SRC 2/3 are Reserved (only TRG2SRC); 2-sum at 20 M/s not possible on one channel (memory 0011, log 06, TODO)
 - 2026-10-28  77d725a  docs: changelog — record 84ea839 / d17d0fc under Committed (fix the missed edit)
