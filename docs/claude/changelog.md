@@ -12,6 +12,10 @@ the sha.
 
 ## Committed
 
+- 2026-10-28  7b7dae4  feat(claude): SessionStart hook also shows the user a 'where we left off' summary (systemMessage)
+- 2026-10-28  781b799  docs: park 2026-10-28 — RX-node bias question answered, R28/R36 vs D7 bias conflict added to TODO_HARDWARE, handoff
+- 2026-10-28  8c0acdc  docs: FE-A (OA1) wiring analysis — RX node is OA1IN+, half-wave on single supply; TODO_HARDWARE items
+- 2026-10-28  d52f25d  docs: changelog/commit log — record the 2026-10-28 commits
 - 2026-10-28  d43320b  feat(pic32): CLK12 <nosc> diagnostic (pic 0.1.7 / rp 0.1.18); log trigger-period measurements and handoff
 - 2026-10-28  fbea3e3  feat: acq [div [samc]] + RDY capture window timed by the RP (pic 0.1.6 / rp 0.1.17); board-2 bring-up logged; TODO_HARDWARE analog findings
 - 2026-10-28  cad3e91  feat: first working RP<->PIC link and acq on board 2 — PIC UART pins fixed (pic 0.1.2), ACQ [div] with period-matched SAMC (pic 0.1.3 / rp 0.1.14, pro

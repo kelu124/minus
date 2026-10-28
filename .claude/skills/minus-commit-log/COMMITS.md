@@ -13,6 +13,10 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 | 2026-10-27 | `6fe5854` | tools: la_decode_icsp.py (decode sigrok captures of the ICSP entry); log LA findings | Owner's logic-analyser dump decoded bit by bit: key/opcodes correct on the wire. |
 | 2026-10-27 | `d3b8b36` | docs: bench debug log — pic id still silent with R53 shorted; SWD pad pull-up finding | Systematic-debugging evidence trail. |
 | 2026-10-27 | `8462b2a` | feat(rp2354): ICSP bench diagnostics — pic mclr rise, pic slow|fast, SWD pad pulls off (fw 0.1.6) | pic id still silent after the R53 fix; found the RP SWD pad pull-ups faking 'PIC alive'. |
+| 2026-10-28 | `7b7dae4` | feat(claude): SessionStart hook also shows the user a 'where we left off' summary (systemMessage) | Park 2026-10-28: see log session 05. |
+| 2026-10-28 | `781b799` | docs: park 2026-10-28 — RX-node bias question answered, R28/R36 vs D7 bias conflict added to TODO_HARDWARE, handoff | Park 2026-10-28: see log session 05. |
+| 2026-10-28 | `8c0acdc` | docs: FE-A (OA1) wiring analysis — RX node is OA1IN+, half-wave on single supply; TODO_HARDWARE items | Park 2026-10-28: see log session 05. |
+| 2026-10-28 | `d52f25d` | docs: changelog/commit log — record the 2026-10-28 commits | Park 2026-10-28: see log session 05. |
 | 2026-10-28 | `d43320b` | feat(pic32): CLK12 <nosc> diagnostic (pic 0.1.7 / rp 0.1.18); log trigger-period measurements and handoff | Board-2 bring-up night: see log session 05. |
 | 2026-10-28 | `fbea3e3` | feat: acq [div [samc]] + RDY capture window timed by the RP (pic 0.1.6 / rp 0.1.17); board-2 bring-up logged; TODO_HARDWARE analog findings | Board-2 bring-up night: see log session 05. |
 | 2026-10-28 | `cad3e91` | feat: first working RP<->PIC link and acq on board 2 — PIC UART pins fixed (pic 0.1.2), ACQ [div] with period-matched SAMC (pic 0.1.3 / rp 0 | Board-2 bring-up night: see log session 05. |
