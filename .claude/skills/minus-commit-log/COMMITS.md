@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-10-28 | `6374b00` | feat(firmware): acqil — two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5) | Owner asked to try the untested route: CH0+CH1 on one input, SCCP1/SCCP2 triggers, DMA0+DMA1. It works — 20 M 2-sums/s, the practical "20 Msps integrated over 2". |
 | 2026-10-28 | `d7cc0a3` | docs: datasheet check — TRG1SRC 2/3 are Reserved (only TRG2SRC); 2-sum at 20 M/s not possible on one channel | Owner asked for 20 Msps integrated over 2 samples: datasheet + bench say 11.4 M sums/s max on one channel; explains why acqcpu trg 2/3 never fired. |
 | 2026-10-28 | `77d725a` | docs: changelog — record 84ea839 / d17d0fc under Committed (fix the missed edit) | The changelog edit in d17d0fc had asserted before writing; this landed the missing lines. |
 | 2026-10-28 | `d17d0fc` | docs: changelog/commit log — record 84ea839 under Committed | Bookkeeping for 84ea839 (the changelog line itself landed in the next commit). |
