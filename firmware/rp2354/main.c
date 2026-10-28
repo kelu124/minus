@@ -295,16 +295,47 @@ static void cmd_pic(const char *arg) {
 
 // ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
 #define ACQ_MAX_N 4095u
+static void acq_receive(char *hdr, unsigned hdrlen, const char *note);
 static void cmd_acq(const char *arg) {
-    static uint8_t payload[2 * ACQ_MAX_N];
     char hdr[96];
-    unsigned div = 0; int samc = -2;                                        // div 0 = PIC default; samc -2 = not given
-    if (arg && *arg) { char *e; div = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') samc = (int)strtol(e + 1, NULL, 10); }
+    unsigned div = 0; int samc = -2; int in = -1; int navg = 0;            // div 0 = PIC default; samc -2 / in -1 / navg 0 = not given
+    if (arg && *arg) {
+        char *e; div = (unsigned)strtoul(arg, &e, 10);
+        if (*e == ' ') { samc = (int)strtol(e + 1, &e, 10);
+            if (*e == ' ') { in = (int)strtol(e + 1, &e, 10); if (*e == ' ') navg = (int)strtol(e + 1, NULL, 10); } }
+    }
+    if (in > 15) { printf("acq: in must be 0..15 (ADC1 PINSEL: 9 node, 0 OA1OUT, 1 OA1IN+)\n"); return; }
+    if (navg < 0 || navg > 16) { printf("acq: navg must be 1..16\n"); return; }
     link_flush_rx();
-    if (div && samc != -2) snprintf(hdr, sizeof hdr, "ACQ %u %d\n", div, samc);
+    if (div && navg) snprintf(hdr, sizeof hdr, "ACQ %u %d %d %d\n", div, samc == -2 ? 0 : samc, in < 0 ? 9 : in, navg);
+    else if (div && in >= 0) snprintf(hdr, sizeof hdr, "ACQ %u %d %d\n", div, samc == -2 ? 0 : samc, in);
+    else if (div && samc != -2) snprintf(hdr, sizeof hdr, "ACQ %u %d\n", div, samc);
     else if (div) snprintf(hdr, sizeof hdr, "ACQ %u\n", div);
     else snprintf(hdr, sizeof hdr, "ACQ\n");
     link_puts(hdr);
+    // The PIC keeps the last div/samc/in across ACQ calls, so only name the input when this call set it.
+    const char *inname = in < 0 ? "last input (AD1AN9 node unless changed)" : in == 9 ? "AD1AN9 (PIC32_ADC node)" : in == 0 ? "AD1AN0 (OA1OUT, op amp 1 x11 on the RX node)" : in == 1 ? "AD1AN1 (OA1IN+, raw RX node)" : "AD1AN?";
+    char note[200];
+    snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 8, in, inname,
+             navg, navg > 1 ? "each value = sum of navg back-to-back 25 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
+    acq_receive(hdr, sizeof hdr, note);
+}
+static void cmd_acqcpu(const char *arg) {
+    // acqcpu [trg [rptcnt]]: CPU-loop capture on the PIC (no DMA). trg 2 = back-to-back conversions (period
+    // 25 ns at samc 0, 50 ns at samc 1, ...), trg 3 = ADC repeat timer every (rptcnt+1) x 12.5 ns.
+    char hdr[96]; unsigned trg = 12, r = 1, gap = 0, phase = 0;   // default: SCCP1 trigger at the last acq div (trg 2/3 proved dead in single-sample mode)
+    if (arg && *arg) { char *e; trg = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') { r = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') { gap = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') phase = (unsigned)strtoul(e + 1, NULL, 10); } } }
+    if (r > 63 || trg > 31 || gap > 64 || phase > 15) { printf("acqcpu: trg 0..31, rptcnt 0..63, gap 0..64, phase 0..15\n"); return; }
+    link_flush_rx();
+    snprintf(hdr, sizeof hdr, "ACQCPU %u %u %u %u\n", trg, r, gap, phase);
+    link_puts(hdr);
+    char note[160];
+    if (trg == 3) snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read), ADC repeat timer %u x 12.5 ns = %.1f ns; last input/samc", gap, r + 1, (r + 1) * 12.5);
+    else snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read, phase %u), trigger %u (12 = SCCP1 at the last acq div; 2 back-to-back / 3 repeat timer are dead); last input/samc", gap, phase, trg);
+    acq_receive(hdr, sizeof hdr, note);
+}
+static void acq_receive(char *hdr, unsigned hdrlen, const char *note) {
+    static uint8_t payload[2 * ACQ_MAX_N];
     // RP-side timing of the capture window: the PIC holds RDY high from trigger start to DMA done.
     absolute_time_t t_arm = make_timeout_time_ms(100); int64_t rp_fill_us = -1;
     while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();     // PIC drops RDY when it parses ACQ
@@ -314,7 +345,7 @@ static void cmd_acq(const char *arg) {
         while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_end)) tight_loop_contents();
         rp_fill_us = absolute_time_diff_us(t0, get_absolute_time());
     }
-    int n = link_readline(hdr, sizeof hdr, 500000);                  // capture itself takes ~0.1 ms, deadline 5 ms
+    int n = link_readline(hdr, hdrlen, 500000);                      // capture itself takes ~0.1 ms, deadline 5 ms
     if (n < 0) { printf("acq: no reply from PIC\n"); return; }
     if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return; }
     acq_hdr_t h;
@@ -328,7 +359,7 @@ static void cmd_acq(const char *arg) {
     while (got < want && !time_reached(deadline))
         if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
     if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return; }
-    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) trigger div %u; AD1AN9, 12-bit unsigned\n", h.n, rate, (long long)rp_fill_us, div ? div : 4);
+    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s\n", h.n, rate, (long long)rp_fill_us, note);
     for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
 }
 
@@ -345,7 +376,10 @@ static void help(void) {
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
            "  lb          RP UART0 internal loopback self-test\n"
-           "  acq [div [samc]]  capture 4095 ADC samples on the PIC (AD1AN9) and print them; div = SCCP1 trigger period in counts (4 default), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto\n"
+           "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 6.25 ns counts (8 = 20 Msps = the DMA ceiling; 4 default = half the triggers lost), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = ADC1 input: 9 node (default), 0 OA1OUT (op amp 1), 1 OA1IN+ (raw RX node), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
+           "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 25 ns per read + gap NOPs; trg 12 (default) = SCCP1 at the last acq div (acq 4 first -> 40 Msps), trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
+           "  raw AMP1 0|1  op amp 1 off/on on the PIC (on at boot)\n"
+           "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
 
@@ -392,6 +426,7 @@ int main(void) {
             hw_clear_bits(&uart_get_hw(LINK_UART)->cr, UART_UARTCR_LBE_BITS);
             printf("uart0 loopback: %s\n", n < 0 ? "FAILED (nothing received)" : !strcmp(rx, "LOOP 42") ? "ok" : rx);
         }
+        else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);

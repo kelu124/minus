@@ -5,12 +5,16 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-10-28 01:00): board 2 works end to end** (`pic id/flash`, `ping`, `acq`).
-    Next bench steps: (1) sweep `acq <div> 0` and get the true trigger period per count (expected
-    6.25 ns; measured ~4.7 ns — check CLKGEN12/SCCP semantics); (2) inject a 1 MHz signal at the
-    ADC SMA (DS203 generator) → samples/period = real fs, first waveform; (3) connect an FE path so
-    the node is buffered (bare node reads 1.07–1.58 V depending on rate, settling artefact);
-    (4) decide the default rate (DMA floor 26.6 Msps) and whether 40 Msps needs a CPU-loop reader.
+- **RESUME HERE (2026-10-28 09:00): rp 0.1.26 / pic 0.1.18 on board 2; `acq` = 20 Msps clean via DMA,
+    `acq … in` selects node / OA1OUT / OA1IN+, `acqcpu` = 40 Msps CPU-loop experiment (marginal).**
+    Next bench steps: (1) **inject a known tone** (DS203, 1–2 MHz) at the ADC SMA → `acq 8 0 9` must show
+    the right samples/period, then `acq 4 0 9` + `acqcpu 12 1 0 <phase 0|1|5>` to see whether the 25 ns
+    CPU capture is really 40 Msps or 20 Msps with duplicates; (2) fix the RX-node bias (TODO_HARDWARE:
+    D7/R28/R36) so OA1 stops sitting at the rail, then `acq 8 0 0` with the transducer; (3) decide the
+    40 Msps route: CPU at 200 MHz (5-cycle loop, needs PLL2 for the 320 MHz ADC clock) vs accept 20 Msps
+    (Nyquist 10 MHz, fine for 3–5 MHz probes) vs `navg 2` at div 15 (10.7 M sums/s). See memory 0011.
+  - Also: the wait loop could use the DMA0 interrupt + `pwrsav #1` instead of the NOP poll (zero SFR
+    traffic during the capture); `acq` default input should be settable once (`acq in <n>`).
   - Board 1: replace U2 (dead PIC) when convenient; remove its H2.16–CN1.17 jumper first.
 - **Was: RESUME HERE (2026-10-28): replace U2** (PIC32AK1216GC41048-I/PT, LCSC C46545915). Bench
     proof 2026-10-27: R53 shorted, MCLR 0.2 V low / 3.13 V released at pin 48, 3.28 V at the chip,
@@ -29,9 +33,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - **acq review minors (deferred):** read AD1CH0DATA before `CHEN=1` (stale sample 0); don't print `fs` on
   non-ok status; `rpcli --out` should exit non-zero when the reply is not a capture; fix the
   indentation of the `stat` dispatch line; heartbeat divider is a loop count.
-- **acq follow-ups (after the bench run):** `acq trig` (arm, start on the RP TRIG edge); rate /
-  input arguments (FE-A path = AD2AN1); if DMA drops at 40 Msps: CPU-loop reader or 20 Msps;
-  absolute rate check (RP-timed via RDY); faster link baud or packed 12-bit payload.
+- **acq follow-ups:** `acq trig` (arm, start on the RP TRIG edge); FE-A full path input (OA2OUT = AD2AN1,
+  needs an ADC2 channel); faster link baud or packed 12-bit payload (8190 B at 115200 = 0.7 s per capture).
 - **pic32prog follow-ups (optional, after `pic id` works):** PIO port of the 2-bit-cmd + 32-bit
   shift (exact timing, as `pic32probe/src/probe.rs`); `pic raw` streaming mode so
   `tools/rpcli.py` can push a hex without rebuilding the RP image (pic32prog `adapter-bitbang`

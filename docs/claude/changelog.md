@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-10-28  (pending)  feat(firmware): `acq … in navg` input select (node / OA1OUT / OA1IN+) + op amp 1 + integration mode; bus-quiet DMA wait (the tight poll duplicated samples: DMA ceiling is 20 Msps, default div 8); `acqcpu` CPU-loop 40 Msps experiment; `ADCBB` ADC core timing test; docs: memory 0011 throughput facts, spec §11, session 06 log, TODO/DONE/TODO_HARDWARE (rp 0.1.26 / pic 0.1.18, proto 4)
 
 ## Committed
 

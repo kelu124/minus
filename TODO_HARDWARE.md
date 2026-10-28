@@ -95,3 +95,8 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - Board 2 (RP id `3E47314186FE29C3`): PIC answers ICSP (2026-10-28).
 - The U2 QFP-48 footprint is an EasyEDA import placed at 90°; orientation was correct on board 1.
   Keep a clear pin-1 mark on the silkscreen.
+
+- **2026-10-28 measured (board 2, firmware `acq 8 0 1` / `acq 8 0 0`):** RX node (OA1IN+) = **0.596 V** DC
+  — exactly the D7 clamp fed by the R28/R36 paths — and OA1OUT = **3.27 V** (×11 → rail). With `AMP1 0`
+  OA1OUT falls to 0.03 V, so the op amp works and is simply saturated. Until D7/R28/R36 are fixed, the
+  PIC op-amp path cannot show an echo.

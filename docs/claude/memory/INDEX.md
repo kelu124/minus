@@ -12,3 +12,4 @@ One line per memory file. Read this first to find the right topic.
 - [0008-devkit-minUS_10102026.md](0008-devkit-minUS_10102026.md) — Devkit as built (KiCad, 48-pin PIC on LCSC), inter-MCU pin map, RP→PIC reset/ICSP taps, 2026-10-26 flaws (R68/R69, R53/MCLR, JTAG), toolchain status, firmware/ layout.
 - [0009-firmware-versioning.md](0009-firmware-versioning.md) — Firmware semver rule: owner = MAJOR.MINOR, Claude = PATCH; `version.h` + `firmware/VERSIONS.md`; repo skills list.
 - [0010-pic32prog-study.md](0010-pic32prog-study.md) — kiffie pic32probe/pic32prog-kvh study (RP2040 ICSP dongle for MIPS PIC32): what transfers to our dsPIC33A-core PIC32AK (entry/physical layer only).
+- [0011-adc-dma-throughput.md](0011-adc-dma-throughput.md) — Bench-proven PIC32AK throughput: ADC core 25 ns, DMA 50 ns (20 Msps ceiling), CPU loop 25 ns marginal, tight SFR polling duplicates samples; what it means for the 40 Msps goal.

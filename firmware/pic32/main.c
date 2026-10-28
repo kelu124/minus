@@ -132,8 +132,13 @@ int main(void) {
                     char out[32]; snprintf(out, sizeof out, "TRIG %lu\n", (unsigned long)trig_edges);
                     uart1_puts(out);
                 } else if (!strncmp(line, "ACQ", 3) && (line[3] == 0 || line[3] == ' ')) {
-                    // ACQ [div]: one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
-                    if (line[3] == ' ') { char *e; acq_set_div((unsigned)strtoul(line + 4, &e, 10)); if (*e == ' ') acq_set_samc((int)strtol(e + 1, NULL, 10)); }
+                    // ACQ [div [samc [in [navg]]]]: one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
+                    if (line[3] == ' ') {
+                        char *e; acq_set_div((unsigned)strtoul(line + 4, &e, 10));
+                        if (*e == ' ') { acq_set_samc((int)strtol(e + 1, &e, 10));
+                            if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10));
+                                if (*e == ' ') acq_set_navg((unsigned)strtoul(e + 1, NULL, 10)); } }
+                    }
                     RDY_LAT = 0;                        // PONG may have left RDY high; the RP times the RDY pulse of this capture
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
@@ -141,6 +146,27 @@ int main(void) {
                     uart1_puts(out);
                     if (st == ACQ_OK)
                         for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strncmp(line, "AMP1 ", 5)) {
+                    // AMP1 0|1: op amp 1 off/on (high-power mode, external gain). On at boot (acq_init).
+                    AMP1CON1bits.AMPEN = line[5] == '1';
+                    char out[24]; snprintf(out, sizeof out, "AMP1 %u\n", (unsigned)AMP1CON1bits.AMPEN);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "ACQCPU ", 7)) {
+                    // ACQCPU <trg> [rptcnt [gap [phase]]]: CPU-loop capture (no DMA), same reply format as ACQ
+                    char *e; unsigned trg = (unsigned)strtoul(line + 7, &e, 10); unsigned r = 1, gap = 0, phase = 0;
+                    if (*e == ' ') { r = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') { gap = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') phase = (unsigned)strtoul(e + 1, NULL, 10); } }
+                    RDY_LAT = 0;
+                    uint32_t t = 0; acq_status_t st = acq_cpu_run(trg, r, gap, phase, &t);
+                    char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, st == ACQ_OK ? "ok" : "notready");
+                    uart1_puts(out);
+                    if (st == ACQ_OK)
+                        for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strncmp(line, "ADCBB ", 6)) {
+                    // ADCBB <n> [ovs]: time n back-to-back conversions (no DMA); reply "ADCBB n ovs ticks tick_ns data"
+                    char *e; unsigned n = (unsigned)strtoul(line + 6, &e, 10); unsigned ovs = *e == ' ' ? (unsigned)strtoul(e + 1, NULL, 10) : 0;
+                    uint32_t data = 0, t = acq_adc_bb(n, ovs, &data);
+                    char out[64]; snprintf(out, sizeof out, "ADCBB %u %u %lu %u %lu\n", n, ovs, (unsigned long)t, (unsigned)ACQ_TICK_NS, (unsigned long)data);
+                    uart1_puts(out);
                 } else if (!strncmp(line, "CLK12 ", 6)) {
                     // diagnostic: re-source CLKGEN12 (SCCP1 trigger clock). 1 = FRC 8 MHz, 5 = PLL1 Fout (160 MHz), 7 = PLL1 VCO/2 (320 MHz)
                     unsigned n = (unsigned)strtoul(line + 6, NULL, 10) & 0xF;

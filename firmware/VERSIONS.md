@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-10-28 | rp2354 | 0.1.26 | `acq [div [samc [in [navg]]]]` (0.1.19/0.1.20), `acqcpu [trg [rptcnt [gap [phase]]]]` CPU-loop experiment (0.1.21–0.1.26, default trigger = SCCP1), default div printed as 8, help for `raw AMP1` / `raw ADCBB`; embeds pic 0.1.18 |
+| 2026-10-28 | pic32  | 0.1.18 | `ACQ [div [samc [in [navg]]]]` (input select + op amp 1 on at boot + `AMP1 0\|1`, 0.1.8; integration-mode `navg`, 0.1.11); **bus-quiet DMA wait loop** (0.1.9/0.1.10 — the tight poll duplicated samples); `ADCBB` ADC throughput test (0.1.12); `ACQCPU` CPU-loop reader with trg/gap/phase knobs (0.1.13–0.1.18); default `ACQ_TRIG_DIV` 8 = 20 Msps (0.1.17) |
 | 2026-10-28 | rp2354 | 0.1.18 | `acq [div [samc]]` (0.1.17); embeds pic 0.1.7 |
 | 2026-10-28 | pic32  | 0.1.7 | `ACQ [div [samc]]` (0.1.6, SAMC default fixed 0); `CLK12 <nosc>` diagnostic re-sources the SCCP1 trigger clock |
 | 2026-10-28 | rp2354 | 0.1.16 | `acq [div]` (proto 3), RP-crystal timing of the RDY capture window (`rp_fill`), waits for the RDY drop first |

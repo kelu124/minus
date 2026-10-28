@@ -96,7 +96,10 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |
 | `rdy`, `trig` | read RDY (GPIO7), 2 µs pulse on TRIG (GPIO6) |
 | `raw <text>` | send any line to the PIC, print its reply |
-| `acq` | PIC captures **4095 samples of AD1AN9 (the ADC node) at a nominal 40 Msps** (SCCP1-triggered ADC1 + DMA), sends them back; RP prints a `# acq n=4095 fill=…us fs=…Msps` line then one value per line (12-bit unsigned). `rpcli.py … acq --wait=3 --out=capture.csv` saves it. Design: `docs/claude/specs/2026-10-27-acq-design.md` |
+| `acq [div [samc [in [navg]]]]` | PIC captures **4095 samples via DMA** and sends them back; RP prints a `# acq n=4095 fill=…us fs=…Msps rp_fill=…` line then one value per line. `div` = SCCP1 trigger period in 6.25 ns counts (**8 = 20 Msps = the DMA ceiling**, default; 4 loses every other trigger), `samc` = sampling 0..7 (0.5 + 2n TAD) or -1 auto, `in` = ADC1 input (**9** PIC32_ADC node, **0** OA1OUT = op amp 1 ×11 on the RX node, **1** OA1IN+ = raw RX node), `navg` = 1 single conversion or 2..16 back-to-back conversions summed per trigger (ADC core at 40 Msps, result 12+log2(navg) bits; needs trigger period ≥ 25·navg + 40 ns). `rpcli.py … acq --wait=3 --out=capture.csv` saves it. Design: `docs/claude/specs/2026-10-27-acq-design.md`; throughput findings: memory 0011 |
+| `acqcpu [trg [rptcnt [gap [phase]]]]` | **Experiment**: CPU-loop capture, no DMA — the CPU copies `AD1CH0DATA` to RAM every 4 cycles (25 ns), phase-locked to the ADC (same PLL). `trg` 12 (default) = SCCP1 at the last `acq` div (`acq 4 …` first → 40 Msps triggers); `gap` = extra NOPs per read (4 → 50 ns reads); `phase` = NOPs before the loop. Bench 2026-10-28: at 50 ns triggers every sample is caught exactly once/twice as expected; at 25 ns it is **marginal** (phase 0/1/5 ≈ 10 % duplicated pairs, other phases every other result lost: CPU reads win the bus over the ADC's result write). trg 2 (back-to-back) / 3 (repeat timer) never fire in single-sample mode |
+| `raw AMP1 0\|1` | op amp 1 off/on (on at boot, high-power mode, external gain R47/R48) |
+| `raw ADCBB n [ovs]` | **Experiment**: time `n` back-to-back conversions without DMA (integration mode; `ovs` 1 = oversampling burst, n = 4/16/64/256). Reply `ADCBB n ovs ticks 100 sum`. Bench: 4095 → 1026 ticks = **25.05 ns per conversion**, the ADC core really does 40 Msps on one channel |
 | `pic id` | enter ICSP on GPIO21/22/24, read DEVID/REVID (expect `0x09DA2053`), exit. No write. |
 | `pic image` | list the PIC image embedded in this RP firmware (from `firmware/pic32/build/minus_pic.hex` at build time) |
 | `pic flash` | bulk erase, program by quadwords, read-back verify, release MCLR so the PIC boots |
@@ -122,7 +125,7 @@ The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.T
 there is no `ICS` setting in this family) were verified against the DFP's
 `p32AK1216GC41048.h` and `config_docs`; the source compiles clean (no warnings) with XC-DSC 3.31.01.
 
-## Link protocol (proto 2)
+## Link protocol (proto 4)
 
 ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG` 694):
 
@@ -131,12 +134,19 @@ ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
 | `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.1 proto 2` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
-| `ACQ` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
+| `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. Arguments persist on the PIC between calls. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
+| `ACQCPU <trg> [rptcnt [gap [phase]]]` | same reply format as `ACQ`; CPU-loop capture (see `acqcpu`) |
+| `AMP1 0\|1` | `AMP1 <0\|1>` — op amp 1 enable |
+| `ADCBB <n> [ovs]` | `ADCBB <n> <ovs> <ticks> <tick_ns> <sum>` — DMA-free ADC throughput test |
+| `CLK12 <nosc>` | `CLK12 cosc=<n> rdy=<n>` — diagnostic: re-source CLKGEN12 (SCCP1 trigger clock) |
 | anything else | `ERR` |
 
 PIC clocking since fw 0.1.1: PLL1 from the FRC → CPU 160 MHz (CLKGEN1), ADC 320 MHz (CLKGEN6 → TAD
-80 MHz → 40 Msps), SCCP 160 MHz (CLKGEN12). `acq` fallback if the DMA cannot keep 40 M transfers/s
-(unspecified): `ACQ_TRIG_DIV 8` in `pic32/acq.h` → 20 Msps.
+80 MHz → 40 Msps), SCCP 160 MHz (CLKGEN12). **Throughput facts (bench 2026-10-28, memory 0011):** the
+DMA (standard-speed bus = CPU/2) moves one 16-bit sample per 4 bus clocks = **50 ns → 20 Msps ceiling**
+(div 8); the ADC core converts at 25 ns; the capture wait loop must not touch SFRs (a tight poll of
+`DMA0STAT`/`TMR1` made the DMA duplicate ~30 % of the samples and fake 26.6 Msps). 40 Msps raw is only
+reachable with the CPU-loop reader (`acqcpu`, marginal at 160 MHz) or by raising the CPU to 200 MHz.
 
 Once this works, step 2 is the real data path: PIC = SPI client (SS1 ← RP49, SCK1 ← RP50,
 SDI1 ← RP51, SDO1 → RP35), RDY = "A-line captured", TRIG = capture start; and the RP-side

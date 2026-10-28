@@ -138,3 +138,22 @@ values, header string format details, `rpcli.py` option name, README wording.
 
 `acq trig` (arm + TRIG edge), rate/input arguments, FE-A path (ADC2), packed 12-bit transfer or a
 faster link baud, continuous mode, TX/RX sequencing.
+
+## 11. Bench findings 2026-10-28 (session 06) — supersede §8
+
+- **Risk "DMA throughput" resolved:** one 16-bit transfer per 4 standard-bus clocks (8 CPU clocks,
+  50 ns at 160 MHz) → **20 Msps ceiling**, `ACQ_TRIG_DIV` default is now 8. At div 4–6 exactly every
+  other trigger is lost (no overrun flag: a trigger arriving while the channel is busy is simply ignored).
+- **The §5.5 poll loop was wrong:** polling `DMA0STAT`/`TMR1` back-to-back makes the CPU win the SFR bus
+  and the DMA then *duplicates* samples (~30 %, visible as repeated values in the settling ramp) while
+  appearing faster than the trigger (the "26.6 Msps" of session 05 and the non-linear div table). The
+  wait loop now polls once per ~1024 NOPs and counts iterations instead of reading Timer1.
+- **SCCP period semantics confirmed:** period = `div` × 6.25 ns (div 8 → 50.3 ns, 16 → 100.5 ns,
+  32 → 195 ns RP-timed; the FRC is ≈ +0.5 % slow).
+- **ADC core:** 4095 back-to-back conversions in 102.6 µs = 25.05 ns each — the 40 Msps is real.
+  Integration/oversampling modes work (`navg`), each triggered sequence costs ≈ 40 ns extra.
+- **Inputs:** `in` selects AD1AN9 (node), AD1AN0 (OA1OUT, op amp 1 on), AD1AN1 (OA1IN+). OA1OUT reads the
+  rail (3.27 V) because the RX node sits at the D7 clamp (0.60 V) × 11 → TODO_HARDWARE bias fix.
+- **CPU-loop reader (`ACQCPU`):** 4 cycles per read, phase-locked; clean at 50 ns triggers, marginal at
+  25 ns (CPU reads collide with the ADC result write). Back-to-back / repeat-timer trigger sources do
+  not fire in single-sample mode on this part.
