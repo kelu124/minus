@@ -14,6 +14,10 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     `raw AMP2 1`, `pot 0 <n>`, read J6.2/RF13 (scope) or U.FL RF13→RF7 + `acq 4 0 9`; (b) **hardware**: MCP4531-103 in the
     feedback caps OA2 at ~1 MHz (datasheet −3 dB 1 MHz, CW 120 pF) — rethink (5 k part, fixed R + switch, or pot as a
     DC control only); (c) ADC2 capture of AD2AN1 (= FE_A_OUT) so OA2OUT can be read without cabling.
+    **Direction (2026-11-02, part 4): GPIO-switched gain legs, no digipot, no VGA** (BOM/simplicity). Owner rework: lift U11,
+    10 k J6.2–J6.3, 1 k + 2.2 k from J6.3 to H2.1 (RD6) / H2.4 (RD5) → Claude adds `GAIN <mask>` on the PIC, then measure the
+    steps with the tone (J6.1 in with `raw AMP1 0`, RF13 → RF7 U.FL out, `acq 4 0 9`). Design-level: AD8338, MCP4531 ×2,
+    MCP4131 ×2, MCP4728 leave the minimal BOM; TGC = GPIO steps during the A-line + software.
 - Was: **RESUME HERE (2026-11-02): tone test done (session 08, `bench/2026-11-02-tone/`). 1 MHz square at
     RF7/H6 (PIC32_ADC node): `acq 8` = 20 samples/period clean; `acq 4` = 20 too (DMA ceiling proven);
     `acqcpu` at 25 ns = every value twice at 7 of 9 phases, phases 3/7 un-duplicated but +425 LSB offset

@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-02  (pending)  docs: session 08 part 4 — OA2 gain-control alternatives under the BOM/simplicity constraint; direction = GPIO-switched gain legs (memory 0012, TODO); J6.1 has no IPEX
 
 ## Committed
 

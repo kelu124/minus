@@ -22,6 +22,16 @@ falls toward ×1 as the pot's reactance drops). Options: 5 kΩ part (2 MHz, stil
 *set a DC gain-control voltage* (AD8338 style) instead of being the feedback resistor, or fixed R + a
 small analog switch. **Hardware TODO.**
 
+## Direction decided 2026-11-02 (session 08 part 4): drop the digipot, switch gain legs with PIC GPIOs
+Owner constraint: BOM cost + simple design, core = RP2354 + PIC32AK (AD8338 is too much BOM for the minimal
+design). Chosen direction: **fixed Rf on OA2 + 2–3 ground-leg resistors each returned to a PIC GPIO**
+(output-low = on, input = off) → ×2 / ×5.5 / ×11 steps, tens of MHz, zero extra parts; the PIC can step them
+on a timer during the A-line (stepped TGC). Fallbacks: analog switch (74HC4053/SGM3157) in the leg, JFET VCR
+from the PIC DAC, or no analog control + software TGC on the 12-bit ADC. Devkit rework to test: lift U11, 10 k
+J6.2–J6.3, 1 k + 2.2 k from J6.3 to H2.1 (RD6) / H2.4 (RD5); firmware `GAIN <mask>` to add. Low-R digipots
+(AD5273 1 kΩ ≈ 6 MHz, AD8400 1 kΩ ≈ 5 MHz) and PGAs (MCP6S91 ≤ 18 MHz) were the next-best options.
+J6.1 (OA1OUT) has **no IPEX**; only RF5 (OA1IN+), RF13 (OA2OUT) and RF7 (ADC node) do.
+
 ## How to measure the OA2 gain (owner, with the DS203)
 1. `raw AMP1 0` (OA1 output pin goes Hi-Z) → inject the 1 MHz tone at **J6.1** (OA1OUT net = OA2IN+), ≤ 0.3 V p-p,
    DC between 0.3 and 2.5 V (single supply).
