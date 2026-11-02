@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-02  (pending)  docs: session 08 part 4 — OA2 gain-control alternatives under the BOM/simplicity constraint; direction = GPIO-switched gain legs (memory 0012, TODO); J6.1 has no IPEX
+- (none)
 
 ## Committed
 
+- 2026-11-02  e5246fe  docs: session 08 part 4 — OA2 gain-control alternatives under the BOM/simplicity constraint; direction = GPIO-switched gain legs (memory 0012, TODO); J6.1 has no IPEX
 - 2026-11-02  1c9ad9d  docs: fix the MCP453X row columns in pdfs/datasheets/README.md
 - 2026-11-02  0412124  feat(firmware): OA2 gain control — RP `i2c` scan + `pot <0|1> [n]` (MCP4531 U11/U18), PIC `AMP2 0|1` (pic 0.1.21 / rp 0.1.29, proto 6); memory 0012 RX chain; MCP453X datasheet filed (OA2 limited to ~1 MHz by the digipot)
 - 2026-11-02  e8c8c4e  feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) — acq default div 4 = uniform 25 Msps via DMA, tone-verified; acqil parked until PLL2; docs/memory/README updated

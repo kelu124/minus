@@ -6,6 +6,9 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-02 | `e5246fe` | docs: session 08 part 4 — OA2 gain alternatives, direction = GPIO-switched legs | Records the BOM-driven decision direction and the devkit rework/test plan so the next session can start from it. |
+| 2026-11-02 | `660815f` | docs: changelog — record 1c9ad9d (sha changed by an amend) | Bookkeeping fix. |
+| 2026-11-02 | `1c9ad9d` | docs: fix the MCP453X row columns in pdfs/datasheets/README.md | Index hygiene. |
 | 2026-11-02 | `0412124` | feat(firmware): OA2 gain control — `i2c`, `pot`, `AMP2` (pic 0.1.21 / rp 0.1.29) | Answers "is the second op amp's gain controlled?": yes, U11 digipot x1–x11 over I2C, now driveable from the CLI; surfaced the 1 MHz digipot bandwidth limit (hardware TODO). |
 | 2026-11-02 | `e8c8c4e` | feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) | Rated-max clock, single PLL; DMA cost 50 -> 40 ns, `acq` default div 4 = uniform 25 Msps (tone-proven); showed trigger-period = DMA-cost is a razor edge; acqil parked until PLL2. |
 | 2026-11-02 | 963d11a | bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) | First real-signal proof of the capture paths: 20 Msps DMA confirmed, the 40 Msps CPU loop is duplicated reads, acqil sits at the DMA ceiling (phase-luck); settles that the 200 MHz clock step is next. |
