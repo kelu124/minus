@@ -100,6 +100,9 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | `acqcpu [trg [rptcnt [gap [phase]]]]` | **Experiment**: CPU-loop capture, no DMA — the CPU copies `AD1CH0DATA` to RAM every 4 cycles (25 ns), phase-locked to the ADC (same PLL). `trg` 12 (default) = SCCP1 at the last `acq` div (`acq 4 …` first → 40 Msps triggers); `gap` = extra NOPs per read (4 → 50 ns reads); `phase` = NOPs before the loop. Bench 2026-10-28: at 50 ns triggers every sample is caught exactly once/twice as expected; at 25 ns it is **marginal** (phase 0/1/5 ≈ 10 % duplicated pairs, other phases every other result lost: CPU reads win the bus over the ADC's result write). trg 2 (back-to-back) / 3 (repeat timer) never fire in single-sample mode |
 | `acqil [div [off [navg]]]` | **Two-channel interleave = 20 M 2-sums/s** (the "20 Msps integrated over 2 samples" route). ADC1 CH0 and CH1 both read the last `acq` input, each summing `navg` (default 2) back-to-back 25 ns conversions per trigger; CH0 is triggered by SCCP1, CH1 by SCCP2 (same period, timer preloaded by `off` counts, 0 = div/2+1); two one-shot DMA channels (DMA0/DMA1, 0x2B/0x2C) fill two halves that the PIC merges into one stream (CH0[i], CH1[i], …). `div` = **per-channel** period in 6.25 ns counts (default 16 = 100 ns). Reply as `acq` with n = 4094. Bench 2026-10-28: `acqil 16` → 4094 sums in 206.0 µs = **19.87 M sums/s** (single channel `acq 16 0 9 2` = 9.94 M/s); the ADC core is then saturated (4 conversions per 100 ns) and packs them on its 25 ns grid, so the even/odd channel means agree to 0.1 LSB for any `off` (5, 9, 12), i.e. a uniform 40 Msps comb summed in pairs (13-bit). At div 20 (5 slots per channel) the two channels cannot be spaced evenly: means differ by 10–22 LSB. `acqil 32 0 4` = 4-sums at 9.94 M/s (same packing); `acqil 24 0 4` overloads the core (fill doubles, order scrambled). Decisive check still pending: a known tone at the ADC SMA |
 | `raw AMP1 0\|1` | op amp 1 off/on (on at boot, high-power mode, external gain R47/R48) |
+| `raw AMP2 0\|1` | op amp 2 off/on (off at boot). OA2IN+ = OA1OUT (pin 18), OA2IN- = U11 wiper + R49 1 k to GND (pin 17, also TMS → JTAGEN OFF), OA2OUT = FE_A_OUT (pin 16 = AD2AN1 only; J6.2 / RF13 IPEX). Gain = 1 + R_AW(U11)/1 k = ×1.07 … ×11.07 |
+| `i2c` | scan I2C0 (GPIO0/1). Bench 2026-11-02: 0x2E MCP4531 U11, 0x2F MCP4531 U18, 0x60 MCP4728 U13; no OLED (0x3C) answered |
+| `pot <0\|1> [n]` | MCP4531 volatile wiper 0 read / set (0..128, 129 taps, R_AW = 10 k × (128 − n)/128 + 75 Ω). `pot 0` = U11 = OA2 feedback (prints the gain: power-on 64 → ×6.08; 0 → ×11.07; 128 → ×1.07); `pot 1` = U18 → JP6/JP7 → AD8338 VGA gain pin |
 | `raw ADCBB n [ovs]` | **Experiment**: time `n` back-to-back conversions without DMA (integration mode; `ovs` 1 = oversampling burst, n = 4/16/64/256). Reply `ADCBB n ovs ticks 100 sum`. Bench: 4095 → 1026 ticks = **25.05 ns per conversion**, the ADC core really does 40 Msps on one channel |
 | `pic id` | enter ICSP on GPIO21/22/24, read DEVID/REVID (expect `0x09DA2053`), exit. No write. |
 | `pic image` | list the PIC image embedded in this RP firmware (from `firmware/pic32/build/minus_pic.hex` at build time) |
@@ -126,7 +129,7 @@ The register bitfield names (`U1CONbits.CLKMOD/TXEN/RXEN/MODE/ON`, `U1STATbits.T
 there is no `ICS` setting in this family) were verified against the DFP's
 `p32AK1216GC41048.h` and `config_docs`; the source compiles clean (no warnings) with XC-DSC 3.31.01.
 
-## Link protocol (proto 5)
+## Link protocol (proto 6)
 
 ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG` 694):
 
@@ -139,6 +142,7 @@ ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG
 | `ACQIL [div [off [navg]]]` | same reply format as `ACQ` with n = 4094 (two 2047-sample halves interleaved on the PIC); two-channel interleaved integration capture (see `acqil`). proto 5 |
 | `ACQCPU <trg> [rptcnt [gap [phase]]]` | same reply format as `ACQ`; CPU-loop capture (see `acqcpu`) |
 | `AMP1 0\|1` | `AMP1 <0\|1>` — op amp 1 enable |
+| `AMP2 0\|1` | `AMP2 <0\|1>` — op amp 2 enable (proto 6) |
 | `ADCBB <n> [ovs]` | `ADCBB <n> <ovs> <ticks> <tick_ns> <sum>` — DMA-free ADC throughput test |
 | `CLK12 <nosc>` | `CLK12 cosc=<n> rdy=<n>` — diagnostic: re-source CLKGEN12 (SCCP1 trigger clock) |
 | anything else | `ERR` |

@@ -2,6 +2,9 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-02 — **OA2 gain path identified and made controllable** (session 08 part 3, memory 0012): OA2IN+ = OA1OUT, feedback =
+  U11 MCP4531 rheostat / R49 1k → ×1.07–×11.07; RP `i2c` scan (0x2E/0x2F/0x60 alive) + `pot <0|1> [n]`, PIC `AMP2 0|1` (pic 0.1.21 /
+  rp 0.1.29, proto 6). Found: the 10 k digipot limits OA2 to ~1 MHz (datasheet filed in pdfs/datasheets/).
 - 2026-11-02 — **PIC clock raised to CPU 200 MHz / ADC 250 MHz** (pic 0.1.20 / rp 0.1.28, session 08 part 2): single-PLL
   datasheet recipe (VCO 1000, FBDIV 125, POSTDIV1 5, INTDIV 2); `acq` default div 4 = **uniform 25 Msps via DMA**, proven with
   the 1 MHz tone (`bench/2026-11-02-tone/clk200*`); ADC core 32 ns/conversion; div 8 shown to be a DMA razor edge.

@@ -20,6 +20,7 @@
 #include "hardware/regs/pads_bank0.h"
 #include "hardware/address_mapped.h"
 #include "hardware/pio.h"
+#include "hardware/i2c.h"
 #include "ws2812.pio.h"
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
@@ -139,6 +140,54 @@ static bool do_ping(bool verbose) {
     return false;
 }
 
+// ---------------------------------------------------------------- I2C0 (GPIO0 SDA / GPIO1 SCL, 10k pull-ups R41/R42)
+// Shared bus, RP is the only master: MCP4531 U11 (0x2E, A0 = GND) = OA2 feedback rheostat, MCP4531 U18 (0x2F,
+// A0 = AVDD) -> JP6/JP7 toward the AD8338 VGA, MCP4728 U13 (0x60) DAC, OLED1 (0x3C). The PIC's ASDA2/ASCL2 sit on
+// the same pins and stay Hi-Z.
+static bool i2c_ready = false;
+static void i2c_ensure(void) {
+    if (i2c_ready) return;
+    i2c_init(i2c0, 100 * 1000);
+    gpio_set_function(MINUS_PIN_SDA, GPIO_FUNC_I2C); gpio_set_function(MINUS_PIN_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(MINUS_PIN_SDA); gpio_pull_up(MINUS_PIN_SCL);
+    i2c_ready = true;
+}
+static const char *i2c_name(unsigned a) {
+    return a == 0x2E ? "MCP4531 U11 (OA2 feedback rheostat)" : a == 0x2F ? "MCP4531 U18 (AD8338 gain, via JP6/JP7)" :
+           a == 0x60 ? "MCP4728 U13 (DAC)" : a == 0x3C ? "OLED1" : "?";
+}
+static void cmd_i2c(void) {
+    // i2c: scan 0x08..0x77 with a zero-length write (ACK = device present)
+    i2c_ensure(); int found = 0;
+    for (unsigned a = 0x08; a < 0x78; a++) {
+        uint8_t d; int r = i2c_read_timeout_us(i2c0, (uint8_t)a, &d, 1, false, 2000);
+        if (r >= 0) { printf("  0x%02X  %s\n", a, i2c_name(a)); found++; }
+    }
+    printf("i2c scan: %d device(s)\n", found);
+}
+// MCP4531 (7-bit, 129 taps, volatile wiper 0): write = [addr W] [0x00 | D8] [D7..0]; read = [addr W] [0x0C] then
+// [addr R] 2 bytes (D8 in bit 0 of the first). RAB 10k typ, RW ~75 ohm: R_AW(n) = RAB x (128 - n) / 128 + RW.
+static int mcp4531_read(unsigned a0, unsigned *n) {
+    i2c_ensure(); uint8_t cmd = 0x0C, rx[2];
+    if (i2c_write_timeout_us(i2c0, 0x2E + a0, &cmd, 1, true, 5000) != 1) return -1;
+    if (i2c_read_timeout_us(i2c0, 0x2E + a0, rx, 2, false, 5000) != 2) return -1;
+    *n = ((rx[0] & 1u) << 8) | rx[1]; return 0;
+}
+static int mcp4531_write(unsigned a0, unsigned n) {
+    i2c_ensure(); uint8_t tx[2] = { (uint8_t)((n >> 8) & 1u), (uint8_t)(n & 0xFF) };
+    return i2c_write_timeout_us(i2c0, 0x2E + a0, tx, 2, false, 5000) == 2 ? 0 : -1;
+}
+static void cmd_pot(const char *arg) {
+    // pot <0|1> [n]: read (or set to n = 0..128, then read back) the MCP4531 wiper; 0 = U11 = OA2 feedback.
+    unsigned a0 = 0, n = 0; int set = 0;
+    if (arg && *arg) { char *e; a0 = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') { n = (unsigned)strtoul(e + 1, NULL, 10); set = 1; } }
+    if (a0 > 1 || n > 128) { printf("usage: pot <0|1> [n 0..128]   (0 = U11 OA2 feedback, 1 = U18 AD8338 gain)\n"); return; }
+    if (set && mcp4531_write(a0, n) < 0) { printf("pot %u: write NAK\n", a0); return; }
+    unsigned got; if (mcp4531_read(a0, &got) < 0) { printf("pot %u: read NAK (no device at 0x%02X?)\n", a0, 0x2E + a0); return; }
+    double raw = 10000.0 * (128.0 - (double)got) / 128.0 + 75.0;
+    if (a0 == 0) printf("pot 0 (U11, 0x2E): wiper %u -> R_AW ~ %.0f ohm -> OA2 gain = 1 + R_AW / R49 1k ~ x%.2f%s\n", got, raw, 1.0 + raw / 1000.0, set ? " (set)" : "");
+    else printf("pot 1 (U18, 0x2F): wiper %u -> R_AW ~ %.0f ohm%s\n", got, raw, set ? " (set)" : "");
+}
 static void cmd_version(void) {
     char uid[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
     pico_get_unique_board_id_string(uid, sizeof uid);
@@ -396,6 +445,9 @@ static void help(void) {
            "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 20 ns per read + gap NOPs (conversions are 32 ns: no integer lock since the 200 MHz clock change); trg 12 (default) = SCCP1 at the last acq div, trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
            "  acqil [div [off [navg]]]  experiment: two ADC1 channels on the same input, navg-sums (default 2) each, triggered half a period apart (div = per-channel period in 5 ns counts, default 24; parked since the 200 MHz / 250 MHz-ADC clock change: two 2-sums of 32 ns conversions no longer fit in one period, needs the 320 MHz ADC clock from PLL2), two DMA channels, interleaved; off = CH1 timer preload in counts (0 = div/2+1)\n"
            "  raw AMP1 0|1  op amp 1 off/on on the PIC (on at boot)\n"
+           "  raw AMP2 0|1  op amp 2 off/on on the PIC (off at boot): OA2IN+ = OA1OUT, gain 1 + R_AW(U11)/R49, OA2OUT = FE_A_OUT (J6.2 / RF13, AD2AN1)\n"
+           "  i2c         scan the I2C0 bus (MCP4531 x2, MCP4728, OLED)\n"
+           "  pot <0|1> [n]  MCP4531 wiper read / set 0..128: 0 = U11 (OA2 feedback: gain x1..x11, power-on 64 = ~x6), 1 = U18 (AD8338)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
 }
@@ -435,6 +487,8 @@ int main(void) {
                     int n = link_readline(rx, sizeof rx, LINK_TIMEOUT_US);
                     printf(n < 0 ? "no reply ('%s' partial)\n" : "reply: '%s'\n", rx);
                 }
+                else if (!strcmp(line, "i2c")) cmd_i2c();
+                else if (!strncmp(line, "pot", 3) && (line[3] == 0 || line[3] == ' ')) cmd_pot(line[3] == ' ' ? line + 4 : "");
                 else if (!strcmp(line, "lb")) {
             // RP UART0 internal loopback (UARTCR.LBE): proves the RP's own TX->RX path and link_readline
             hw_set_bits(&uart_get_hw(LINK_UART)->cr, UART_UARTCR_LBE_BITS);

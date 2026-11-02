@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-02  (pending)  feat(firmware): OA2 gain control — RP `i2c` scan + `pot <0|1> [n]` (MCP4531 U11/U18), PIC `AMP2 0|1` (pic 0.1.21 / rp 0.1.29, proto 6); memory 0012 RX chain; MCP453X datasheet filed (OA2 limited to ~1 MHz by the digipot)
 
 ## Committed
 

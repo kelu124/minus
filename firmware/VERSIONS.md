@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-02 | rp2354 | 0.1.29 | `i2c` bus scan, `pot <0|1> [n]` MCP4531 wiper read/set (U11 = OA2 feedback, gain print); proto 6; embeds pic 0.1.21 |
+| 2026-11-02 | pic32  | 0.1.21 | `AMP2 0\|1` op amp 2 enable (OA2: IN+ = OA1OUT, IN- = U11 wiper / R49, OUT = FE_A_OUT); proto 6 |
 | 2026-11-02 | rp2354 | 0.1.28 | clock-change strings: SCCP counts are 5 ns, `acq 8` = 25 Msps, `acqil` default div 24 (120 ns), 32 ns conversions; embeds pic 0.1.20 |
 | 2026-11-02 | pic32  | 0.1.20 | **CPU 200 MHz / ADC 250 MHz** (PLL1 VCO 1000: FBDIV 125, POSTDIV1 5, VCO1DIV INTDIV 2; datasheet "clocks_initialize" recipe): DMA 40 ns = 25 Msps at div 8, Timer1 tick 80 ns (`ACQ_TICK_NS`), SAMC auto for TAD 16 ns, heartbeat 5e6; default `ACQ_TRIG_DIV` 4 (20 ns triggers -> uniform 40 ns comb; div 8 proved to sit on the DMA edge). 160/320 MHz until 0.1.19 (commit 963d11a and before) |
 | 2026-10-28 | rp2354 | 0.1.27 | `acqil [div [off [navg]]]` two-channel interleave (20 M 2-sums/s); proto 5; embeds pic 0.1.19 |

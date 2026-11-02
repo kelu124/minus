@@ -12,6 +12,7 @@ Datasheets / app-notes for candidate ICs (esp. pulser options — see
 | `PIC32AK1216GC41064-family-product-brief-DS70005582.pdf` | Microchip PIC32AK…GC41064 family | 200 MHz PIC32A MCU (FPU+DSP) with **2× 12-bit 40 Msps ADC**, **3× 100 MHz rail-to-rail op-amps**, 3 comparators + 12-bit DACs, HS PWM. Concept: pair with RP2350 as the analog capture engine → `design/pic32/`. |
 | `PIC32AK1216GC41064-family-datasheet-DS70005592.pdf` | Microchip PIC32AK…GC41064 family | **Full datasheet** (DS70005592) — ADC input range/VREF, op-amp specs, HS-PWM/PTG ADC triggering, pinouts, electrical. The authoritative reference for `design/pic32/` + DesignA. |
 | `PIC32AK1216GC41064-family-flash-programming-spec-DS70005583.pdf` | Microchip PIC32AK…GC41064 family | Flash Programming Spec (DS70005583) — ICSP/LVP entry sequence + timing (for the RP2354→PIC bit-bang programmer and PICkit); see `design/pic32/pic32.md`. |
+| `MCP453X-455X-463X-465X-I2C-digipot-datasheet-DS22096B.pdf` | Microchip MCP4531 (U11 OA2 feedback rheostat, U18 AD8338 gain) I2C digipot family datasheet DS22096B. Key for minus: **−3 dB bandwidth 1 MHz for the 10 kΩ part** (mid code, 30 pF load), CA/CB 75 pF, CW 120 pF, RW 75 Ω — the OA2 gain network rolls off at ~1 MHz (session 08).  |
 
 Not mirrored (host blocked download — links):
 - **TC6320** (Microchip HV P/N MOSFET pair, ±100 V, 2 A) — covered in MD1213DB1; product page: microchip.com/TC6320.

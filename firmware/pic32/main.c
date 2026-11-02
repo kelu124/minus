@@ -155,6 +155,15 @@ int main(void) {
                     AMP1CON1bits.AMPEN = line[5] == '1';
                     char out[24]; snprintf(out, sizeof out, "AMP1 %u\n", (unsigned)AMP1CON1bits.AMPEN);
                     uart1_puts(out);
+                } else if (!strncmp(line, "AMP2 ", 5)) {
+                    // AMP2 0|1: op amp 2 (OA2IN+ = OA1OUT pin 18/RB2, OA2IN- = RB1 pin 17 = U11 wiper + R49 1k to GND,
+                    // OA2OUT = RB0 pin 16 = FE_A_OUT / AD2AN1). Gain = 1 + R_AW(U11) / 1k, set over I2C by the RP ("pot 0 n").
+                    // Off at boot. High-power mode, external gain, like AMP1. RB0..RB2 are analog by reset default.
+                    AMP2CON1bits.UGE   = 0;
+                    AMP2CON1bits.HPEN  = 1;
+                    AMP2CON1bits.AMPEN = line[5] == '1';
+                    char out[24]; snprintf(out, sizeof out, "AMP2 %u\n", (unsigned)AMP2CON1bits.AMPEN);
+                    uart1_puts(out);
                 } else if (!strncmp(line, "ACQCPU ", 7)) {
                     // ACQCPU <trg> [rptcnt [gap [phase]]]: CPU-loop capture (no DMA), same reply format as ACQ
                     char *e; unsigned trg = (unsigned)strtoul(line + 7, &e, 10); unsigned r = 1, gap = 0, phase = 0;

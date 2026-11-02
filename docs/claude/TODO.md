@@ -9,6 +9,11 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
     div 4 = uniform 25 Msps (tone-proven, session 08 part 2, memory 0011). Open from the change: PLL2 → 320 MHz
     ADC clock (restores 40 Msps core, un-parks `acqil`, then 5-cycle CPU loop); `acq` should reset `navg` when not
     given (it persists on the PIC and silently poisons the next capture).**
+  - **OA2 gain (owner asked 2026-11-02, memory 0012):** firmware side done (pic 0.1.21 `AMP2`, rp 0.1.29 `i2c`/`pot`; U11 answers at
+    0x2E, wiper 64 = ×6.08 at power-on, settable ×1.07–×11.07). Still to do: (a) **measure** it: `raw AMP1 0`, tone into J6.1,
+    `raw AMP2 1`, `pot 0 <n>`, read J6.2/RF13 (scope) or U.FL RF13→RF7 + `acq 4 0 9`; (b) **hardware**: MCP4531-103 in the
+    feedback caps OA2 at ~1 MHz (datasheet −3 dB 1 MHz, CW 120 pF) — rethink (5 k part, fixed R + switch, or pot as a
+    DC control only); (c) ADC2 capture of AD2AN1 (= FE_A_OUT) so OA2OUT can be read without cabling.
 - Was: **RESUME HERE (2026-11-02): tone test done (session 08, `bench/2026-11-02-tone/`). 1 MHz square at
     RF7/H6 (PIC32_ADC node): `acq 8` = 20 samples/period clean; `acq 4` = 20 too (DMA ceiling proven);
     `acqcpu` at 25 ns = every value twice at 7 of 9 phases, phases 3/7 un-duplicated but +425 LSB offset
