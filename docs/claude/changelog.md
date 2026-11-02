@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-02  (pending)  bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) — 20 Msps DMA proven, acqcpu duplicates, acqil at DMA ceiling; data in bench/2026-11-02-tone/; session 07 log (PCB via/DRC check)
 
 ## Committed
 

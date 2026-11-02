@@ -5,18 +5,19 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-10-28 15:30): rp 0.1.27 / pic 0.1.19 (proto 5) on board 2; `acqil 16` = 19.87 M 2-sums/s
-    (two-channel interleave, memory 0011); `acq` = 20 Msps clean via DMA,
-    `acq … in` selects node / OA1OUT / OA1IN+, `acqcpu` = 40 Msps CPU-loop experiment (marginal).**
-    Next bench steps: (1) **inject a known tone** (DS203, 1–2 MHz) at the ADC SMA → `acq 8 0 9` must show
-    the right samples/period, then `acq 4 0 9` + `acqcpu 12 1 0 <phase 0|1|5>` to see whether the 25 ns
-    CPU capture is really 40 Msps or 20 Msps with duplicates; (2) fix the RX-node bias (TODO_HARDWARE:
-    D7/R28/R36) so OA1 stops sitting at the rail, then `acq 8 0 0` with the transducer; (3) decide the
-    40 Msps route: CPU at 200 MHz (5-cycle loop, needs PLL2 for the 320 MHz ADC clock) vs accept 20 Msps
-    (Nyquist 10 MHz, fine for 3–5 MHz probes) vs `navg 2` at div 15 (10.7 M sums/s). See memory 0011.
-  - `acqil` (two-channel interleave, 19.87 M 2-sums/s, rp 0.1.27 / pic 0.1.19) needs the tone check too:
-    `acqil 16` with a 1–2 MHz tone → 20 MHz/f samples per period and no even/odd amplitude or phase step
-    (would reveal a non-uniform comb). Then decide whether `acqil 16` becomes the default capture.
+- **RESUME HERE (2026-11-02): tone test done (session 08, `bench/2026-11-02-tone/`). 1 MHz square at
+    RF7/H6 (PIC32_ADC node): `acq 8` = 20 samples/period clean; `acq 4` = 20 too (DMA ceiling proven);
+    `acqcpu` at 25 ns = every value twice at 7 of 9 phases, phases 3/7 un-duplicated but +425 LSB offset
+    (not usable); `acqil 16` = DMA at its ceiling, CH1 loses every other trigger in 3 of 4 runs.**
+    Next: (1) **clock change**: VCO 1000 → CPU 200 MHz + ADC 250 MHz (no PLL2) = clean 25 Msps DMA
+    (40 ns/transfer) and margin for `acqil` (then re-run the tone set); later PLL2 → 320 MHz ADC +
+    5-cycle loop for raw 40 Msps; (2) chase the +425 LSB offset of the un-duplicated CPU reads (which
+    ADC register/correction stage is being read?); (3) reproduce the intermittent slow `acq 8`
+    (218–232 µs, scrambled periods, 2 of 5 runs — interrupt/SFR traffic during capture?);
+    (4) fix the RX-node bias (TODO_HARDWARE: D7/R28/R36) so OA1 stops sitting at the rail, then
+    `acq 8 0 0` with the transducer. Note: there is no "ADC SMA" — RF7 is IPEX, H6 the pin header.
+  - `acqil 16` cannot be the default capture until the DMA has margin (200 MHz CPU) or a fill-time
+    check retries a half-speed run (fill 412 µs instead of 206 µs).
   - Also: the wait loop could use the DMA0 interrupt + `pwrsav #1` instead of the NOP poll (zero SFR
     traffic during the capture); `acq` default input should be settable once (`acq in <n>`).
   - Board 1: replace U2 (dead PIC) when convenient; remove its H2.16–CN1.17 jumper first.

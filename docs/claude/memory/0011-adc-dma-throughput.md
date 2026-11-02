@@ -1,6 +1,6 @@
 # 0011 — PIC32AK ADC / DMA / CPU throughput facts (bench, board 2, 2026-10-28)
 
-**Status:** current · type: project/reference · source: session 06 log, DS70005592 §7.3, §15, §16, §18
+**Status:** current (tone-verified 2026-11-02, session 08) · type: project/reference · source: session 06/08 logs, DS70005592 §7.3, §15, §16, §18
 
 ## The numbers
 | Path | Measured | Why |
@@ -15,8 +15,24 @@
 | 20 M sums/s ("20 Msps integrated over 2") on one channel | **not possible**: CNT=2 sequence = 88 ns → 11.4 M sums/s max (div 15) | oversampling mode starts at ACCNUM=4, so CNT=2 integration is the only hardware 2-sum; the ≈ 40 ns per-trigger overhead cannot be skipped (no self-retrigger for TRG1SRC) |
 | **Two-channel interleave `acqil` (CH0 on SCCP1, CH1 on SCCP2 preloaded ~half a period, CNT=2 each, DMA0 + DMA1)** | **works: `acqil 16` = 4094 2-sums in 206.0 µs = 19.87 M sums/s** (pic 0.1.19 / rp 0.1.27) | both DMAs finish, no overrun; with 4 conversions per 100 ns the ADC core is saturated and packs conversions on its 25 ns grid → even/odd channel means equal to 0.1 LSB for any `off` (uniform 40 Msps comb, pairs summed, 13-bit). Period must be a multiple of 2×25 ns per channel: div 20 (5 slots) gives 10–22 LSB channel offset, `acqil 24 0 4` overloads (fill ×2, order scrambled); `acqil 32 0 4` = 4-sums at 9.94 M/s. The first pair can come out swapped (startup); `off 5` at div 16 avoids it. Still to prove with a known tone |
 
+## Tone verification (2026-11-02, 1 MHz square at RF7 = PIC32_ADC node, `bench/2026-11-02-tone/`)
+| Path | samples per 1 MHz period | verdict |
+| --- | --- | --- |
+| `acq 8` (DMA, 50 ns) | 20 | **20 Msps proven** |
+| `acq 4` (DMA, 25 ns triggers) | 20, no duplicates | **DMA ceiling proven** (every other trigger lost) |
+| `acqcpu` 25 ns, phases 0/1/2/4/5/6/8 | 40 but every value twice | 40 reads/s of a 20 Msps stream — **not 40 Msps** |
+| `acqcpu` phases 3 (1 of 2 runs) / 7 | 40, un-duplicated, plateau slope halves | distinct 25 ns samples exist, but the values carry a **+425 LSB offset** (same amplitude) — reading an intermediate/uncorrected result? unusable until understood |
+| `acqil 16` | 3 of 4 runs: CH0 100 ns, **CH1 200 ns** (fill 412 µs); 1 of 4: both 100 ns (206 µs) | two transfers per 100 ns = exactly the 50 ns DMA cost → **zero margin, phase-luck**; session-06 19.87 M was a lucky run |
+| `acq 8` intermittent | 2 of 5 runs fill 218–232 µs, periods 13–17 | open issue (interrupt/SFR traffic during capture?) |
+
+Clock facts settled the same day: 200 MHz CPU is the **rated** maximum (DS70005592 OS25 TCY ≥ 5 ns,
+3.0–3.6 V, flash wait states fixed at 3), not an overclock. 160 MHz is only a PLL-sharing constraint
+(CPU Fout vs ADC VCO/(2·INTDIV)). VCO 1000 → CPU 200 + ADC 250 MHz = **25 Msps clean DMA (40 ns)
+with no PLL2**; PLL2 (VCO 640 → 320 MHz, CLKGEN6 source 1000) needed only for the 40 Msps core.
+
 ## What it means for minus
-- **Default capture = `acq` at div 8 = 20 Msps via DMA**, clean. Nyquist 10 MHz covers 3–5 MHz probes.
+- **Default capture = `acq` at div 8 = 20 Msps via DMA**, clean (tone-proven). Nyquist 10 MHz covers 3–5 MHz probes.
+- Route (b) below is **dead at 160 MHz** (duplicated reads / offset reads, session 08); route (d) `acqil` has **no DMA margin** at 160 MHz. Both point at the 200 MHz CPU step.
 - The "40 Msps ADC" is sized for 20 channels / oversampling, not for single-channel streaming; the
   peripheral-to-RAM path is the limit. Routes to real 40 Msps raw: (a) CPU at 200 MHz → 5-cycle loop
   with slack (needs PLL2 for the 320 MHz ADC clock; also lifts the DMA to 25 Msps); (b) keep the
