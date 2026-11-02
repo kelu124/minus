@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-02  (pending)  feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) — acq default div 4 = uniform 25 Msps via DMA, tone-verified; acqil parked until PLL2; docs/memory/README updated
 
 ## Committed
 

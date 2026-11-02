@@ -316,13 +316,13 @@ static void cmd_acq(const char *arg) {
     // The PIC keeps the last div/samc/in across ACQ calls, so only name the input when this call set it.
     const char *inname = in < 0 ? "last input (AD1AN9 node unless changed)" : in == 9 ? "AD1AN9 (PIC32_ADC node)" : in == 0 ? "AD1AN0 (OA1OUT, op amp 1 x11 on the RX node)" : in == 1 ? "AD1AN1 (OA1IN+, raw RX node)" : "AD1AN?";
     char note[200];
-    snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 8, in, inname,
-             navg, navg > 1 ? "each value = sum of navg back-to-back 25 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
+    snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 4, in, inname,
+             navg, navg > 1 ? "each value = sum of navg back-to-back 32 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
     acq_receive(hdr, sizeof hdr, note);
 }
 static void cmd_acqcpu(const char *arg) {
     // acqcpu [trg [rptcnt]]: CPU-loop capture on the PIC (no DMA). trg 2 = back-to-back conversions (period
-    // 25 ns at samc 0, 50 ns at samc 1, ...), trg 3 = ADC repeat timer every (rptcnt+1) x 12.5 ns.
+    // 32 ns at samc 0, 64 ns at samc 1, ...), trg 3 = ADC repeat timer every (rptcnt+1) x 16 ns (TAD at the 250 MHz ADC clock).
     char hdr[96]; unsigned trg = 12, r = 1, gap = 0, phase = 0;   // default: SCCP1 trigger at the last acq div (trg 2/3 proved dead in single-sample mode)
     if (arg && *arg) { char *e; trg = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') { r = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') { gap = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') phase = (unsigned)strtoul(e + 1, NULL, 10); } } }
     if (r > 63 || trg > 31 || gap > 64 || phase > 15) { printf("acqcpu: trg 0..31, rptcnt 0..63, gap 0..64, phase 0..15\n"); return; }
@@ -330,24 +330,24 @@ static void cmd_acqcpu(const char *arg) {
     snprintf(hdr, sizeof hdr, "ACQCPU %u %u %u %u\n", trg, r, gap, phase);
     link_puts(hdr);
     char note[160];
-    if (trg == 3) snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read), ADC repeat timer %u x 12.5 ns = %.1f ns; last input/samc", gap, r + 1, (r + 1) * 12.5);
+    if (trg == 3) snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read), ADC repeat timer %u x 16 ns = %.1f ns; last input/samc", gap, r + 1, (r + 1) * 16.0);
     else snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read, phase %u), trigger %u (12 = SCCP1 at the last acq div; 2 back-to-back / 3 repeat timer are dead); last input/samc", gap, phase, trg);
     acq_receive(hdr, sizeof hdr, note);
 }
 static void cmd_acqil(const char *arg) {
-    // acqil [div [off [navg]]]: two ADC1 channels on the same input, each summing navg (default 2) 25 ns
+    // acqil [div [off [navg]]]: two ADC1 channels on the same input, each summing navg (default 2) 32 ns
     // conversions per trigger, triggered half a period apart (CH0 SCCP1, CH1 SCCP2 preloaded by off counts),
-    // two DMA channels; the PIC interleaves the halves. div = per-channel period (default 16 = 100 ns ->
-    // 20 M sums/s total if the ADC interleaves the two sequences). Uses the last acq input/samc.
-    char hdr[96]; unsigned div = 16, off = 0, navg = 2;
+    // two DMA channels; the PIC interleaves the halves. div = per-channel period in 5 ns counts (default 24 = 120 ns ->
+    // 16.7 M sums/s total; two DMA transfers per 120 ns leave 40 ns of margin at the 40 ns DMA cost). Uses the last acq input/samc.
+    char hdr[96]; unsigned div = 24, off = 0, navg = 2;
     if (arg && *arg) { char *e; div = (unsigned)strtoul(arg, &e, 10); if (*e == ' ') { off = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
     if (div < 4 || div > 255 || off > 255 || navg < 1 || navg > 16) { printf("acqil: div 4..255, off 0..255 (0 = div/2+1), navg 1..16\n"); return; }
     link_flush_rx();
     snprintf(hdr, sizeof hdr, "ACQIL %u %u %u\n", div, off, navg);
     link_puts(hdr);
     char note[200];
-    snprintf(note, sizeof note, "two-channel interleave: per-channel period %u x 6.25 ns = %.1f ns, CH1 offset %s counts, each value = sum of %u conversions (%u bits); last input/samc",
-             div, div * 6.25, off ? "given" : "div/2+1", navg, 12 + (navg >= 16 ? 4 : navg >= 8 ? 3 : navg >= 4 ? 2 : navg >= 2 ? 1 : 0));
+    snprintf(note, sizeof note, "two-channel interleave: per-channel period %u x 5 ns = %.1f ns, CH1 offset %s counts, each value = sum of %u conversions (%u bits); last input/samc",
+             div, div * 5.0, off ? "given" : "div/2+1", navg, 12 + (navg >= 16 ? 4 : navg >= 8 ? 3 : navg >= 4 ? 2 : navg >= 2 ? 1 : 0));
     acq_receive(hdr, sizeof hdr, note);
 }
 static void acq_receive(char *hdr, unsigned hdrlen, const char *note) {
@@ -392,9 +392,9 @@ static void help(void) {
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
            "  lb          RP UART0 internal loopback self-test\n"
-           "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 6.25 ns counts (8 = 20 Msps = the DMA ceiling; 4 default = half the triggers lost), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = ADC1 input: 9 node (default), 0 OA1OUT (op amp 1), 1 OA1IN+ (raw RX node), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
-           "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 25 ns per read + gap NOPs; trg 12 (default) = SCCP1 at the last acq div (acq 4 first -> 40 Msps), trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
-           "  acqil [div [off [navg]]]  experiment: two ADC1 channels on the same input, navg-sums (default 2) each, triggered half a period apart (div = per-channel period, default 16 = 100 ns -> 20 M sums/s total), two DMA channels, interleaved; off = CH1 timer preload in counts (0 = div/2+1)\n"
+           "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 5 ns counts (4 default = 25 Msps: the 32 ns ADC takes every other 20 ns trigger, uniform 40 ns = the DMA cost; 10 = 20 Msps; 5..9 irregular, on the DMA edge), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = ADC1 input: 9 node (default), 0 OA1OUT (op amp 1), 1 OA1IN+ (raw RX node), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
+           "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 20 ns per read + gap NOPs (conversions are 32 ns: no integer lock since the 200 MHz clock change); trg 12 (default) = SCCP1 at the last acq div, trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
+           "  acqil [div [off [navg]]]  experiment: two ADC1 channels on the same input, navg-sums (default 2) each, triggered half a period apart (div = per-channel period in 5 ns counts, default 24; parked since the 200 MHz / 250 MHz-ADC clock change: two 2-sums of 32 ns conversions no longer fit in one period, needs the 320 MHz ADC clock from PLL2), two DMA channels, interleaved; off = CH1 timer preload in counts (0 = div/2+1)\n"
            "  raw AMP1 0|1  op amp 1 off/on on the PIC (on at boot)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");

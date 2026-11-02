@@ -5,9 +5,12 @@
 // the RP's point of view (fw 0.1.1 had them swapped: both chips drove UART_TX, RP saw nothing). Toggles RDY (RA7 -> RP2354 GPIO7) on every reply, mirrors
 // TRIG (RA0 <- RP2354 GPIO6) edges into a counter, blinks LED2 (RC5) as a heartbeat.
 //
-// Clocking (fw 0.1.1): PLL1 from the 8 MHz FRC -> VCO 640 MHz -> Fout 160 MHz = CLKGEN1 (CPU +
-// peripherals, FCY) and VCO/2 = 320 MHz = CLKGEN6 (ADC) / CLKGEN12 = 160 MHz (SCCP). Same recipe
-// as datasheet DS70005592 Example 18-3. The "standard speed peripheral clock" (UART CLKSEL = 0,
+// Clocking (fw 0.1.20, 2026-11-02): PLL1 from the 8 MHz FRC -> VCO 1000 MHz -> Fout 200 MHz = CLKGEN1
+// (CPU + peripherals, FCY; 200 MHz is the rated maximum, OS25 TCY >= 5 ns) and VCO/4 = 250 MHz = CLKGEN6
+// (ADC: TAD = 250/4 = 62.5 MHz -> 32 ns conversions) / CLKGEN12 = 200 MHz (SCCP, 5 ns ticks). Same
+// recipe as the datasheet PTG/ADC example ("clocks_initialize", CPU 200 MHz + 250 MHz ADC clock).
+// fw 0.1.1-0.1.19 ran VCO 640 -> 160 MHz CPU / 320 MHz ADC (Example 18-3); the DMA then moved one word
+// per 50 ns (20 Msps); at 200 MHz it is 40 ns (25 Msps). 320 MHz for the ADC now needs PLL2 (todo). The "standard speed peripheral clock" (UART CLKSEL = 0,
 // Timer1, SCCP CLKSEL = 0) is the system clock / 2 = FPB (Table 21-2, Table 26-2).
 // FRC is +/-1.5 %, fine for 115200 baud.
 //
@@ -33,21 +36,22 @@
 // (this family has no ICS / debug-pair config setting: any PGCx/PGDx pair works for ICSP)
 
 // ---------------------------------------------------------------- clocks
-#define FCY 160000000UL          // CLKGEN1 = PLL1 Fout
+#define FCY 200000000UL          // CLKGEN1 = PLL1 Fout (rated max; was 160 MHz until fw 0.1.19)
 #define FPB (FCY / 2)            // standard speed peripheral clock = system clock / 2
 
 static void clocks_init(void) {
-    // DS70005592 Example 18-3 ("OscillatorInitialization"): FRC 8 MHz, PLLPRE 1, FBDIV 80 -> VCO
-    // 640 MHz (OS51: 500-1600 MHz); POSTDIV1 4, POSTDIV2 1 -> Fout 160 MHz; VCO1DIV INTDIV 1 ->
-    // VCO/(2*1) = 320 MHz for the ADC (CLKGEN6 max input 320 MHz, TAD = 80 MHz -> 40 Msps).
+    // FRC 8 MHz, PLLPRE 1, FBDIV 125 -> VCO 1000 MHz (OS51: 500-1600 MHz); POSTDIV1 5, POSTDIV2 1 ->
+    // Fout 200 MHz; VCO1DIV INTDIV 2 -> VCO/(2*2) = 250 MHz for the ADC (CLKGEN6 max input 320 MHz;
+    // TAD = input/4 = 62.5 MHz -> 1.5 TAD conversion + 0.5 TAD sampling = 32 ns = 31.25 Msps core).
+    // One PLL cannot give 200 MHz Fout and 320 MHz VCO-div at once (VCO/(2n) of 1000 = 500/250/...).
     PLL1CONbits.ON = 1;
     OSCCTRLbits.PLL1EN = 1;
     while (OSCCTRLbits.PLL1RDY == 0) ;
     PLL1CONbits.FSCMEN = 0;                 // no fail-safe clock monitor during bring-up
-    VCO1DIVbits.INTDIV = 1;                 // VCO div output = 640 / (2*1) = 320 MHz
-    PLL1DIVbits.PLLFBDIV = 80;              // 8 MHz * 80 = 640 MHz
+    VCO1DIVbits.INTDIV = 2;                 // VCO div output = 1000 / (2*2) = 250 MHz
+    PLL1DIVbits.PLLFBDIV = 125;             // 8 MHz * 125 = 1000 MHz
     PLL1DIVbits.PLLPRE = 1;
-    PLL1DIVbits.POSTDIV1 = 4;               // 640 / 4 = 160 MHz
+    PLL1DIVbits.POSTDIV1 = 5;               // 1000 / 5 = 200 MHz
     PLL1DIVbits.POSTDIV2 = 1;
     PLL1CONbits.DIVSWEN = 1;  while (PLL1CONbits.DIVSWEN) ;    // latch VCO divider
     PLL1CONbits.NOSC = 1;                   // PLL input = FRC
@@ -55,11 +59,11 @@ static void clocks_init(void) {
     PLL1CONbits.FOUTSWEN = 1; while (PLL1CONbits.FOUTSWEN) ;   // latch output dividers
     PLL1CONbits.PLLSWEN = 1;  while (PLL1CONbits.PLLSWEN) ;    // latch input/feedback dividers
     while (PLL1CONbits.CLKRDY == 0) ;
-    // CLKGEN1 (CPU + peripherals) <- PLL1 Fout (NOSC 5) = 160 MHz
+    // CLKGEN1 (CPU + peripherals) <- PLL1 Fout (NOSC 5) = 200 MHz
     CLK1CONbits.NOSC = 5;  CLK1CONbits.OSWEN = 1;  while (CLK1CONbits.OSWEN) ;  while (CLK1CONbits.CLKRDY == 0) ;
-    // CLKGEN6 (ADC) <- PLL1 VCO divider (NOSC 7) = 320 MHz
+    // CLKGEN6 (ADC) <- PLL1 VCO divider (NOSC 7) = 250 MHz
     CLK6CONbits.ON = 1;  CLK6CONbits.NOSC = 7;  CLK6CONbits.OSWEN = 1;  while (CLK6CONbits.OSWEN) ;  while (CLK6CONbits.CLKRDY == 0) ;
-    // CLKGEN12 (SCCP / REFO1) <- PLL1 Fout (NOSC 5) = 160 MHz
+    // CLKGEN12 (SCCP / REFO1) <- PLL1 Fout (NOSC 5) = 200 MHz (5 ns per SCCP count)
     CLK12CONbits.ON = 1; CLK12CONbits.NOSC = 5; CLK12CONbits.OSWEN = 1; while (CLK12CONbits.OSWEN) ; while (CLK12CONbits.CLKRDY == 0) ;
 }
 
@@ -181,7 +185,7 @@ int main(void) {
                     char out[64]; snprintf(out, sizeof out, "ADCBB %u %u %lu %u %lu\n", n, ovs, (unsigned long)t, (unsigned)ACQ_TICK_NS, (unsigned long)data);
                     uart1_puts(out);
                 } else if (!strncmp(line, "CLK12 ", 6)) {
-                    // diagnostic: re-source CLKGEN12 (SCCP1 trigger clock). 1 = FRC 8 MHz, 5 = PLL1 Fout (160 MHz), 7 = PLL1 VCO/2 (320 MHz)
+                    // diagnostic: re-source CLKGEN12 (SCCP1 trigger clock). 1 = FRC 8 MHz, 5 = PLL1 Fout (200 MHz), 7 = PLL1 VCO/4 (250 MHz)
                     unsigned n = (unsigned)strtoul(line + 6, NULL, 10) & 0xF;
                     CLK12CONbits.NOSC = n; CLK12CONbits.OSWEN = 1;
                     uint32_t guard = 2000000; while (CLK12CONbits.OSWEN && --guard) ;
@@ -195,6 +199,6 @@ int main(void) {
                 }
             } else if (len < (int)sizeof line - 1) line[len++] = (char)c;
         }
-        if (++beat == 4000000UL) { beat = 0; LED2_LAT ^= 1; }   // ~heartbeat at 160 MHz
+        if (++beat == 5000000UL) { beat = 0; LED2_LAT ^= 1; }   // ~heartbeat at 200 MHz (loop count)
     }
 }

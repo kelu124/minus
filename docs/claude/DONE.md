@@ -2,6 +2,9 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-02 — **PIC clock raised to CPU 200 MHz / ADC 250 MHz** (pic 0.1.20 / rp 0.1.28, session 08 part 2): single-PLL
+  datasheet recipe (VCO 1000, FBDIV 125, POSTDIV1 5, INTDIV 2); `acq` default div 4 = **uniform 25 Msps via DMA**, proven with
+  the 1 MHz tone (`bench/2026-11-02-tone/clk200*`); ADC core 32 ns/conversion; div 8 shown to be a DMA razor edge.
 - 2026-11-02 — **Known-tone test of every capture path** (session 08): 1 MHz square at RF7 → `acq 8` 20 samples/period
   (20 Msps proven), `acq 4` 20 too (DMA ceiling proven), `acqcpu` 25 ns = duplicated reads (not 40 Msps), `acqil 16`
   at the DMA ceiling (phase-luck). Data in `bench/2026-11-02-tone/`.

@@ -1,6 +1,6 @@
 # 0011 — PIC32AK ADC / DMA / CPU throughput facts (bench, board 2, 2026-10-28)
 
-**Status:** current (tone-verified 2026-11-02, session 08) · type: project/reference · source: session 06/08 logs, DS70005592 §7.3, §15, §16, §18
+**Status:** current — **since pic 0.1.20 (2026-11-02) the PIC runs CPU 200 MHz / ADC 250 MHz; the table below was measured at 160/320 MHz, see the 200 MHz section** (tone-verified 2026-11-02, session 08) · type: project/reference · source: session 06/08 logs, DS70005592 §7.3, §15, §16, §18
 
 ## The numbers
 | Path | Measured | Why |
@@ -30,8 +30,22 @@ Clock facts settled the same day: 200 MHz CPU is the **rated** maximum (DS700055
 (CPU Fout vs ADC VCO/(2·INTDIV)). VCO 1000 → CPU 200 + ADC 250 MHz = **25 Msps clean DMA (40 ns)
 with no PLL2**; PLL2 (VCO 640 → 320 MHz, CLKGEN6 source 1000) needed only for the 40 Msps core.
 
+## After the clock change (pic 0.1.20 / rp 0.1.28, 2026-11-02, session 08 part 2, `bench/2026-11-02-tone/clk200*`)
+PLL1 VCO 1000 MHz: CPU **200 MHz** (rated max, not an overclock), ADC **250 MHz** (TAD 62.5 MHz), SCCP counts **5 ns**,
+Timer1 tick **80 ns**. One PLL cannot give 200 MHz Fout and 320 MHz VCO-div at once; 320 MHz for the ADC needs PLL2 (todo).
+| Path | Measured (1 MHz tone) | Why |
+| --- | --- | --- |
+| ADC core | **32.04 ns / conversion** (`ADCBB 4095` = 1640 ticks) | 1.5 + 0.5 TAD at 16 ns |
+| DMA | **40 ns / transfer**: `acq 4` (20 ns triggers) = 164.6 µs, 25 samples/period, even/odd steps equal → **uniform 25 Msps, the new default** | 4 standard-bus clocks at 100 MHz; the 32 ns ADC ignores every other 20 ns trigger |
+| `acq 8` (40 ns triggers) | 226 µs, 18–19 samples/period, regular drops | trigger period = DMA cost is a **razor edge** (div 8 at 160 MHz had been the same edge and worked by phase luck); div 5/6 jitter, div 10 = clean 20 Msps |
+| `navg 2` | sequence ≈ 2 × 32 + 40 = 104 ns → div ≥ 21 | per-trigger overhead unchanged (~40 ns) |
+| `acqil` | **parked**: two channels × two 32 ns conversions = 128 ns of core time per period, cannot fit 100–120 ns | needs the 320 MHz ADC clock (PLL2) |
+| `acqcpu` | 8-cycle (40 ns) reads after `acq 4` give a 25 Msps copy (phase-dependent duplicates); 4-cycle 20 ns reads = 64 % duplicates | CPU 200 / ADC 250 share the PLL at 4:5, no integer lock any more; stays an experiment |
+Rule learned: **never set the trigger period equal to the DMA cost — over-trigger and let the ADC busy time decimate.**
+Also: `navg`/`div`/`in` persist on the PIC between `acq` calls; `acq 8 0 9` after `acq 16 0 9 2` runs with navg 2.
+
 ## What it means for minus
-- **Default capture = `acq` at div 8 = 20 Msps via DMA**, clean (tone-proven). Nyquist 10 MHz covers 3–5 MHz probes.
+- **Default capture = `acq` (div 4 since pic 0.1.20) = uniform 25 Msps via DMA**, tone-proven; was div 8 = 20 Msps at 160 MHz. Nyquist 12.5 MHz covers 3–5 MHz probes.
 - Route (b) below is **dead at 160 MHz** (duplicated reads / offset reads, session 08); route (d) `acqil` has **no DMA margin** at 160 MHz. Both point at the 200 MHz CPU step.
 - The "40 Msps ADC" is sized for 20 channels / oversampling, not for single-channel streaming; the
   peripheral-to-RAM path is the limit. Routes to real 40 Msps raw: (a) CPU at 200 MHz → 5-cycle loop

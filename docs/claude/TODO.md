@@ -5,13 +5,15 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-11-02): tone test done (session 08, `bench/2026-11-02-tone/`). 1 MHz square at
+- **RESUME HERE (2026-11-02 evening): pic 0.1.20 / rp 0.1.28 = CPU 200 MHz / ADC 250 MHz on board 2; `acq` default
+    div 4 = uniform 25 Msps (tone-proven, session 08 part 2, memory 0011). Open from the change: PLL2 → 320 MHz
+    ADC clock (restores 40 Msps core, un-parks `acqil`, then 5-cycle CPU loop); `acq` should reset `navg` when not
+    given (it persists on the PIC and silently poisons the next capture).**
+- Was: **RESUME HERE (2026-11-02): tone test done (session 08, `bench/2026-11-02-tone/`). 1 MHz square at
     RF7/H6 (PIC32_ADC node): `acq 8` = 20 samples/period clean; `acq 4` = 20 too (DMA ceiling proven);
     `acqcpu` at 25 ns = every value twice at 7 of 9 phases, phases 3/7 un-duplicated but +425 LSB offset
     (not usable); `acqil 16` = DMA at its ceiling, CH1 loses every other trigger in 3 of 4 runs.**
-    Next: (1) **clock change**: VCO 1000 → CPU 200 MHz + ADC 250 MHz (no PLL2) = clean 25 Msps DMA
-    (40 ns/transfer) and margin for `acqil` (then re-run the tone set); later PLL2 → 320 MHz ADC +
-    5-cycle loop for raw 40 Msps; (2) chase the +425 LSB offset of the un-duplicated CPU reads (which
+    Next: (1) ~~clock change~~ done (pic 0.1.20); later PLL2 → 320 MHz ADC + 5-cycle loop for raw 40 Msps; (2) chase the +425 LSB offset of the un-duplicated CPU reads (which
     ADC register/correction stage is being read?); (3) reproduce the intermittent slow `acq 8`
     (218–232 µs, scrambled periods, 2 of 5 runs — interrupt/SFR traffic during capture?);
     (4) fix the RX-node bias (TODO_HARDWARE: D7/R28/R36) so OA1 stops sitting at the rail, then

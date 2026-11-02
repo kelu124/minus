@@ -1,9 +1,9 @@
 // minus devkit — PIC32AK "acq" capture engine, step 1 of the data path.
 //
-// Chain: SCCP1 16-bit time base (CLKGEN12 = 160 MHz, period ACQ_TRIG_DIV) --"SCCP1 Trigger out"
+// Chain: SCCP1 16-bit time base (CLKGEN12 = 200 MHz, 5 ns counts, period ACQ_TRIG_DIV) --"SCCP1 Trigger out"
 // (TRG1SRC 12)--> ADC1 channel 0 (PINSEL 9 = AD1AN9/RA9 by default, 0 = OA1OUT, 1 = OA1IN+; single sample) --channel
 // 0 ready (DMA trigger 0x2B "ADC1 - AN0", channel-numbered)--> DMA0 copies AD1CH0DATA (16-bit) into
-// acq_buf[ACQ_N], one-shot. Timer1 (FPB/8 = 100 ns) measures start -> DMA DONE so the RP can print
+// acq_buf[ACQ_N], one-shot. Timer1 (FPB/8 = 80 ns, ACQ_TICK_NS) measures start -> DMA DONE so the RP can print
 // the effective sample rate and detect dropped triggers (DMA throughput at 40 M/s is unspecified).
 // Status: ok | timeout (DONE not reached in 5 ms) | dmaerr (address/bus fault) | overrun (dropped
 // trigger = dropped samples, the anti-goal) | notready (ADC calibration never finished).
@@ -22,18 +22,18 @@ static unsigned acq_navg = 1;                 // 1 = single conversion per trigg
 void     acq_set_navg(unsigned n) { if (n < 1) n = 1; if (n > 16) n = 16; acq_navg = n; }
 unsigned acq_get_navg(void) { return acq_navg; }
 
-// Sampling time (SAMC, 0.5 + n*2 TAD at 80 MHz TAD) chosen to fit the trigger period: conversion
-// takes 1.5 TAD = 18.75 ns, so sample time <= period - 18.75 ns - margin. Longer sampling helps the
+// Sampling time (SAMC, 0.5 + n*2 TAD at 62.5 MHz TAD = 16 ns) chosen to fit the trigger period: conversion
+// takes 1.5 TAD = 24 ns, so sample time <= period - 24 ns - margin. Longer sampling helps the
 // bare ADC node (10k||10k bias, no FE buffer) charge the hold capacitor.
 static unsigned samc_for_div(unsigned div) {
-    unsigned period_ns = div * 25u / 4u;                  // div x 6.25 ns
-    unsigned budget_ns = period_ns > 25u ? period_ns - 25u : 0;   // 18.75 ns conversion + ~6 ns margin
+    unsigned period_ns = div * 5u;                        // div x 5 ns (CLKGEN12 200 MHz)
+    unsigned budget_ns = period_ns > 30u ? period_ns - 30u : 0;   // 24 ns conversion + ~6 ns margin
     unsigned samc = 0;
-    while (samc < 7 && (625u + 2500u * (samc + 1)) / 100u <= budget_ns) samc++;   // 6.25 + 25*samc ns
+    while (samc < 7 && 8u + 32u * (samc + 1) <= budget_ns) samc++;   // sampling = 8 + 32*samc ns
     return samc;
 }
 void acq_set_div(unsigned div) { if (div < 4) div = 4; if (div > 255) div = 255; acq_div = div; }
-static int acq_samc = 0;                  // default fixed 0 (6.25 ns) — deterministic; auto (-1) was found to skip triggers irregularly
+static int acq_samc = 0;                  // default fixed 0 (0.5 TAD = 8 ns) — deterministic; auto (-1) was found to skip triggers irregularly
 void acq_set_samc(int samc) { acq_samc = samc < 0 ? -1 : (samc > 7 ? 7 : samc); }
 int  acq_get_samc(void) { return acq_samc; }
 unsigned acq_get_div(void) { return acq_div; }
@@ -56,14 +56,14 @@ void acq_init(void) {
     AMP1CON1bits.HPEN  = 1;
     AMP1CON1bits.AMPEN = 1;
 
-    // ADC1 core on (CLKGEN6 = 320 MHz must be running); startup calibration ~5000 ADC clocks.
+    // ADC1 core on (CLKGEN6 = 250 MHz must be running; TAD = 62.5 MHz); startup calibration ~5000 ADC clocks.
     // Bounded wait: if the ADC never comes up the link must still work and ACQ reports "notready".
-    AD1CONbits.RPTCNT = 1;              // repeat timer: 2 ADC clocks = 25 ns (set before ON; used by the ACQCPU trg 3 experiment)
+    AD1CONbits.RPTCNT = 1;              // repeat timer: 2 TAD = 32 ns (set before ON; used by the ACQCPU trg 3 experiment)
     AD1CONbits.ON = 1;
     for (uint32_t i = 0; i < ACQ_ADRDY_SPINS && AD1CONbits.ADRDY == 0; i++) ;
 
     // Channel 0: AN9, single-ended, unsigned right-aligned, one conversion per trigger,
-    // sampling 0.5 TAD (6.25 ns) — the node is driven through 100 R / 56 pF, see pcb-brief.
+    // sampling 0.5 TAD (8 ns) — the node is driven through 100 R / 56 pF, see pcb-brief.
     AD1CH0CON = 0;
     AD1CH0CONbits.PINSEL  = ACQ_INPUT_NODE;
     AD1CH0CONbits.MODE    = 0;          // single sample initiated by TRG1SRC
@@ -74,7 +74,7 @@ void acq_init(void) {
     // SCCP1 in 32-bit Timer mode (DS70005592 §27.4.2.2, same as the ADC Example 18-10): a
     // CCP1TMR == CCP1PR match raises the Special Event Trigger (= "SCCP1 Trigger out", ADC
     // TRG1SRC 12) and the Sync output, and resets the timer. (Dual 16-bit mode would need CCP1RB
-    // for the trigger instead.) Clock = CLKGEN12 160 MHz. Left OFF until a capture.
+    // for the trigger instead.) Clock = CLKGEN12 200 MHz. Left OFF until a capture.
     CCP1CON1 = 0;
     CCP1CON1bits.CCSEL  = 0;            // time base / output compare block
     CCP1CON1bits.T32    = 1;            // single 32-bit timer
@@ -108,8 +108,8 @@ acq_status_t acq_run(uint32_t *ticks) {
     // navg > 1: integration mode (DS70005592 §18.4.5 / Example 18-6): the SCCP trigger starts the first
     // conversion, TRG2SRC 2 (back-to-back) re-triggers immediately for the rest, the sum of navg results
     // lands in AD1CH0DATA (12 + log2(navg) bits) and raises the channel-ready DMA request once. Each
-    // conversion is 1.5 TAD + sampling (0.5 TAD at SAMC 0) = 25 ns, i.e. the ADC core runs at 40 Msps
-    // while the DMA only has to move one word per trigger (20 Msps max at div 8).
+    // conversion is 1.5 TAD + sampling (0.5 TAD at SAMC 0) = 32 ns, i.e. the ADC core runs at 31.25 Msps
+    // while the DMA only has to move one word per trigger (25 Msps max at div 8).
     if (acq_navg > 1) { AD1CH0CONbits.MODE = 2; AD1CH0CONbits.TRG2SRC = 2; AD1CH0CNT = acq_navg; AD1CH0CONbits.ACCRO = 0; }
     else              { AD1CH0CONbits.MODE = 0; AD1CH0CONbits.TRG2SRC = 0; }
     AD1CH0CONbits.SAMC = acq_samc < 0 ? samc_for_div(acq_div) : (unsigned)acq_samc;
@@ -178,12 +178,14 @@ uint32_t acq_adc_bb(unsigned n, unsigned ovs, uint32_t *data) {
 }
 
 // CPU-loop reader (link command "ACQCPU r"): no DMA. Channel 0 in single-sample mode, triggered by the
-// ADC's own repeat timer (TRG1SRC 3, period = (r+1) ADC clocks of 12.5 ns: r=1 -> 25 ns = 40 Msps,
-// r=3 -> 50 ns = 20 Msps). The CPU copies AD1CH0DATA into acq_buf in a tight loop without checking the
-// ready flag: CPU (160 MHz) and ADC clock (320 MHz) come from the same PLL, so a 4-cycle loop is
-// phase-locked to a 25 ns conversion period. Timer1 times the loop so the RP can print cycles/sample.
-// trg 2 = back-to-back (conversion period = 1.5 TAD + sampling = 25 ns at SAMC 0, 50 ns at SAMC 1, +25 ns
-// per SAMC step), trg 3 = repeat timer (bench 2026-10-28: produced no conversions, DATA stayed stale).
+// ADC's own repeat timer (TRG1SRC 3, period = (r+1) TAD of 16 ns). The CPU copies AD1CH0DATA into acq_buf
+// in a tight loop without checking the ready flag: CPU (200 MHz) and ADC clock (250 MHz) come from the same
+// PLL (ratio 4:5), so a 4-cycle read = 20 ns against 32 ns conversions: no longer an integer lock (it was
+// 4 cycles = 25 ns = one conversion at 160/320 MHz; the 2026-11-02 tone test showed that lock read each
+// conversion twice at 7 of 9 phases and offset values at the other two — memory 0011). gap 4 -> 8 cycles
+// = 40 ns reads = one per DMA-rate trigger. Timer1 times the loop so the RP can print cycles/sample.
+// trg 2 = back-to-back (conversion period = 1.5 TAD + sampling = 32 ns at SAMC 0, +32 ns per SAMC step),
+// trg 3 = repeat timer (bench 2026-10-28: produced no conversions, DATA stayed stale).
 acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned phase, uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
     AD1CH0CONbits.PINSEL  = acq_input;
@@ -224,7 +226,9 @@ acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned p
 
 // Two-channel interleaved integration capture (link command "ACQIL [div [off [navg]]]"), the "20 M
 // 2-sums/s" experiment (session 06 follow-up). One channel cannot deliver 2-sample sums faster than
-// ~88 ns each (every triggered sequence costs ~40 ns on top of 25 ns per conversion, and the ADC has no
+// ~88 ns each at 320 MHz ADC clock (every triggered sequence costs ~40 ns on top of 25 ns per conversion; at
+// the 250 MHz ADC clock of fw 0.1.20 it is ~104 ns = 2 x 32 + 40, so the per-channel period must be >= 21 counts
+// of 5 ns and the core cannot interleave two 2-sums per 100 ns any more), and the ADC has no
 // self-retriggering start: TRG1SRC 2/3 are Reserved). So two channels share the same input pin:
 //   CH0: integration navg (default 2), started by SCCP1 Trigger out (TRG1SRC 12), period div counts;
 //   CH1: identical, started by SCCP2 Trigger out (TRG1SRC 13), same period, SCCP2 preloaded with
@@ -233,8 +237,10 @@ acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned p
 //   DMA0: AD1CH0DATA -> acq_buf[0..ACQ_IL_HALF), DMA1: AD1CH1DATA -> acq_buf1, both one-shot 16-bit.
 // Afterwards the two halves are merged in place into acq_buf (CH0[i], CH1[i], CH0[i+1], ...), so the
 // reply is the usual ACQ stream with n = ACQ_IL_N and each value a (12 + log2(navg))-bit sum. With
-// div 16 (100 ns per channel) a clean result is 4094 sums in ~204.7 us = 20 M sums/s, the DMA ceiling
-// shared by two channels; if the ADC serialises the two sequences the fill time doubles.
+// div 16 (100 ns per channel at 6.25 ns counts, fw <= 0.1.19) a clean result was 4094 sums in ~204.7 us =
+// 20 M sums/s — exactly the 50 ns DMA cost shared by two channels, so it depended on the start phase of
+// the two DMA requests (tone test 2026-11-02: CH1 lost every other trigger in 3 of 4 runs). At 200 MHz
+// CPU the DMA costs 40 ns per transfer: div 24 (120 ns per channel, 5 ns counts) leaves 40 ns of margin.
 acq_status_t acq_il_run(unsigned off, unsigned navg, uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
     if (navg < 1) navg = 1;
