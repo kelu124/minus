@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-02  (pending)  feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) — acq default div 4 = uniform 25 Msps via DMA, tone-verified; acqil parked until PLL2; docs/memory/README updated
+- (none)
 
 ## Committed
 
+- 2026-11-02  e8c8c4e  feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) — acq default div 4 = uniform 25 Msps via DMA, tone-verified; acqil parked until PLL2; docs/memory/README updated
 - 2026-11-02  963d11a  bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) — 20 Msps DMA proven, acqcpu duplicates, acqil at DMA ceiling; data in bench/2026-11-02-tone/; session 07 log (PCB via/DRC check)
 - 2026-10-28  ebfb38c  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)
 - 2026-10-28  6374b00  feat(firmware): `acqil` two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5); docs: memory 0011/0008, spec §12, log, TODO/DONE
