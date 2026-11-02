@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-02  (pending)  feat(firmware): OA2 gain control — RP `i2c` scan + `pot <0|1> [n]` (MCP4531 U11/U18), PIC `AMP2 0|1` (pic 0.1.21 / rp 0.1.29, proto 6); memory 0012 RX chain; MCP453X datasheet filed (OA2 limited to ~1 MHz by the digipot)
+- (none)
 
 ## Committed
 
+- 2026-11-02  0412124  feat(firmware): OA2 gain control — RP `i2c` scan + `pot <0|1> [n]` (MCP4531 U11/U18), PIC `AMP2 0|1` (pic 0.1.21 / rp 0.1.29, proto 6); memory 0012 RX chain; MCP453X datasheet filed (OA2 limited to ~1 MHz by the digipot)
 - 2026-11-02  e8c8c4e  feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) — acq default div 4 = uniform 25 Msps via DMA, tone-verified; acqil parked until PLL2; docs/memory/README updated
 - 2026-11-02  963d11a  bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) — 20 Msps DMA proven, acqcpu duplicates, acqil at DMA ceiling; data in bench/2026-11-02-tone/; session 07 log (PCB via/DRC check)
 - 2026-10-28  ebfb38c  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)

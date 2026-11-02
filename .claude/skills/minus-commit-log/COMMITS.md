@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-02 | `0412124` | feat(firmware): OA2 gain control — `i2c`, `pot`, `AMP2` (pic 0.1.21 / rp 0.1.29) | Answers "is the second op amp's gain controlled?": yes, U11 digipot x1–x11 over I2C, now driveable from the CLI; surfaced the 1 MHz digipot bandwidth limit (hardware TODO). |
 | 2026-11-02 | `e8c8c4e` | feat(firmware): PIC CPU 200 MHz / ADC 250 MHz (pic 0.1.20 / rp 0.1.28) | Rated-max clock, single PLL; DMA cost 50 -> 40 ns, `acq` default div 4 = uniform 25 Msps (tone-proven); showed trigger-period = DMA-cost is a razor edge; acqil parked until PLL2. |
 | 2026-11-02 | 963d11a | bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) | First real-signal proof of the capture paths: 20 Msps DMA confirmed, the 40 Msps CPU loop is duplicated reads, acqil sits at the DMA ceiling (phase-luck); settles that the 200 MHz clock step is next. |
 | 2026-10-28 | `ebfb38c` | docs: session 06 handoff — close of session | Resume point for the next session: tone test of acqil 16 / acq 8, RX-node bias fix. |
