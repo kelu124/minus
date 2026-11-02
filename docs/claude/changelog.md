@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-02  (pending)  bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) — 20 Msps DMA proven, acqcpu duplicates, acqil at DMA ceiling; data in bench/2026-11-02-tone/; session 07 log (PCB via/DRC check)
+- (none)
 
 ## Committed
 
+- 2026-11-02  963d11a  bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) — 20 Msps DMA proven, acqcpu duplicates, acqil at DMA ceiling; data in bench/2026-11-02-tone/; session 07 log (PCB via/DRC check)
 - 2026-10-28  ebfb38c  docs: session 06 handoff section (close of session; rp 0.1.27 / pic 0.1.19)
 - 2026-10-28  6374b00  feat(firmware): `acqil` two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5); docs: memory 0011/0008, spec §12, log, TODO/DONE
 - 2026-10-28  d7cc0a3  docs: datasheet check — TRG1SRC 2/3 are Reserved (only TRG2SRC); 2-sum at 20 M/s not possible on one channel (memory 0011, log 06, TODO)

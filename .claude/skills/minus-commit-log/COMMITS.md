@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-02 | 963d11a | bench: 1 MHz tone test of acq/acqcpu/acqil (session 08) | First real-signal proof of the capture paths: 20 Msps DMA confirmed, the 40 Msps CPU loop is duplicated reads, acqil sits at the DMA ceiling (phase-luck); settles that the 200 MHz clock step is next. |
 | 2026-10-28 | `ebfb38c` | docs: session 06 handoff — close of session | Resume point for the next session: tone test of acqil 16 / acq 8, RX-node bias fix. |
 | 2026-10-28 | `6374b00` | feat(firmware): acqil — two-channel interleaved integration capture = 19.87 M 2-sums/s (pic 0.1.19 / rp 0.1.27, proto 5) | Owner asked to try the untested route: CH0+CH1 on one input, SCCP1/SCCP2 triggers, DMA0+DMA1. It works — 20 M 2-sums/s, the practical "20 Msps integrated over 2". |
 | 2026-10-28 | `d7cc0a3` | docs: datasheet check — TRG1SRC 2/3 are Reserved (only TRG2SRC); 2-sum at 20 M/s not possible on one channel | Owner asked for 20 Msps integrated over 2 samples: datasheet + bench say 11.4 M sums/s max on one channel; explains why acqcpu trg 2/3 never fired. |
