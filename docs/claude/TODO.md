@@ -5,9 +5,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RX LNA (session 09, 2026-11-06, memory 0013):** owner to decide on a BGA2817 MMIC test (24 dB, 3.3 V, LCSC C2654187):
-    small U.FL board from the RX node into RF5 (OA1 IN+), 10 nF couplers, 51 Ω to a decoupled Vmid; first measure its gain at
-    1–5 MHz (datasheet only covers ≥ 250 MHz). Also: check `HPEN = 1` on OA2 in the `AMP2` code.
+- Check `HPEN = 1` on OA2 in the `AMP2` code (session 09).
 - **RESUME HERE (2026-11-02 evening): pic 0.1.20 / rp 0.1.28 = CPU 200 MHz / ADC 250 MHz on board 2; `acq` default
     div 4 = uniform 25 Msps (tone-proven, session 08 part 2, memory 0011). Open from the change: PLL2 → 320 MHz
     ADC clock (restores 40 Msps core, un-parks `acqil`, then 5-cycle CPU loop); `acq` should reset `navg` when not
@@ -97,6 +95,9 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Next
 
+- **Board redesign candidate — RX LNA (owner 2026-11-06, memory 0013):** BGA2817 MMIC (24 dB, 3.3 V, LCSC C2654187)
+    ahead of OA1, with the FE-A bias/coupling fixes (TODO_HARDWARE). No devkit test now; bench-check its 1–5 MHz gain
+    when the redesign is prepared.
 - (optional) Mirror the full BioGAP Altium source + gerbers, and the Open Echo
   firmware/Python interface, if wanted beyond the current schematic+fab files.
 - Sheet remaining leads: Measurement-2024 compact modular platform (32 el., get PDF

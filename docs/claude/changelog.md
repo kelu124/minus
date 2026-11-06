@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-06  (pending)  docs: MMIC LNA parked as a board-redesign candidate (TODO Next, memory 0013 status)
 
 ## Committed
 
