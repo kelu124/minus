@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-06 | `378dc84` | docs: park the BGA2817 MMIC LNA as a board-redesign candidate | Owner decision: no devkit test now, keep for the redesign. |
+| 2026-11-06 | `07bdef8` | docs: changelog/commit log — record 9f333d3 under Committed | Bookkeeping. |
 | 2026-11-06 | `9f333d3` | docs: session 09 — FE-A fixes, gain switching, GBW limit, BGA2817/BGA2869 MMIC LNA (memory 0013) | Captures the analog review Q&A and a <1 € LNA option (24 dB, 3.3 V) with datasheets, so the RX chain rework can be planned. |
 | 2026-11-02 | `7747f41` | docs: changelog/commit log — record e5246fe under Committed | Bookkeeping. |
 | 2026-11-02 | `e5246fe` | docs: session 08 part 4 — OA2 gain alternatives, direction = GPIO-switched legs | Records the BOM-driven decision direction and the devkit rework/test plan so the next session can start from it. |

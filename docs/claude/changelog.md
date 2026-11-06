@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-06  (pending)  docs: MMIC LNA parked as a board-redesign candidate (TODO Next, memory 0013 status)
+- (none)
 
 ## Committed
 
+- 2026-11-06  378dc84  docs: MMIC LNA parked as a board-redesign candidate (TODO Next, memory 0013 status)
 - 2026-11-06  9f333d3  docs: session 09 — FE-A op-amp fixes, gain switching (GPIO legs / 74HC4051), per-stage GBW limit, MMIC LNA proposal (BGA2817/BGA2869 datasheets, memory 0013)
 - 2026-11-02  e5246fe  docs: session 08 part 4 — OA2 gain-control alternatives under the BOM/simplicity constraint; direction = GPIO-switched gain legs (memory 0012, TODO); J6.1 has no IPEX
 - 2026-11-02  1c9ad9d  docs: fix the MCP453X row columns in pdfs/datasheets/README.md
