@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-06 | `cb2e544` | docs: memory 0013 — ADC tap pins along the RX chain | Answers which ADC inputs see the LNA / interstage / final signals, for the redesign. |
+| 2026-11-06 | `389fcfc` | docs: changelog/commit log — record 378dc84 under Committed | Bookkeeping. |
 | 2026-11-06 | `378dc84` | docs: park the BGA2817 MMIC LNA as a board-redesign candidate | Owner decision: no devkit test now, keep for the redesign. |
 | 2026-11-06 | `07bdef8` | docs: changelog/commit log — record 9f333d3 under Committed | Bookkeeping. |
 | 2026-11-06 | `9f333d3` | docs: session 09 — FE-A fixes, gain switching, GBW limit, BGA2817/BGA2869 MMIC LNA (memory 0013) | Captures the analog review Q&A and a <1 € LNA option (24 dB, 3.3 V) with datasheets, so the RX chain rework can be planned. |
