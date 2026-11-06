@@ -83,6 +83,13 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
   (`PINSEL 0`), which bypasses the node's clamp and anti-alias filter; a 0 Ω option from OA1OUT to
   the ADC-node input (H5) would make the filtered path jumper-free too.
 
+- **[should] FE-A DC/AC details (session 09, memory 0013):** one shared series cap in the OA1/OA2 gain-leg
+  returns (DC gain ×1); C + re-bias to Vmid between OA1OUT and OA2IN+ (≈100 kHz HP); a clean Vmid (divider +
+  10 µF or OA3 as buffer); D7's −0.6 V clamp is likely beyond the PIC pin's −0.3 V abs max; keep OA IN− nodes
+  tiny (OA2 IN− = TMS stub); OA2 gain by GPIO legs or a 74HC4051 at the ground end of the legs (Rf ≈ 20 k).
+- **[nice] LNA ahead of OA1:** BGA2817 MMIC (24 dB, 3.3 V, SOT363, LCSC C2654187), 10 nF couplers, BAV99 clamp,
+  51 Ω termination to a decoupled Vmid that also biases OA1 IN+ — to be bench-checked at 1–5 MHz first.
+
 ## Analog path (from `design/devkit/review-findings.md`, not yet re-checked on hardware)
 
 - Gain distribution / digipot bandwidth, anti-alias RC corner (~6–8 MHz), LVP-only programming

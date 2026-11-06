@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-06  (pending)  docs: session 09 — FE-A op-amp fixes, gain switching (GPIO legs / 74HC4051), per-stage GBW limit, MMIC LNA proposal (BGA2817/BGA2869 datasheets, memory 0013)
 
 ## Committed
 

@@ -13,6 +13,8 @@ Datasheets / app-notes for candidate ICs (esp. pulser options — see
 | `PIC32AK1216GC41064-family-datasheet-DS70005592.pdf` | Microchip PIC32AK…GC41064 family | **Full datasheet** (DS70005592) — ADC input range/VREF, op-amp specs, HS-PWM/PTG ADC triggering, pinouts, electrical. The authoritative reference for `design/pic32/` + DesignA. |
 | `PIC32AK1216GC41064-family-flash-programming-spec-DS70005583.pdf` | Microchip PIC32AK…GC41064 family | Flash Programming Spec (DS70005583) — ICSP/LVP entry sequence + timing (for the RP2354→PIC bit-bang programmer and PICkit); see `design/pic32/pic32.md`. |
 | `MCP453X-455X-463X-465X-I2C-digipot-datasheet-DS22096B.pdf` | Microchip MCP453X/455X/463X/465X (DS22096B) | I2C digipots on the devkit: U11 (OA2 feedback rheostat), U18 (AD8338 gain). Key for minus: **−3 dB bandwidth 1 MHz for the 10 kΩ part** (mid code, 30 pF load), CA/CB 75 pF, CW 120 pF, RW 75 Ω → the OA2 gain network rolls off at ~1 MHz (session 08, memory 0012). |
+| `BGA2817_MMIC-wideband-amp_24dB_3V3.pdf` | NXP BGA2817 (Rev. 7, mirror cdn.eicom.ru) | MMIC wideband amp, **24 dB, 3.3 V / 20 mA**, NF 3.9 dB, OP1dB +6 dBm, 50 Ω, SOT363 — proposed RX LNA ahead of OA1 (memory 0013). Specs only ≥ 250 MHz. |
+| `BGA2869_MMIC-wideband-amp_31dB_5V.pdf` | NXP BGA2869 (Rev. 3, mirror hwlab.fit.cvut.cz) | MMIC wideband amp, **31 dB, 5 V / 24 mA**, NF 3.1 dB, OP1dB +10 dBm — higher-gain alternative (memory 0013). |
 
 Not mirrored (host blocked download — links):
 - **TC6320** (Microchip HV P/N MOSFET pair, ±100 V, 2 A) — covered in MD1213DB1; product page: microchip.com/TC6320.
