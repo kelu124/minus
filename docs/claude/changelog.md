@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-06  (pending)  docs: session 09 — FE-A op-amp fixes, gain switching (GPIO legs / 74HC4051), per-stage GBW limit, MMIC LNA proposal (BGA2817/BGA2869 datasheets, memory 0013)
+- (none)
 
 ## Committed
 
+- 2026-11-06  9f333d3  docs: session 09 — FE-A op-amp fixes, gain switching (GPIO legs / 74HC4051), per-stage GBW limit, MMIC LNA proposal (BGA2817/BGA2869 datasheets, memory 0013)
 - 2026-11-02  e5246fe  docs: session 08 part 4 — OA2 gain-control alternatives under the BOM/simplicity constraint; direction = GPIO-switched gain legs (memory 0012, TODO); J6.1 has no IPEX
 - 2026-11-02  1c9ad9d  docs: fix the MCP453X row columns in pdfs/datasheets/README.md
 - 2026-11-02  0412124  feat(firmware): OA2 gain control — RP `i2c` scan + `pot <0|1> [n]` (MCP4531 U11/U18), PIC `AMP2 0|1` (pic 0.1.21 / rp 0.1.29, proto 6); memory 0012 RX chain; MCP453X datasheet filed (OA2 limited to ~1 MHz by the digipot)
