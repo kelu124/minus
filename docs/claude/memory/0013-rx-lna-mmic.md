@@ -56,5 +56,20 @@ MD0100 T/R ─┬─ BAV99 (±0.7 V to GND ≈ +7 dBm < +10 dBm abs max)
 A small U.FL-in/U.FL-out BGA2817 board fed from the RX node, output into **RF5 (OA1 IN+ IPEX)** with the
 51 Ω-to-Vmid termination; measure gain vs frequency with the tone first.
 
+## ADC taps along the chain (48-pin U2, DS70005592 Table 1-3; session 09)
+| Node | Pin | ADC input | Note |
+| --- | --- | --- | --- |
+| LNA out = OA1 IN+ | 10 | **AD1AN1** | free tap, 51 Ω node → sampling kick-back small |
+| OA1 IN− | 9 | AD2AN0 (AD1ANN1) | do not sample: kick-back into the feedback node is amplified |
+| OA1 OUT | 8 | **AD1AN0** | low-Z op-amp output — best interstage tap |
+| OA2 IN+ | 18 | AD2AN4 | after the interstage cap, high-Z bias → avoid; sample OA1 OUT instead |
+| OA2 IN− (TMS) | 17 | AD1AN4 | do not sample |
+| OA2 OUT | 16 | **AD2AN1** | final, highest gain |
+| OA3 OUT / IN+ | 11 / 13 | AD1AN3 / AD2AN2 | |
+| spare ADC2 pins | 24 RB7, 4 RA8 | AD2AN8, AD2AN9 | check they are free; pin 3 (AD1AN7+AD2AN3) is PGC2/DACOUT1, pin 22 (AD2AN5) is PGC1 |
+LNA out and OA1 OUT are both ADC1-only, OA2 OUT is ADC2-only. Simultaneous dual-gain capture = ADC1 (LNA out
+or OA1 OUT) + ADC2 (OA2 OUT). To get LNA out and OA1 OUT at the same time, route a copy of one through ~100 Ω to
+AD2AN8/AD2AN9. Two DMA streams are near the measured DMA ceiling (memory 0011) → expect ~12.5 Msps each until tested.
+
 ## Related
 [[0012-rx-chain-oa2-gain]], [[0007-designA-devkit]] (review B1/C16), [[0006-pricing-basis]].
