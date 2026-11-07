@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-07 | `5af4ffc` | hardware: add minUS_07112026 + review notes | Versions the owner's new slim board and records the netlist review (4 must-fix items) for the next layout pass. |
+| 2026-11-06 | `b6a9fd6` | docs: changelog/commit log — record cb2e544 under Committed | Bookkeeping. |
 | 2026-11-06 | `cb2e544` | docs: memory 0013 — ADC tap pins along the RX chain | Answers which ADC inputs see the LNA / interstage / final signals, for the redesign. |
 | 2026-11-06 | `389fcfc` | docs: changelog/commit log — record 378dc84 under Committed | Bookkeeping. |
 | 2026-11-06 | `378dc84` | docs: park the BGA2817 MMIC LNA as a board-redesign candidate | Owner decision: no devkit test now, keep for the redesign. |
