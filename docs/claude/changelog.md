@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-07  (pending)  hardware: add minUS_07112026 (owner's new slim board: BGA2817 LNA + 74HC4052 gain mux) + review notes (memory 0014, TODO_HARDWARE, session 09 log)
 
 ## Committed
 

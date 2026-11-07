@@ -1,0 +1,152 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "861618b7-ffaa-48cd-8ef1-f9ce2b837ab5")
+	(paper "A1")
+	(lib_symbols)
+	(sheet
+		(at 212.598 269.748)
+		(size 420.878 60.198)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 194 0 1)
+		)
+		(uuid "6a54b36e-19b1-48e8-9bb3-b2d520d250fc")
+		(property "Sheetname" "FE_A"
+			(at 423.672 316.738 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 20 20)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "FE_A.kicad_sch"
+			(at 212.598 330.454 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/776893c9-685a-4aad-b276-5b257ebafd69"
+					(page "9")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 36.83 40.132)
+		(size 151.13 506.984)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 153 0 1)
+		)
+		(uuid "a3f29037-840a-40f9-8b35-709cffd31f67")
+		(property "Sheetname" "TRANSDUCER"
+			(at 139.446 483.362 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 40 40)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "TRANSDUCER.kicad_sch"
+			(at 36.83 547.7006 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/776893c9-685a-4aad-b276-5b257ebafd69"
+					(page "15")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 671.322 31.75)
+		(size 148.336 502.666)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 0 255 1)
+		)
+		(uuid "a75c8c6d-15dc-41e7-b690-5f6de6b58e33")
+		(property "Sheetname" "PIC32_ADC"
+			(at 783.336 431.038 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 40 40)
+					(thickness 8)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "PIC32_ADC.kicad_sch"
+			(at 671.322 535.0006 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/776893c9-685a-4aad-b276-5b257ebafd69"
+					(page "13")
+				)
+			)
+		)
+	)
+)
