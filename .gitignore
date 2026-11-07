@@ -3,7 +3,7 @@ firmware/*/build/
 # KiCad lock / autosave files
 *.lck
 ~*.kicad_*
-*-backups/*.zip
+**/*-backups/*.zip
 # superpowers plan workspaces (ledgers, briefs)
 .superpowers/
 # host test binaries

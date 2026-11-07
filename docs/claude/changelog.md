@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-07  (pending)  chore: .gitignore — ignore KiCad *-backups/*.zip in any subfolder
 
 ## Committed
 
