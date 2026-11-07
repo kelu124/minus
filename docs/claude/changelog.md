@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-07  (pending)  docs: memory 0014 follow-ups — C3/C32 → 10 nF, optional 100 nF DC block + bleed before D2
+- (none)
 
 ## Committed
 
+- 2026-11-07  af8e892  docs: memory 0014 follow-ups — C3/C32 → 10 nF, optional 100 nF DC block + bleed before D2
 - 2026-11-07  5af4ffc  hardware: add minUS_07112026 (owner's new slim board: BGA2817 LNA + 74HC4052 gain mux) + review notes (memory 0014, TODO_HARDWARE, session 09 log)
 - 2026-11-06  cb2e544  docs: memory 0013 — ADC tap pins along the RX chain (48-pin PIC32AK)
 - 2026-11-06  378dc84  docs: MMIC LNA parked as a board-redesign candidate (TODO Next, memory 0013 status)
