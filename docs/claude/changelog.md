@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-07  (pending)  docs: memory 0014 follow-ups — C3/C32 → 10 nF, optional 100 nF DC block + bleed before D2
 
 ## Committed
 

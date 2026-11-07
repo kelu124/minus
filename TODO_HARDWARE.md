@@ -9,10 +9,11 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 
 ## Next board `hardware/minUS_07112026/` — review 2026-11-07 (memory 0014)
 
-- **[must]** U1 S0/S1 (`RP_GC1/RP_GC2`) floating — connect to MCU pins + pull-downs. **[must]** C3 330 pF → 10 nF.
+- **[must]** U1 S0/S1 (`RP_GC1/RP_GC2`) floating — connect to MCU pins + pull-downs. **[must]** C3 330 pF → 10 nF (and C32 → 10 nF once R69/R70 → 0 Ω/51 Ω).
   **[must]** R17 → 0 Ω (MCLR). **[must]** D2 clamp antiparallel to GND (+ series R/T-R if TX/RX nets are joined).
 - **[should]** R69/R70 → 0 Ω/51 Ω; one Rf → 0 Ω (×1); DNP Cf on each OA; C86/C87 → ~100 pF; PIC32_ADC → AD2AN8/9;
   R8 → ferrite; drop R65/R66.
+- **[nice]** 100 nF series cap before D2 + 1–10 kΩ bleed to GND (DC block if TX/RX nets are joined).
 
 ## PIC32 reset / programming (ICSP from the RP2354A)
 
