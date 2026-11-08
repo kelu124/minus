@@ -12,6 +12,10 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - All must-fix items resolved (ICSP, mux selects, input caps, clamp, termination, MCLR, AVDD ferrite, ADC node on ADC2).
 - **[should]** C86/C87 56 pF → ~100 pF (anti-alias ~6 MHz). **[nice]** DNP Cf (1–3 pF) OUT→IN− on OA1/OA2; 1–10 kΩ
   bleed at the D2 node; 100 k pull-downs on S0/S1.
+- **[must, before ordering] U3 = MIC4427YMM (C152165):** replaces out-of-stock TC4427AEUA713 (C628548); design files and `production/bom.csv`
+  still list the TC4427. Check the BOM line uploaded to JLC and live stock (13 on 2026-10-24).
+- **[should]** One QR code on a clear area (the 2 QR codes cause all 25 remaining DRC errors). **[nice]** Delete track stubs on OA2OUT,
+  PIC32_ADC, AVDD; C5 reference text too small.
 
 ## Next board `hardware/minUS_07112026/` — review 2026-11-07 (memory 0014)
 
