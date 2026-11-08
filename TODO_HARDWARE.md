@@ -11,8 +11,10 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 
 - **[must]** U1 S0/S1 (`RP_GC1/RP_GC2`) floating — connect to MCU pins + pull-downs. **[must]** C3 330 pF → 10 nF (and C32 → 10 nF once R69/R70 → 0 Ω/51 Ω).
   **[must]** R17 → 0 Ω (MCLR). **[must]** D2 clamp antiparallel to GND (+ series R/T-R if TX/RX nets are joined).
-- **[should]** R69/R70 → 0 Ω/51 Ω; one Rf → 0 Ω (×1); DNP Cf on each OA; C86/C87 → ~100 pF; PIC32_ADC → AD2AN8/9;
+- **[should]** R69/R70 → 0 Ω/51 Ω; DNP Cf on each OA; C86/C87 → ~100 pF; PIC32_ADC → AD2AN8/9;
   R8 → ferrite; drop R65/R66.
+- ~~×1 gain step via a 0 Ω Rf~~ — **not needed: firmware `AMPxCON1.UGE = 1`** shorts OUT to IN− inside the PIC
+  (DS70005592 §32.4.2.1) → ×1 per stage on top of the 4 mux steps (bench-check gain with the Rg leg attached).
 - **[nice]** 100 nF series cap before D2 + 1–10 kΩ bleed to GND (DC block if TX/RX nets are joined).
 
 ## PIC32 reset / programming (ICSP from the RP2354A)

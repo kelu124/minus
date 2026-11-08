@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-08  (pending)  hardware: add minUS_08112026 (iteration of 07112026) + review (memory 0014: fixes landed, regression = RP GPIO21/22 taken by the gain selects → PIC ICSP pair 1 disconnected); ×1 gain via PIC UGE bit instead of a 0 Ω Rf; KiCad project touch on 07112026
 
 ## Committed
 

@@ -1,0 +1,56 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "ab4f5dc4-4f01-406e-afa7-1b42ce716034")
+	(paper "A4")
+	(lib_symbols)
+	(sheet
+		(at 86.36 35.56)
+		(size 192.532 114.3)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 255 255 0 1)
+		)
+		(uuid "37244c81-f389-47bd-b2ad-28900ed8a6cb")
+		(property "Sheetname" "PUSH_PULL"
+			(at 94.234 103.886 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 20 20)
+					(thickness 4)
+					(bold yes)
+					(color 255 255 255 1)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "untitled.kicad_sch"
+			(at 86.614 32.512 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/393275de-e3f9-4800-99dc-bb7de891e8d2"
+					(page "4")
+				)
+			)
+		)
+	)
+)
