@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-08 | `f148c5e` | hardware: add minUS_08112026 + review; ×1 gain via PIC UGE bit | Versions the owner's iteration and flags the ICSP regression before fabrication; records the firmware ×1 gain option. |
+| 2026-11-07 | `53de699` | docs: changelog/commit log — record fa23f03 under Committed | Bookkeeping. |
 | 2026-11-07 | `fa23f03` | chore: .gitignore — ignore KiCad *-backups/*.zip in any subfolder | The old pattern only matched at the repo root, so hardware/*/minUS-backups zips showed as untracked. |
 | 2026-11-07 | `73936af` | docs: changelog/commit log — record af8e892 under Committed | Bookkeeping. |
 | 2026-11-07 | `af8e892` | docs: memory 0014 follow-ups — C3/C32 → 10 nF, optional 100 nF DC block + bleed before D2 | Keeps the input-cap fixes on record before the owner's next board iteration. |
