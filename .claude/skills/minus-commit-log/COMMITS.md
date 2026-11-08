@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-08 | `d2b4c36` | hardware: minUS_08112026 layout pass + JLC outputs; U3 substitution noted | Versions the checked layout and JLC files, and records that U3's swap is not yet in the design files. |
+| 2026-11-08 | `3cb0e33` | docs: changelog/commit log — record 0694925 under Committed | Bookkeeping. |
 | 2026-11-08 | `0694925` | hardware: minUS_08112026 2nd iteration + review (all must-fix resolved) | Versions the corrected board and records that it is clear of blocking issues; logs the ADC2 firmware follow-up. |
 | 2026-11-08 | `d0e73c0` | docs: changelog/commit log — record f148c5e under Committed | Bookkeeping. |
 | 2026-11-08 | `f148c5e` | hardware: add minUS_08112026 + review; ×1 gain via PIC UGE bit | Versions the owner's iteration and flags the ICSP regression before fabrication; records the firmware ×1 gain option. |
