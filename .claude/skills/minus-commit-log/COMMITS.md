@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-08 | `0694925` | hardware: minUS_08112026 2nd iteration + review (all must-fix resolved) | Versions the corrected board and records that it is clear of blocking issues; logs the ADC2 firmware follow-up. |
+| 2026-11-08 | `d0e73c0` | docs: changelog/commit log — record f148c5e under Committed | Bookkeeping. |
 | 2026-11-08 | `f148c5e` | hardware: add minUS_08112026 + review; ×1 gain via PIC UGE bit | Versions the owner's iteration and flags the ICSP regression before fabrication; records the firmware ×1 gain option. |
 | 2026-11-07 | `53de699` | docs: changelog/commit log — record fa23f03 under Committed | Bookkeeping. |
 | 2026-11-07 | `fa23f03` | chore: .gitignore — ignore KiCad *-backups/*.zip in any subfolder | The old pattern only matched at the repo root, so hardware/*/minUS-backups zips showed as untracked. |

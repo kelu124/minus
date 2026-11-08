@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-08  0694925  hardware: minUS_08112026 2nd iteration + review — all must-fix resolved (ICSP GPIO21/22, mux selects GPIO25/23, D2 antiparallel, ADC node on AD2AN9/ADC2, R65/R66 gone); remaining C86/C87 → ~100 pF, DNP Cf; firmware ADC2 capture TODO
+- 2026-11-08  d0e73c0  docs: changelog/commit log — record f148c5e under Committed
 - 2026-11-08  f148c5e  hardware: add minUS_08112026 (iteration of 07112026) + review (memory 0014: fixes landed, regression = RP GPIO21/22 taken by the gain selects → PIC ICSP pair 1 disconnected); ×1 gain via PIC UGE bit instead of a 0 Ω Rf; KiCad project touch on 07112026
 - 2026-11-07  fa23f03  chore: .gitignore — ignore KiCad *-backups/*.zip in any subfolder
 - 2026-11-07  af8e892  docs: memory 0014 follow-ups — C3/C32 → 10 nF, optional 100 nF DC block + bleed before D2
