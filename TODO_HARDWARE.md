@@ -7,6 +7,12 @@ exploration progresses (session logs in `docs/claude/log/`, flaw review in
 
 Legend: **[must]** blocks a function · **[should]** works with rework · **[nice]** convenience.
 
+## Board `hardware/minUS_08112026/` (2nd iteration, review 2026-11-08, memory 0014)
+
+- All must-fix items resolved (ICSP, mux selects, input caps, clamp, termination, MCLR, AVDD ferrite, ADC node on ADC2).
+- **[should]** C86/C87 56 pF → ~100 pF (anti-alias ~6 MHz). **[nice]** DNP Cf (1–3 pF) OUT→IN− on OA1/OA2; 1–10 kΩ
+  bleed at the D2 node; 100 k pull-downs on S0/S1.
+
 ## Next board `hardware/minUS_07112026/` — review 2026-11-07 (memory 0014)
 
 - **[must]** U1 S0/S1 (`RP_GC1/RP_GC2`) floating — connect to MCU pins + pull-downs. **[must]** C3 330 pF → 10 nF (and C32 → 10 nF once R69/R70 → 0 Ω/51 Ω).

@@ -3426,6 +3426,12 @@
 		(uuid "649ed28d-8340-479a-9876-fcdc412b97ca")
 	)
 	(junction
+		(at 118.11 195.58)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "65a3d362-3f65-4cbf-97da-ca3c8e575d4d")
+	)
+	(junction
 		(at 400.05 157.48)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3606,6 +3612,10 @@
 		(uuid "f19359bc-8392-4d17-82d1-43319c2e5084")
 	)
 	(no_connect
+		(at 190.5 198.12)
+		(uuid "35aea554-a5a8-43b3-b1f5-3280dcf74683")
+	)
+	(no_connect
 		(at 314.96 226.06)
 		(uuid "affa6fcd-4c48-4625-8b8d-fe80b65be77f")
 	)
@@ -3722,6 +3732,16 @@
 			(type default)
 		)
 		(uuid "11fd3550-b2be-4020-bcf9-f6af60de069e")
+	)
+	(wire
+		(pts
+			(xy 118.11 195.58) (xy 118.11 312.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "12c48046-2fd9-411e-b0a7-f6b0fb0c218a")
 	)
 	(wire
 		(pts
@@ -3982,16 +4002,6 @@
 			(type default)
 		)
 		(uuid "325f224f-5058-4d43-b133-98abfae63dcc")
-	)
-	(wire
-		(pts
-			(xy 113.03 198.12) (xy 190.5 198.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3290c8ca-379a-45f9-84c5-9fa79332f5ae")
 	)
 	(wire
 		(pts
@@ -4945,16 +4955,6 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 195.58) (xy 118.11 312.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c1d00674-321f-44f6-b52e-bdd72c4f0346")
-	)
-	(wire
-		(pts
 			(xy 295.91 307.34) (xy 290.83 307.34)
 		)
 		(stroke
@@ -5192,6 +5192,16 @@
 			(type default)
 		)
 		(uuid "dc700388-33a8-44fb-9262-1324c71275d4")
+	)
+	(wire
+		(pts
+			(xy 113.03 195.58) (xy 118.11 195.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "df7d39e6-4c61-4919-adfa-b460b11ea0f0")
 	)
 	(wire
 		(pts
@@ -5541,7 +5551,7 @@
 	)
 	(global_label "PIC32_ADC"
 		(shape input)
-		(at 113.03 198.12 180)
+		(at 113.03 195.58 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5551,7 +5561,7 @@
 		)
 		(uuid "2d5800f5-11c8-4eb5-bcb0-c96014a04953")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 99.8848 198.12 0)
+			(at 99.8848 195.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

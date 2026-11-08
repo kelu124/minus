@@ -95,6 +95,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Next
 
+- **Firmware for board minUS_08112026 (memory 0014):** ADC2 capture of AD2AN9 (filtered node) with ADC2 DMA trigger;
+    dual-gain capture ADC1 (OA1OUT/LNA) + ADC2; gain command = RP GPIO25/23 (4052 S0/S1) + PIC `AMPxCON1.UGE` per stage.
 - **Board redesign candidate — RX LNA (owner 2026-11-06, memory 0013):** BGA2817 MMIC (24 dB, 3.3 V, LCSC C2654187)
     ahead of OA1, with the FE-A bias/coupling fixes (TODO_HARDWARE). No devkit test now; bench-check its 1–5 MHz gain
     when the redesign is prepared.
