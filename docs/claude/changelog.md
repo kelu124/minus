@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-11  docs: session 10 close — DONE.md entry, commit shas in session log
+- (none)
 
 ## Committed
 
+- 2026-11-11  8268830  docs: session 10 close — DONE.md entry, commit shas in session log
 - 2026-11-11  78dc599  hardware: 3D renders (top/bottom/angled) of minUS_08112026 + `hardware/render_3d.py` + vendored EasyEDA 3D models; headers/SMA omitted, U.FL substituted
 - 2026-11-08  d2b4c36  hardware: minUS_08112026 layout pass + Fabrication Toolkit outputs with LCSC numbers; DRC clean except the 2 QR codes; U3 MIC4427YMM substitution recorded (design files still list TC4427); gerber_to_order zip and PNGs removed by owner
 - 2026-11-08  3cb0e33  docs: changelog/commit log — record 0694925 under Committed
