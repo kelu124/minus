@@ -2,6 +2,8 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-11 — **3D renders of minUS_08112026** (session 10, memory 0015): `hardware/render_3d.py` → `minUS_F.png` / `minUS_B.png` /
+  `minUS_angled.png`; vendored EasyEDA models in `hardware/3dmodels/EasyEDA/`, stock substitutes, U.FL shown, 2×N/IDC headers + SMA omitted. Commit 78dc599.
 - 2026-11-02 — **OA2 gain path identified and made controllable** (session 08 part 3, memory 0012): OA2IN+ = OA1OUT, feedback =
   U11 MCP4531 rheostat / R49 1k → ×1.07–×11.07; RP `i2c` scan (0x2E/0x2F/0x60 alive) + `pot <0|1> [n]`, PIC `AMP2 0|1` (pic 0.1.21 /
   rp 0.1.29, proto 6). Found: the 10 k digipot limits OA2 to ~1 MHz (datasheet filed in pdfs/datasheets/).

@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-11  docs: session 10 close — DONE.md entry, commit shas in session log
 
 ## Committed
 
