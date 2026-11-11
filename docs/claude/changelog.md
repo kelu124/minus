@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-11  hardware: 3D renders (top/bottom/angled) of minUS_08112026 + `hardware/render_3d.py` + vendored EasyEDA 3D models; headers/SMA omitted, U.FL substituted
 
 ## Committed
 
