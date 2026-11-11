@@ -6,6 +6,8 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-11 | `78dc599` | hardware: 3D renders of minUS_08112026 + render_3d.py script | Repeatable populated renders (model paths remapped, U.FL substituted, headers/SMA omitted per owner). |
+| 2026-11-08 | `1abeebc` | docs: changelog/commit log — record d2b4c36 under Committed | Bookkeeping. |
 | 2026-11-08 | `d2b4c36` | hardware: minUS_08112026 layout pass + JLC outputs; U3 substitution noted | Versions the checked layout and JLC files, and records that U3's swap is not yet in the design files. |
 | 2026-11-08 | `3cb0e33` | docs: changelog/commit log — record 0694925 under Committed | Bookkeeping. |
 | 2026-11-08 | `0694925` | hardware: minUS_08112026 2nd iteration + review (all must-fix resolved) | Versions the corrected board and records that it is clear of blocking issues; logs the ADC2 firmware follow-up. |
