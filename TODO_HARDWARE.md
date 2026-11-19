@@ -1,137 +1,75 @@
-# TODO_HARDWARE — corrections for the next revision of the minus devkit
+# TODO_HARDWARE — changes for the next board revision
 
-Board under test: devkit `minUS_10102026` (removed from the tree 2026-11-19, see git history; current board = `hardware/`) (JLCPCB batch, 2 boards). This file lists what the
-next hardware revision must change, learned while bringing up this one. Keep it updated as the
-exploration progresses (session logs in `docs/claude/log/`, flaw review in
-`design/devkit/review-findings.md` (git history), as-built notes in `docs/claude/memory/0008-*.md`).
+**Current board:** minus v1.1 = `minUS_08112026` ("board 3"), KiCad project in [`hardware/`](hardware/),
+firmware rp 1.1.2 / pic 1.1.0. Items below come from the bench bring-up (session logs in `docs/claude/log/`,
+campaigns in `docs/bench/2026-11-19-*`), the datasheet errata (E1–E11, `datasheet/minus-datasheet.pdf`) and the
+design reviews (repo memory `docs/claude/memory/0014`, `0016`, `0017`, `0020`).
 
-Legend: **[must]** blocks a function · **[should]** works with rework · **[nice]** convenience.
+Legend: **[must]** blocks a function or an order · **[should]** works today with a workaround · **[nice]** convenience.
+The devkit (`minUS_10102026`) list this file used to hold is summarised at the end; the full text is in git
+history (this file before 2026-11-19).
 
-## Board 3 `minUS_08112026` (now `hardware/`) (2nd iteration, review 2026-11-08, memory 0014)
+## Before the next order
 
-- **[todo] (owner, 2026-11-19)** Add a **0 Ω (DNP-able) link between TX (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) and RX
-  (`TRANSDUCER`, C45, RF22/RF23/H10)** so a single-element probe works on one connector without an external tee. RX is
-  protected by C45 10 nF + D2 BAV99 (±0.6 V); keep the pad DNP-able for separate TX/RX probes.
+- **[must] U3 = MIC4427YMM (LCSC C152165)** in the schematic, PCB and `hardware/production/bom.csv`: they still say
+  TC4427AEUA713 (C628548, out of stock). Same MSOP-8 and pin order. Check live stock at order time (13 on 2026-10-24);
+  fallback TC4427AEOA713 (C20551, SOIC-8, footprint change). Datasheet E9.
+- **[must] OSHWA mark (owner):** apply for the UID (licences in `LICENSE.md`), put the logo + UID on the silkscreen,
+  then cite the UID in the README and the datasheet.
+- **[should] TX at +5 V during power-up (E1):** GPIO9 (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) has no pull-up, so the
+  RP2350 pad pull-down turns Q1 on until the firmware idles the pins (a few ms). Add 10 kΩ pull-up on GPIO9 and
+  10 kΩ pull-down on GPIO8.
+- **[should] Single-connector probe (E11, owner):** add a **DNP-able 0 Ω link between TX** (`Transducer`, Q1/Q2 drains,
+  RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works without an external tee.
+  RX is protected by C45 10 nF + D2 BAV99 (±0.6 V); keep it DNP for separate TX/RX probes.
+- **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.
+  Delete the dangling stubs on OA2OUT, PIC32_ADC, AVDD; enlarge the C5 reference text.
 
-- **[should] (bench 2026-11-19)** GPIO9 (`RP2354 PIO-PWM_L`, U3 IN B → Q1 P-FET gate) has no pull-up: the RP2350 pad default
-  pull-down turns **Q1 on** from power-up until the firmware idles the pins (a few ms): `Transducer` sits at +5 V DC. Add 10 k
-  pull-up on GPIO9 (and 10 k pull-down on GPIO8). The net names are also swapped vs function (PWM_H drives the low-side N-FET).
+## Signal chain
 
-- All must-fix items resolved (ICSP, mux selects, input caps, clamp, termination, MCLR, AVDD ferrite, ADC node on ADC2).
-- **[should]** C86/C87 56 pF → ~100 pF (anti-alias ~6 MHz). **[nice]** DNP Cf (1–3 pF) OUT→IN− on OA1/OA2; 1–10 kΩ
-  bleed at the D2 node; 100 k pull-downs on S0/S1.
-- **[must, before ordering] U3 = MIC4427YMM (C152165):** replaces out-of-stock TC4427AEUA713 (C628548); design files and `production/bom.csv`
-  still list the TC4427. Check the BOM line uploaded to JLC and live stock (13 on 2026-10-24).
-- **[should]** One QR code on a clear area (the 2 QR codes cause all 25 remaining DRC errors). **[nice]** Delete track stubs on OA2OUT,
-  PIC32_ADC, AVDD; C5 reference text too small.
+- **[should] Anti-alias filter:** C86/C87 56 pF → ~100 pF (corner ~10.6 → ~6 MHz).
+- **[should] Interference lines (E5)** at 2.72 MHz (in band) and 0.49 MHz enter at the front end and are up to half the
+  in-band noise at high gain. Find the source (supply / RP / LP5562 or OSC1 harmonics / layout) before the next
+  layout; at least extra filtering on the LNA supply and Vmid.
+- **[should] Period-4 fixed pattern (E4):** a 10.5 LSB rms pattern locked to the sample clock on external ADC inputs,
+  removed in firmware (`pc`), coupling path not found. Check ADC reference/AVDD decoupling and the routing of the ADC
+  node near digital lines (DMA/bus activity).
+- **[should] LNA output tap (E6):** input 1 (AD1AN1) reads 26 mV rms of flat, aliased wideband noise that does not
+  reach OA1OUT, and sits at a 1.06 V baseline. Add a series R (and/or RC) before the PIC pin, or drop the tap.
+- **[should] OA2 gain 10–20 % above nominal** (bench 2026-11-19, `docs/bench/2026-11-19-gain/`): check the 4052 Ron
+  and C44 in the gain leg; consider Rf values that absorb Ron.
+- **[nice] Internal AVDD channel (E10)** reads 3480 instead of 3840 codes (internal references need SAMC ≥ 3): check
+  AVDD/ADC-reference filtering.
+- **[nice]** DNP Cf (1–3 pF) OUT→IN− on OA1/OA2; optional 1–10 kΩ bleed at the D2 node; 100 kΩ pull-downs on the
+  4052 S0/S1 (today the RP2350 pad pull-downs hold them at reset).
 
-## Next board `hardware/minUS_07112026/` — review 2026-11-07 (memory 0014)
+## Timing and data path
 
-- **[must]** U1 S0/S1 (`RP_GC1/RP_GC2`) floating — connect to MCU pins + pull-downs. **[must]** C3 330 pF → 10 nF (and C32 → 10 nF once R69/R70 → 0 Ω/51 Ω).
-  **[must]** R17 → 0 Ω (MCLR). **[must]** D2 clamp antiparallel to GND (+ series R/T-R if TX/RX nets are joined).
-- **[should]** R69/R70 → 0 Ω/51 Ω; DNP Cf on each OA; C86/C87 → ~100 pF; PIC32_ADC → AD2AN8/9;
-  R8 → ferrite; drop R65/R66.
-- ~~×1 gain step via a 0 Ω Rf~~ — **not needed: firmware `AMPxCON1.UGE = 1`** shorts OUT to IN− inside the PIC
-  (DS70005592 §32.4.2.1) → ×1 per stage on top of the 4 mux steps (bench-check gain with the Rg leg attached).
-- **[nice]** 100 nF series cap before D2 + 1–10 kΩ bleed to GND (DC block if TX/RX nets are joined).
+- **[should] Common clock for pulse and sampling (E2/E3):** the RP fires the pulse and the PIC samples on unrelated
+  clocks (RP 12 MHz oscillator U7, PIC internal FRC ±1.5 %, no crystal). Shot to shot the pulse falls anywhere in
+  one 40 ns sample, and 14–31 % of captures slip by a whole sample (`docs/bench/2026-11-19-jitter/`). A shared
+  clock (e.g. RP clock output → PIC clock input, or a PIC REFO → RP GPIN) would make the pulse-to-comb phase
+  deterministic and give an absolute sample rate; route the pins even if the firmware does not use them yet.
+- **[should] Faster RP↔PIC data path:** the 115 200 Bd UART makes one 4095-sample shot take ~0.9 s, which is too slow
+  for live M-mode. Route the PIC SPI (or a faster UART / parallel lines into the RP PIO) between the MCUs, without
+  sharing the PIC JTAG pins (TCK/TDO/TMS default on in a blank PIC).
+- **[nice] Net names by direction:** `UART_TX`/`UART_RX` are RP-side names (`RP_TX_PIC_RX`, `PIC_TX_RP_RX` would be
+  clearer), and `PWM_H`/`PWM_L` are swapped vs function (PWM_H drives the low-side N-FET).
 
-## PIC32 reset / programming (ICSP from the RP2354A)
+## Programming, clocks, LEDs
 
-- **[must] R53 → 0 Ω** (GPIO24 → MCLR node). As built (4.7 kΩ against R5 10 kΩ) the RP cannot pull
-  MCLR below VIL; measured 2.88 V on board 1. Both boards were reworked by shorting R53.
-  Alternative: drive MCLR from the RP through a small N-FET (open-drain) so J1/PICkit can share it.
-- **[must] No capacitor on MCLR when ICSP is driven by the RP.** C31 (470 nF via JP1) kills the
-  ≥ 20 ns / < 2 µs reset blip the entry sequence needs. Either drop C31 or keep JP1 as a *normally
-  open* solder jumper; note the current footprint has no copper bridge, so assembly may or may
-  not close it (board 1 had to be cut, board 2 came open). Document the default on the silkscreen.
-- **[should] Keep R17/R18 (RP SWD ↔ J1)** but remember the RP2350 SWCLK/SWDIO pads default to
-  pull-ups: they pulled PGC1/PGD1 high through 47 Ω and faked a "PIC alive" reading. Firmware now
-  disables those pulls; a cleaner board puts the RP SWD on its own header and leaves J1 as a pure
-  Microchip ICSP connector (pins 1 MCLR, 2 VDD, 3 GND, 4 PGD1, 5 PGC1).
-- **[nice] Second ICSP pair reachable without a jumper:** PGD2 = RA0 is already the TRIG line
-  (GPIO6); route PGC2 = RA1 to a spare RP GPIO (today it only reaches H2.16) so a board can be
-  diagnosed on two pairs without a flying wire.
-- **[must] Remove the Tag-Connect footprint (J1).** Replace it with a plain 6-pin 2.54 mm ICSP
-  header (1 MCLR, 2 VDD, 3 GND, 4 PGD1, 5 PGC1, 6 NC — Snap / PICkit Basic pin order) so a
-  programmer, a meter or an analyser can be attached without a special cable or pogo pins.
-  (Owner decision 2026-10-28.)
-- **[nice] Test points** on MCLR (PIC side of R9), PGC1, PGD1: the Tag-Connect pads are 1 mm and
-  hard to probe with hook clips; a 1 Hz MCLR blink was needed to find pad 1 on the analyser.
+- **[nice] Recovery ICSP header:** v1.1 has no J1; the PIC is programmed only by the RP (works: `pic flash`, ~1 s).
+  A plain 6-pin 2.54 mm ICSP header (1 MCLR, 2 VDD, 3 GND, 4 PGD1, 5 PGC1, 6 NC) or test points on MCLR/PGC1/PGD1
+  would allow a Microchip tool or a logic analyser for recovery.
+- **[nice] OSC1 (32.768 kHz) can be DNP:** it only feeds the LP5562, and the firmware uses the LP5562 internal clock.
+- **[nice]** Keep LED2 (PIC heartbeat) — the only PIC sign of life without the USB console.
 
-## RP ↔ PIC bus (from the 2026-10-26 schematic review, memory 0008)
+## Resolved in v1.1 (from the devkit `minUS_10102026` list)
 
-- **[must] R68 ‖ R69 = 50 Ω between SPI_MOSI and SPI_MISO** (MCP4131 SDI/SDO coupling): keep one
-  resistor of 1–4.7 kΩ. Removing both kills the digipot writes.
-- **[should] JTAG defaults on and hijacks the SPI pins** (TCK = RD1, TDO = RD2, TMS = RB1): the PIC
-  firmware sets `JTAGEN = OFF`; a blank PIC cannot talk SPI. Prefer not sharing SPI with JTAG pins.
-- **[should] Bus ownership:** the RP is the only master of the digipots (SPI MCP4131, I²C
-  MCP4531/MCP4728); the PIC's SPI/I²C pins must stay Hi-Z or get their own bus.
-
-## Naming
-
-- **[nice] Name the UART nets by direction** (e.g. `RP_TX_PIC_RX`, `PIC_TX_RP_RX`): `UART_TX`/`UART_RX`
-  are RP-side names and the first PIC firmware mapped them the wrong way round (both chips drove
-  the same wire until it was caught on 2026-10-28). Same for `SPI_MOSI/MISO`, `TRIG`, `RDY`.
-
-## Power / clocks / LEDs
-
-- **[should] PIC crystal:** no crystal on the PIC (OSC pins only on H2); everything runs on the
-  FRC (8 MHz ± 1.5 %). Fine for 115200 baud and a 40 Msps capture whose rate is reported, not
-  trusted; add a crystal footprint if absolute sample timing matters.
-- **[should] WS2812 (U5) and SK6812 (LED1) DIN in parallel on GPIO10**, 5 V parts driven at 3.3 V
-  logic: marginal; use one LED and a level shifter or a 3.3 V-tolerant part.
-- **[nice] LED2 (red, PIC RC5)** is the only PIC sign of life; keep it. On board 1 it is lit steady
-  with a blank/dead PIC (RC5 stuck high) — a useful symptom.
-
-## Analog path — first measurements (board 2, 2026-10-28)
-
-- **[should] The bare ADC node needs a low-impedance driver.** With no FE path connected the node
-  sits on the R43/R44 10 k‖10 k bias (≈ 5 kΩ source) and the 12-bit ADC cannot charge its hold
-  capacitor in a 6.25 ns sampling window: the reading settles over ~60 samples and the mean drops
-  from 1.58 V (slow rate, long sampling) to 1.07 V at 26 Msps. Every FE path (op-amp output
-  through 100 Ω) must stay connected, or add a buffer at the node; keep the bias divider but make
-  it ≤ 1 kΩ Thevenin or AC-couple into a buffered mid-rail.
-- **[nice] Trigger-rate observation:** the SCCP1-triggered ADC + DMA chain tops out at ~26.6 Msps
-  (one 16-bit DMA transfer per ~6 CPU clocks); 40 Msps needs a different data path (CPU loop or
-  the ADC's own buffering). Not a board issue, noted for the design (RP2350 PIO/SPI readout vs
-  PIC DMA).
-
-- **[should] FE-A (PIC op-amps) is ground-referenced:** the RX node (`OA1IN+`) is clamped to ±0.6 V
-  around GND by D7 and OA1's gain leg R47 goes to GND, so on the single 3.3 V supply OA1 (×11) and
-  OA2 can only reproduce the positive half of the echo. Next revision: AC-couple the RX node into
-  OA1IN+ with a mid-rail bias (2 × R to 1.65 V), reference R47 to the same mid-rail, and clamp D7
-  around that bias instead of GND. Same for OA2/OA3 if used as gain stages.
-- **[must] RX node bias conflict:** R28/R36 (50 Ω) DC-couple the RX node to the OPA847/LMH6629
-  non-inverting inputs, which are biased at 2.5 V (10k/10k from 5 V), while D7 clamps the node to
-  ±0.6 V around GND: as built, the node sits at ≈ +0.6 V and both external op-amp inputs are
-  pulled off their bias. Fix: one bias domain for the node (series cap after the T/R switch, 2 × R
-  to a mid-rail, clamp D7 around that rail) and AC-couple every FE input to it (R28/R36 → C + R);
-  OA1/OA2 gain legs R47/R49 get a series cap (DC gain 1) or the same mid-rail reference.
-- **[nice] OA1OUT is also AD1AN0**: the op-amp output can be sampled with no external wiring
-  (`PINSEL 0`), which bypasses the node's clamp and anti-alias filter; a 0 Ω option from OA1OUT to
-  the ADC-node input (H5) would make the filtered path jumper-free too.
-
-- **[should] FE-A DC/AC details (session 09, memory 0013):** one shared series cap in the OA1/OA2 gain-leg
-  returns (DC gain ×1); C + re-bias to Vmid between OA1OUT and OA2IN+ (≈100 kHz HP); a clean Vmid (divider +
-  10 µF or OA3 as buffer); D7's −0.6 V clamp is likely beyond the PIC pin's −0.3 V abs max; keep OA IN− nodes
-  tiny (OA2 IN− = TMS stub); OA2 gain by GPIO legs or a 74HC4051 at the ground end of the legs (Rf ≈ 20 k).
-- **[nice] LNA ahead of OA1:** BGA2817 MMIC (24 dB, 3.3 V, SOT363, LCSC C2654187), 10 nF couplers, BAV99 clamp,
-  51 Ω termination to a decoupled Vmid that also biases OA1 IN+ — to be bench-checked at 1–5 MHz first.
-
-## Analog path (from `design/devkit/review-findings.md` (git history), not yet re-checked on hardware)
-
-- Gain distribution / digipot bandwidth, anti-alias RC corner (~6–8 MHz), LVP-only programming
-  (never 9 V VPP on the shared ICSP net), HV P-FET gate drive — see sections B–E of the review.
-
-## Assembly / batch notes
-
-- Board 1 (RP id `11A3B335E9E91355`): PIC32AK **dead** (silent on ICSP pairs 1 and 2 with the full
-  entry sequence verified by logic analyser at its pins; MCLR pin sinks ~16 µA). U2 to be replaced.
-- Board 2 (RP id `3E47314186FE29C3`): PIC answers ICSP (2026-10-28).
-- The U2 QFP-48 footprint is an EasyEDA import placed at 90°; orientation was correct on board 1.
-  Keep a clear pin-1 mark on the silkscreen.
-
-- **2026-10-28 measured (board 2, firmware `acq 8 0 1` / `acq 8 0 0`):** RX node (OA1IN+) = **0.596 V** DC
-  — exactly the D7 clamp fed by the R28/R36 paths — and OA1OUT = **3.27 V** (×11 → rail). With `AMP1 0`
-  OA1OUT falls to 0.03 V, so the op amp works and is simply saturated. Until D7/R28/R36 are fixed, the
-  PIC op-amp path cannot show an echo.
+MCLR reachable by the RP (series 0 Ω, no MCLR capacitor blocking ICSP entry); RP is the only PIC programmer, no
+Tag-Connect; 4052 gain selects driven by the RP (GPIO25/23); ×1 per stage via the PIC `AMPxCON1.UGE` bit (no 0 Ω
+Rf needed); RX on its own net with 10 nF DC blocks and a BAV99 clamp antiparallel to GND; BGA2817 LNA terminated in
+51 Ω; Vmid-biased, AC-coupled op-amp stages (the devkit's ground-referenced FE-A and RX bias conflict are gone);
+ADC node on ADC2 (AD2AN9) with a buffered path; AVDD via a ferrite; digipots, external op-amps, HV parts and the
+SPI MOSI/MISO coupling resistors removed; the WS2812/SK6812 pair replaced by an LP5562 driver (`rgb`, rp ≥ 1.1.1).
+Board 1 (dead PIC) and board 2 were devkits; board 3 (`7D4466C63B374C98`) is the v1.1 reference unit.
