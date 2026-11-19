@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-19  fw: period-4 fixed-pattern correction on the PIC (pic 0.1.24, `PC`), rp 0.1.33 `pc`, proto 9
+- (none)
 
 ## Committed
 
+- 2026-11-19  d2a1e0f  fw: period-4 fixed-pattern correction on the PIC (pic 0.1.24, `PC`), rp 0.1.33 `pc`, proto 9
 - 2026-11-19  8edfc36  bench: ADC + RX-chain noise / ENOB analysis on board 3 (bench/2026-11-19-noise, memory 0017)
 - 2026-11-19  35c0873  fw: `gain` (4052 mux + PIC UGE, rp 0.1.31 / pic 0.1.23, proto 8), `pe` retry on slow ADC lock (rp 0.1.32); gain sweep data + plots in bench/2026-11-19-gain
 - 2026-11-19  970b172  fw: pulser PIO + `pulse`/`pe` (rp 0.1.30), ADC2 capture + AMP2 on (pic 0.1.22), proto 7; first pulse-echo data + plots in bench/2026-11-19-pe
