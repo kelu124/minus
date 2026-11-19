@@ -12,7 +12,7 @@ the sha.
 
 ## Committed
 
-- 2026-11-19  (this)  TODO_HARDWARE.md rewritten for minus v1.1 (open items by area, devkit list summarised)
+- 2026-11-19  6e15051  TODO_HARDWARE.md rewritten for minus v1.1 (open items by area, devkit list summarised)
 - 2026-11-19  5786fdf  docs/intended-use.md (intended use case summary), linked from README
 - 2026-11-19  e18496e  README: rev 0.2, LP5562 (no digipots), Annex A probe, known limitations (E3/E2), sync hooks, pic id output fixed
 - 2026-11-19  2db5a1a  TODO: OSHWA marking (owner)
