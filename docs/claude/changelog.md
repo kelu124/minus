@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  bench: ADC + RX-chain noise / ENOB analysis on board 3 (bench/2026-11-19-noise, memory 0017)
 
 ## Committed
 

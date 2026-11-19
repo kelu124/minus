@@ -18,3 +18,4 @@ One line per memory file. Read this first to find the right topic.
 - [0014-board-minUS_07112026.md](0014-board-minUS_07112026.md) — New slim board (BGA2817 LNA + 74HC4052 gain mux) and its 2026-11-07 review: 4 must-fix items (floating mux selects, 330 pF LNA input cap, MCLR R17, input clamp).
 - [0015-3d-renders.md](0015-3d-renders.md) — `hardware/render_3d.py`: kicad-cli top/bottom/angled renders; vendored EasyEDA models + stock substitutes; always omit 2×N/IDC headers and SMA.
 - [0016-pulser-pulse-echo.md](0016-pulser-pulse-echo.md) — Board 3 pulser wiring/polarity, `pe` sync on RDY, ADC input codes, first echoes.
+- [0017-noise-enob.md](0017-noise-enob.md) — Board 3 noise/ENOB: ADC 10.2–10.5 bits, period-4 pin pattern, chain 6.3–8.3 bits full band / 8.2–11.4 in band, front-end limited at max gain.

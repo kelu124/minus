@@ -10,6 +10,10 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   `acq` has no retry yet); (b) `reboot dfu` intermittently returns to the app instead of BOOTSEL (since 0.1.30?); (c) TGC = gain
   steps during the A-line (mux + UGE switching mid-capture, e.g. timed by the RP); (d) LNA-tap baseline 1.06 V; (e) averaging over
   shots + a PC viewer; (f) TODO_HARDWARE GPIO9 pull-up; OA2 measured 10–20 % above nominal (Ron/C44?).
+  **Noise (part 4, `bench/2026-11-19-noise/`):** (g) period-4 fixed pattern on all external ADC inputs (fs/4, fs/2; ~10.5 LSB rms,
+  gain-independent) → subtract per capture in firmware/host, then hunt the coupling (DMA/SFR traffic, AVDD); (h) 2.72 MHz + 0.49 MHz
+  interference entering at the front end (in band at high gain); (i) LNA output = 26 mV rms aliased wideband noise at AD1AN1 → check
+  for LNA oscillation; (j) sine test (DS203 generator) for a real SINAD-based ENOB.
 - Check `HPEN = 1` on OA2 in the `AMP2` code (session 09).
 - **RESUME HERE (2026-11-02 evening): pic 0.1.20 / rp 0.1.28 = CPU 200 MHz / ADC 250 MHz on board 2; `acq` default
     div 4 = uniform 25 Msps (tone-proven, session 08 part 2, memory 0011). Open from the change: PLL2 → 320 MHz

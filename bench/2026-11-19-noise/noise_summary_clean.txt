@@ -1,0 +1,66 @@
+### pattern-removed (period-4 fixed pattern subtracted per record = random noise only)
+== ADC alone (internal references, no front end) ==
+input                      SAMC     mean  sigma LSB   p-p  ENOB_n  SNR_FS dB
+AD1AN15 band gap 0.8 V        0    828.6       0.91     7   10.35       64.1
+AD1AN14 15/16 AVDD            0   3409.0       1.04     8   10.15       62.9
+AD2AN15 band gap              0    828.9       0.88     6   10.39       64.3
+AD2AN14 15/16 AVDD            0   3166.2       1.01     7   10.20       63.1
+AD1AN15 band gap 0.8 V        3    986.9       0.83     6   10.48       64.8
+AD1AN14 15/16 AVDD            3   3481.6       0.99     6   10.22       63.3
+AD2AN15 band gap              3    989.2       0.82     7   10.49       64.9
+AD2AN14 15/16 AVDD            3   3479.4       0.89     6   10.37       64.2
+  -> AVDD from the 0.8 V band gap (AD1AN15, SAMC 3): 3.320 V (band gap spec 0.784-0.816 V, so +/-2 %)
+  -> AVDD from the 0.8 V band gap (AD2AN15, SAMC 3): 3.312 V (band gap spec 0.784-0.816 V, so +/-2 %)
+
+== Chain noise at the ADC node (in 25, no pulse, transducer connected) ==
+setting      G1    G2   G dB  sigma LSB  mV rms  ENOB_n  in-ref @OA1 in uV  @LNA in uV
+g011       1.00  1.00    0.0       3.69    2.97    8.33             2969.4      187.36
+g010       1.00  3.68   11.3       4.08    3.29    8.18              893.4       56.37
+g110       1.00  6.90   16.8       4.68    3.77    7.98              546.9       34.51
+g210       1.00  9.80   19.8       4.94    3.98    7.90              405.8       25.61
+g310       1.00 13.10   22.3       5.43    4.38    7.77              334.1       21.08
+g000       3.58  3.68   22.4       6.07    4.89    7.61              371.2       23.42
+g100       5.80  6.90   32.0       6.86    5.52    7.43              138.1        8.71
+g200       7.90  9.80   37.8       9.43    7.60    6.97               98.2        6.19
+g300      10.20 13.10   42.5      15.09   12.16    6.29               91.0        5.74
+
+Model fit sigma^2 = s0^2 + (G2 n2)^2 + (G1 G2 n1)^2 (LSB):
+  s0 (ADC + after-OA2 noise) = 4.64 LSB = 3.74 mV rms   (ADC alone measured 0.82 LSB)
+  n2 (added at OA2 input)    = 0.18 LSB = 146 uV rms
+  n1 (at OA1 input = LNA out)= 0.11 LSB = 85 uV rms  -> at LNA input (/24 dB) 5.4 uV rms
+  g011: measured 3.69, model 4.65 LSB, front-end (n1) share 0 %
+  g010: measured 4.08, model 4.71 LSB, front-end (n1) share 1 %
+  g110: measured 4.68, model 4.86 LSB, front-end (n1) share 2 %
+  g210: measured 4.94, model 5.08 LSB, front-end (n1) share 4 %
+  g310: measured 5.43, model 5.40 LSB, front-end (n1) share 7 %
+  g000: measured 6.07, model 4.89 LSB, front-end (n1) share 8 %
+  g100: measured 6.86, model 6.41 LSB, front-end (n1) share 44 %
+  g200: measured 9.43, model 9.59 LSB, front-end (n1) share 73 %
+  g300: measured 15.09, model 15.08 LSB, front-end (n1) share 88 %
+
+== Taps (no pulse) ==
+  AD1AN1 LNA out (OA1IN+)   g011: sigma 32.63 LSB = 26292 uV rms, mean 1339
+  AD1AN1 LNA out (OA1IN+)   g000: sigma 32.60 LSB = 26261 uV rms, mean 1339
+  AD1AN1 LNA out (OA1IN+)   g300: sigma 32.19 LSB = 25931 uV rms, mean 1339
+  AD1AN0 OA1OUT             g011: sigma 4.62 LSB = 3722 uV rms, mean 2050
+  AD1AN0 OA1OUT             g000: sigma 7.27 LSB = 5854 uV rms, mean 2047
+  AD1AN0 OA1OUT             g300: sigma 2.64 LSB = 2127 uV rms, mean 2046
+
+== Noise spectra, input-referred to the OA1 input (= LNA output) ==
+  g011: median 2-5 MHz 201 nV/rtHz at OA1 in = 12.7 nV/rtHz at LNA in; top spurs: 12.43 MHz +29 dB, 6.21 MHz +27 dB, 12.19 MHz +11 dB
+  g010: median 2-5 MHz 64 nV/rtHz at OA1 in = 4.0 nV/rtHz at LNA in; top spurs: 12.43 MHz +26 dB, 6.21 MHz +25 dB, 12.19 MHz +8 dB
+  g000: median 2-5 MHz 35 nV/rtHz at OA1 in = 2.2 nV/rtHz at LNA in; top spurs: 12.43 MHz +26 dB, 6.21 MHz +22 dB, 2.72 MHz +11 dB
+  g100: median 2-5 MHz 24 nV/rtHz at OA1 in = 1.5 nV/rtHz at LNA in; top spurs: 6.21 MHz +19 dB, 12.43 MHz +18 dB, 2.72 MHz +17 dB
+  g300: median 2-5 MHz 13 nV/rtHz at OA1 in = 0.8 nV/rtHz at LNA in; top spurs: 0.49 MHz +24 dB, 2.72 MHz +22 dB, 6.21 MHz +18 dB
+  LNA tap AD1AN1 (as read by the ADC): median 2-5 MHz 328 nV/rtHz, flat to Nyquist = wideband (aliased) noise
+
+== Echo SNR (gain sweep captures, echo pp vs the chain noise at that gain) ==
+  g011: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  33.2    22.6    14.4     9.5    (* clipped)
+  g010: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  43.4    33.3    21.6    14.7    (* clipped)
+  g110: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  48.0    37.1    26.0    17.4    (* clipped)
+  g210: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  49.0*   39.9    28.3    18.5    (* clipped)
+  g310: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  48.3*   41.6    30.4    19.7    (* clipped)
+  g000: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  47.4*   41.1    28.4    18.9    (* clipped)
+  g100: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  46.4*   46.3*   37.0    27.1    (* clipped)
+  g200: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  43.5*   43.6*   39.4    28.5    (* clipped)
+  g300: echo SNR (sine-equivalent, dB) at 41/80/121/161 us:  39.5*   39.4*   38.5    27.4    (* clipped)

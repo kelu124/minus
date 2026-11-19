@@ -1,0 +1,13 @@
+noise in 1.5-5 MHz (brick-wall FFT band-pass, period-4 pattern removed); 'w/o 2.72' = also notching 2.72 MHz +-0.15
+set        G sigma LSB  w/o 2.72 SNR_FS dB  ENOB_n  @OA1in uV nV/rtHz@OA1in nV/rtHz@LNAin
+g011     1.0      0.48      0.45      70.2   11.36      362.3         193.7         12.22
+g010     3.7      0.59      0.52      68.9   11.14      114.4          61.2          3.86
+g110     6.9      0.77      0.61      67.5   10.93       71.0          37.9          2.39
+g210     9.8      0.95      0.66      66.8   10.81       54.3          29.0          1.83
+g310    13.1      1.24      0.83      64.8   10.48       51.0          27.3          1.72
+g000    13.2      1.36      1.03      62.9   10.16       63.1          33.7          2.13
+g100    40.0      3.34      2.02      57.1    9.19       40.7          21.8          1.37
+g200    77.4      5.40      2.88      54.0    8.68       29.9          16.0          1.01
+g300   133.6      8.02      4.17      50.8    8.15       25.1          13.4          0.85
+ADC alone (AD2AN15, 24.86 Msps) in band: 0.40 LSB -> SNR_FS 71.1 dB, ENOB_n 11.53 (band = 28 % of Nyquist: +5.5 dB processing gain)
+thermal noise of 50 ohm: 0.91 nV/rtHz
