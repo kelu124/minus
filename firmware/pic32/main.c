@@ -164,6 +164,12 @@ int main(void) {
                     AMP2CON1bits.AMPEN = line[5] == '1';
                     char out[24]; snprintf(out, sizeof out, "AMP2 %u\n", (unsigned)AMP2CON1bits.AMPEN);
                     uart1_puts(out);
+                } else if (!strncmp(line, "PC", 2) && (line[2] == ' ' || line[2] == '?')) {
+                    // PC 0|1: period-4 fixed-pattern correction off/on (on at boot); PC? = state + last offsets (LSB/16)
+                    if (line[2] == ' ') acq_set_pc(line[3] == '1');
+                    const int32_t *o; unsigned on = acq_get_pc(&o);
+                    char out[64]; snprintf(out, sizeof out, "PC %u %ld %ld %ld %ld\n", on, (long)o[0], (long)o[1], (long)o[2], (long)o[3]);
+                    uart1_puts(out);
                 } else if (!strncmp(line, "UGE ", 4)) {
                     // UGE <a1> <a2>: op amp unity-gain enable (AMPxCON1.UGE, DS70005592 §32.4.2.1 = internal OUT -> IN- short,
                     // gain 1 whatever the external Rf/Rg). Board 3: the RP picks Rf via the 4052 (GPIO25/23); UGE = 1 bypasses

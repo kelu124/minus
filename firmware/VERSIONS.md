@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 0.1.33 | `pc [0\|1]` (pattern-correction state + last offsets); proto 9; embeds pic 0.1.24 |
+| 2026-11-19 | pic32  | 0.1.24 | **period-4 fixed-pattern correction** in `acq_run`/`acq_run_adc2` (per-phase mean of samples 64..N minus the mean, 1/16 LSB, clamped; navg 1 only; on at boot), `PC 0\|1` / `PC?`; proto 9. Bench: σ 8.94 → 3.57 LSB at ×1, residual pattern 0.17 LSB rms (`bench/2026-11-19-pc/`) |
 | 2026-11-19 | rp2354 | 0.1.32 | `pe` retries (up to 8 shots) when the fill exceeds 4095 × 40 ns + 5 % (ADC locked to the 40/60/60 ns pattern); `acq_receive` returns a status |
 | 2026-11-19 | rp2354 | 0.1.31 | `gain [leg [u1 [u2]]]`: 4052 selects GPIO25 (S0) / GPIO23 (S1) driven low at boot, PIC `UGE` per stage; gain printed in the `pe` header; proto 8; embeds pic 0.1.23 |
 | 2026-11-19 | pic32  | 0.1.23 | `UGE a1 a2` link command: AMP1/AMP2 `UGE` (unity-gain, internal OUT→IN−), amp disabled around the change; proto 8 |

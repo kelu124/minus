@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  fw: period-4 fixed-pattern correction on the PIC (pic 0.1.24, `PC`), rp 0.1.33 `pc`, proto 9
 
 ## Committed
 

@@ -503,6 +503,18 @@ static void cmd_gain(const char *arg) {
     }
     char d[160]; gain_desc(d, sizeof d); printf("%s\n", d);
 }
+// pc [0|1]: PIC-side period-4 fixed-pattern correction (on at PIC boot) off/on; prints state + the last capture's offsets
+static void cmd_pc(const char *arg) {
+    char tx[16], rx[64];
+    if (arg && *arg) { if (strcmp(arg, "0") && strcmp(arg, "1")) { printf("usage: pc [0|1]\n"); return; } snprintf(tx, sizeof tx, "PC %s\n", arg); }
+    else snprintf(tx, sizeof tx, "PC?\n");
+    link_flush_rx(); link_puts(tx);
+    if (link_readline(rx, sizeof rx, LINK_TIMEOUT_US) < 0) { printf("pc: no reply\n"); return; }
+    int on; long o[4];
+    if (sscanf(rx, "PC %d %ld %ld %ld %ld", &on, &o[0], &o[1], &o[2], &o[3]) != 5) { printf("pc: bad reply '%s'\n", rx); return; }
+    printf("pattern correction %s; last capture offsets (LSB, phase 0..3): %+.2f %+.2f %+.2f %+.2f\n", on ? "ON" : "off",
+           o[0] / 16.0, o[1] / 16.0, o[2] / 16.0, o[3] / 16.0);
+}
 static void cmd_acqcpu(const char *arg) {
     // acqcpu [trg [rptcnt]]: CPU-loop capture on the PIC (no DMA). trg 2 = back-to-back conversions (period
     // 32 ns at samc 0, 64 ns at samc 1, ...), trg 3 = ADC repeat timer every (rptcnt+1) x 16 ns (TAD at the 250 MHz ADC clock).
@@ -587,6 +599,7 @@ static void help(void) {
            "  pulse [hi [lo [dead]]]  one pulser shot now (board 3, GPIO8/9 -> U3 -> Q1/Q2): +5 V hi ns (200), both off dead ns (27, min 4 cycles), GND lo ns (500), then released\n"
            "  pe [hi [lo [in [dead]]]]  pulse-echo: pulser fires on the PIC's RDY rise = ADC start, 4095 samples at 25 Msps on in (25 = AD2AN9 node default; 0 OA1OUT, 1 LNA/OA1IN+, 17 OA2OUT)\n"
            "  gain [leg [u1 [u2]]]  RX gain (board 3): leg 0..3 = 4052 Rf 2.2k/4.7k/6.8k/10k on both stages (x3.2/x5.7/x7.8/x11 each, Rg 1k); u1/u2 = 1 -> OA1/OA2 at x1 (PIC UGE). No args = show\n"
+           "  pc [0|1]    period-4 fixed-pattern correction on the PIC (acq/pe, single conversions; on at boot) + last offsets\n"
            "  i2c         scan the I2C0 bus (MCP4531 x2, MCP4728, OLED)\n"
            "  pot <0|1> [n]  MCP4531 wiper read / set 0..128: 0 = U11 (OA2 feedback: gain x1..x11, power-on 64 = ~x6), 1 = U18 (AD8338)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
@@ -644,6 +657,7 @@ int main(void) {
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "pe", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pe(line[2] == ' ' ? line + 3 : "");
+        else if (!strncmp(line, "pc", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pc(line[2] == ' ' ? line + 3 : "");
         else if (!strncmp(line, "gain", 4) && (line[4] == 0 || line[4] == ' ')) cmd_gain(line[4] == ' ' ? line + 5 : "");
         else if (!strncmp(line, "pulse", 5) && (line[5] == 0 || line[5] == ' ')) cmd_pulse(line[5] == ' ' ? line + 6 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",

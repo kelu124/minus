@@ -121,6 +121,30 @@ void acq_init(void) {
     DMA1SELbits.CHSEL = 0x2C;           // Table 16-2: 0x2C "ADC1 - AN1" (channel 1) — used by acq_il_run
 }
 
+// Period-4 fixed-pattern correction (bench 2026-11-19, memory 0017): every external ADC input carries a pattern locked to
+// the 40 ns sample clock with a period of 4 samples (one sample in four ~23 LSB low, ~10.5 LSB rms, independent of the
+// analog gain, phase random per capture; internal inputs are clean). Estimated per capture as the mean of each phase
+// (samples ACQ_PC_SKIP..N) minus the overall mean, and subtracted. Echo content averages out across the 4 phases (it is
+// not locked to fs/4). Single conversions only (navg 1), clamped to 0..4095.
+#define ACQ_PC_SKIP 64u
+static unsigned acq_pc_on = 1;
+static int32_t  acq_pc_off[4];
+void acq_set_pc(unsigned on) { acq_pc_on = on ? 1u : 0u; }
+unsigned acq_get_pc(const int32_t **off) { if (off) *off = acq_pc_off; return acq_pc_on; }
+static void acq_pc_apply(void) {
+    int32_t sum[4] = {0, 0, 0, 0}, cnt[4] = {0, 0, 0, 0}, tot = 0, n = 0;
+    for (unsigned i = ACQ_PC_SKIP; i < ACQ_N; i++) { sum[i & 3u] += acq_buf[i]; cnt[i & 3u]++; tot += acq_buf[i]; n++; }
+    for (unsigned k = 0; k < 4; k++) {   // offset in 1/16 LSB, rounded: (mean_k - mean) * 16
+        int64_t a = (int64_t)sum[k] * 16 * n - (int64_t)tot * 16 * cnt[k], d = (int64_t)cnt[k] * n;
+        acq_pc_off[k] = (int32_t)((a >= 0 ? a + d / 2 : a - d / 2) / d);
+    }
+    for (unsigned i = 0; i < ACQ_N; i++) {
+        int32_t v = (int32_t)acq_buf[i] * 16 - acq_pc_off[i & 3u];
+        v = (v >= 0 ? v + 8 : v - 8) / 16;
+        acq_buf[i] = (uint16_t)(v < 0 ? 0 : v > 4095 ? 4095 : v);
+    }
+}
+
 // ADC2 variant of acq_run (input codes 16..31): identical chain on the second core — SCCP1 Trigger out ->
 // AD2CH0 (TRG1SRC 12) -> DMA0 (CHSEL 0x40 "ADC2 - AN0", Table 16-2) -> acq_buf. Board 3 (minUS_08112026) puts
 // the filtered RX node (net PIC32_ADC) on AD2AN9 = code 25, the default since fw 0.1.22. ADC1 CH0 is idled
@@ -168,6 +192,7 @@ static acq_status_t acq_run_adc2(uint32_t *ticks) {
     AD1CH0CONbits.TRG1SRC = 12;
     DMA0SELbits.CHSEL = 0x2B;
     (void)AD2CH0DATA;
+    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;
 }
@@ -224,6 +249,7 @@ acq_status_t acq_run(uint32_t *ticks) {
     else if (DMA0STATbits.DONE == 0) st = ACQ_TIMEOUT;
     else if (DMA0STATbits.OVERRUN) st = ACQ_OVERRUN;   // a trigger arrived while the previous transfer was still running: samples dropped
     DMA0CHbits.CHEN = 0;
+    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;
 }

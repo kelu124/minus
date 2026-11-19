@@ -35,6 +35,8 @@ unsigned     acq_get_navg(void);
 acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned phase, uint32_t *ticks);   // CPU-loop reader: trg 2 back-to-back (rate by SAMC), 3 repeat timer (r+1)*12.5 ns
 acq_status_t acq_il_run(unsigned off, unsigned navg, uint32_t *ticks);   // two-channel interleave: CH0 on SCCP1, CH1 on SCCP2 offset by off counts (0 = div/2+1), navg-sums each; result in acq_buf[ACQ_IL_N]
 uint32_t     acq_adc_bb(unsigned n, unsigned ovs, uint32_t *data);   // DMA-free ADC throughput test: Timer1 ticks for n back-to-back conversions
+void         acq_set_pc(unsigned on);      // period-4 fixed-pattern correction on (default) / off; acq_run only, navg 1
+unsigned     acq_get_pc(const int32_t **off); // on/off + last per-phase offsets (1/16 LSB)
 extern uint16_t acq_buf[ACQ_N];            // unsigned 12-bit right-aligned samples
 
 #endif
