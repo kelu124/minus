@@ -7,7 +7,7 @@ The full texts are in [`LICENSES/`](LICENSES/).
 |---|---|---|---|
 | Hardware design | `hardware/` (except `hardware/3dmodels/`, see below) | TAPR Open Hardware License v1.0 | [`LICENSES/TAPR-OHL-1.0.txt`](LICENSES/TAPR-OHL-1.0.txt) |
 | Firmware (sources and the built `.uf2` / `.hex` images) | `firmware/` | GNU General Public License v3.0 or later (`GPL-3.0-or-later`) | [`LICENSES/GPL-3.0-or-later.txt`](LICENSES/GPL-3.0-or-later.txt) |
-| Python library, notebooks and scripts (bench capture / analysis, rendering) | `python/`, `docs/bench/**/*.py`, `docs/bench/**/*.sh`, `hardware/render_3d.py`, `firmware/rp2354/tools/` | GNU General Public License v3.0 or later (`GPL-3.0-or-later`) | [`LICENSES/GPL-3.0-or-later.txt`](LICENSES/GPL-3.0-or-later.txt) |
+| Python library, notebooks and scripts (bench capture / analysis, rendering) | `python/`, `docs/bench/**/*.py`, `docs/bench/**/*.sh`, `datasheet/piezo_test/*.py`, `hardware/render_3d.py`, `firmware/rp2354/tools/` | GNU General Public License v3.0 or later (`GPL-3.0-or-later`) | [`LICENSES/GPL-3.0-or-later.txt`](LICENSES/GPL-3.0-or-later.txt) |
 | Documentation, datasheet and bench data | `datasheet/`, `docs/`, the Markdown files at the root and in the other folders | Creative Commons Attribution-ShareAlike 4.0 International (`CC-BY-SA-4.0`) | [`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt) |
 
 Copyright © kelu124

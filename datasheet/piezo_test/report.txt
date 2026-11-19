@@ -1,0 +1,8 @@
+BiViPiezo.s1p: 606 points, 2.00-5.60 MHz, Z0 50 ohm
+RL dip 3.308 MHz: 17.5 dB, Z = 55.3 -13.1j ohm
+RL dip 4.164 MHz: 15.5 dB, Z = 58.4 +16.4j ohm
+-10 dB return-loss band 3.12-4.38 MHz (contiguous: False)
+series resonance (max G) fs = 3.766 MHz, G = 38.71 mS; parallel resonance (max R) fp = 4.325 MHz, R = 80.4 ohm; phase zero at 3.220, 3.737, 4.268 MHz
+-10 dB sub-bands: 3.12-3.74, 3.83-4.38 MHz; between the dips RL falls to 9.8 dB at 3.78 MHz
+|Z| over 3.0-4.4 MHz: 26-83 ohm; band-edge susceptance -5.5 mS (inductive) -> matched probe (integrated network), BVD fit of the ceramic not applicable
+at 3.30 MHz: |Z| = 57.9 ohm, phase -12.7 deg, RL 17.5 dB

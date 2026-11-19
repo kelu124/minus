@@ -43,6 +43,7 @@
 \input{values.tex}
 \input{noise_rows.tex}
 \input{jitter_values.tex}
+\input{piezo_values.tex}
 
 \definecolor{accent}{HTML}{1F5FA8}
 \definecolor{accentlight}{HTML}{E8F0FA}
@@ -176,7 +177,7 @@ switchable 0–42\,dB receive chain and 12-bit 25\,Msps acquisition}
 \vspace{6pt}
 \begin{tcolorbox}[colback=accentlight,colframe=accent,arc=1mm,boxrule=0.5pt,title={\bfseries How to read this datasheet},fonttitle=\small]
 \small Values marked \meas{} were measured on one board (RP2354A unique ID \vuid, firmware rp~\vrpfw{} / pic~\vpicfw{}, link protocol~\vproto; the released firmware rp~\rpfwrel{} / pic~\picfwrel{} has the same acquisition code, plus the LP5562 LED driver and new names)
-with a 3.3\,MHz single-element piezo transducer connected, at room temperature, powered from a PC USB port. Values marked \des{} come
+with a 3.3\,MHz single-element piezo transducer connected (characterised in Annex~\ref{sec:piezo}), at room temperature, powered from a PC USB port. Values marked \des{} come
 from the schematic, the component datasheets or the firmware and were not independently measured. Every measurement can be
 reproduced with the scripts in \texttt{docs/bench/2026-11-19-*/} of the repository (\repo); the raw captures are stored next to them.
 There is a single unit: no min/max over production is available.
@@ -579,7 +580,7 @@ Thickness & 1.6\,mm, 4 copper layers\\
 Mounting & 4 × M2 (2.2\,mm, padded)\\
 Components & 120 footprints, 39 R, 47 C\\
 Main ICs & RP2354A (QFN-60), PIC32AK1216GC41048 (TQFP-48), BGA2817 (SC-70-6), 74HC4052 (TSSOP-16), TC4427/MIC4427 (MSOP-8), AP2112K (SOT-23-5), LP5562 (DSBGA-12)\\
-Design files & \texttt{hardware/minUS\_08112026/} (KiCad), JLC outputs in \texttt{production/}\\\bottomrule
+Design files & \texttt{hardware/} (KiCad), JLC outputs in \texttt{hardware/production/}\\\bottomrule
 \end{tabular}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.46\textwidth}
@@ -604,7 +605,43 @@ Design files & \texttt{hardware/minUS\_08112026/} (KiCad), JLC outputs in \textt
 \textbf{Rev} & \textbf{Date} & \textbf{Change}\\\midrule
 0.1 & 2026-11-19 & First release: board 3 bring-up, firmware rp \vrpfw{} / pic \vpicfw, measurements of session 11.\\
 0.2 & 2026-11-19 & Board named v1.1; firmware rp \rpfwrel{} / pic \picfwrel{} (LP5562 \cmd{rgb} with brightness, E7 fixed); Python library + notebooks;\\
-    &            & E3 sample-comb phase study (400 shots); licenses and repository links.\\\bottomrule
+    &            & E3 sample-comb phase study (400 shots); licenses and repository links; Annex A test transducer.\\\bottomrule
 \end{tabular}
+
+\newpage
+% ====================================================================== annex A
+\section*{Annex A — Test transducer}\label{sec:piezo}
+\addcontentsline{toc}{section}{Annex A — Test transducer}
+Every \meas{} value in this datasheet was taken with the same single-element piezo probe (``BiVi piezo'', 3.3\,MHz nominal),
+on TX and RX. Its one-port reflection was measured by the owner with a NanoVNA
+(\texttt{datasheet/piezo\_test/BiViPiezo.s1p}: \vPnpts{} points, \vPfmin–\vPfmax\,MHz, S\textsubscript{11} re/im, 50\,Ω). The values
+below come from \texttt{datasheet/piezo\_test/analyze\_s1p.py}. The measurement is at the VNA port, so it includes any cable or adapter.
+
+\small
+\begin{longtable}{@{}p{62mm}p{60mm}r@{}}\toprule
+\textbf{Parameter} & \textbf{How} & \textbf{Value}\\\midrule\endhead
+Return-loss dip 1 & minimum of |S\textsubscript{11}| & \vPdipa\,MHz, \vPrla\,dB, Z = \vPza\,Ω\\
+Return-loss dip 2 & second minimum & \vPdipb\,MHz, \vPrlb\,dB, Z = \vPzb\,Ω\\
+Return loss between the dips & worst point between them & \vPmidrl\,dB at \vPmidf\,MHz\\
+Return loss ≥ 10\,dB & (VSWR ≤ 1.92) & \vPsubs\,MHz\\
+|Z| over 3.0–4.4\,MHz & & \vPzlo–\vPzhi\,Ω\\
+Impedance at 3.30\,MHz & & \vPzmag\,Ω, \vPzph°\\
+Conductance peak & max Re(1/Z) & \vPfs\,MHz\\
+Resistance peak & max Re(Z) & \vPfp\,MHz\\
+Phase zero crossings & & \vPzc\,MHz\\\bottomrule
+\end{longtable}
+\normalsize
+The probe looks \textbf{electrically matched to 50\,Ω}: |Z| stays within \vPzlo–\vPzhi\,Ω across 3–4.4\,MHz, the response loops round
+the centre of the Smith chart, and away from resonance the susceptance is inductive. A bare ceramic would be capacitive there, so a
+Butterworth–Van Dyke fit of the element itself does not apply. The double dip is typical of a matched, damped probe. The acoustic
+echo band measured through the board (electrical characteristics, ``Echo −6\,dB band'': \vbwlo–\vbwhi\,MHz, peak
+\vfpeak\,MHz) sits on the lower dip. The 200\,ns unipolar pulse, the two-way transducer response and the RX anti-alias filter all
+weight the echo spectrum towards lower frequencies.
+\begin{figure}[h]\centering
+\includegraphics[width=\textwidth]{figures/piezo_impedance.pdf}\\[2pt]
+\includegraphics[width=0.9\textwidth]{figures/piezo_vna.png}
+\caption{Test transducer, S\textsubscript{11} from \texttt{BiViPiezo.s1p}. Top: return loss, impedance (|Z|, R, X), admittance (G, B;
+dashed = conductance peak). Bottom: the NanoVNA screen as measured (markers at the two return-loss dips).}
+\end{figure}
 
 \end{document}
