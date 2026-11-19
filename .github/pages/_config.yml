@@ -1,0 +1,6 @@
+title: minus
+description: A minimal, single-channel, low-cost, open-source ultrasound pulse-echo platform
+theme: jekyll-theme-cayman
+markdown: kramdown
+kramdown:
+  input: GFM
