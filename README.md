@@ -10,33 +10,36 @@ workshop (e.g. **muscle-contraction monitoring**, A-/M-mode) and then extend and
 experiment with (coded excitation, on-device DSP, add-on boards).
 
 > ⚠️ **Status: working prototype (minus v1.1, board `minUS_08112026`).** Pulse-echo, the
-> switchable RX gain and the fixed-pattern correction work on the bench, and the
-> [datasheet rev 0.1](datasheet/minus-datasheet.pdf) gives measured figures.
-> Board **minus v1.1**; firmware RP2354A **1.1.2**, PIC32AK **1.1.0**, link protocol **10**.
+> switchable RX gain, the fixed-pattern correction and the RGB LED work on the bench, and the
+> [datasheet rev 0.2](datasheet/minus-datasheet.pdf) gives measured figures, errata and the
+> test transducer (Annex A). Firmware RP2354A **1.1.2**, PIC32AK **1.1.0**, link protocol **10**.
+> Source: <https://github.com/kelu124/minus>.
 > Non-clinical, for **research / education / NDT** only; not a medical device.
 
 ![minUS board 3](hardware/minUS_angled.png)
 
 ## What it is (at a glance)
 
-- **Two MCUs:** a Raspberry Pi **RP2354A** (USB-C console, pulse timing via PIO, RGB LED,
-  digipots, ICSP programmer for the PIC) and a Microchip **PIC32AK1216GC41048** (on-chip
+- **Two MCUs:** a Raspberry Pi **RP2354A** (USB-C console, pulse timing via PIO, gain mux,
+  LP5562 RGB LED over I²C, ICSP programmer for the PIC) and a Microchip **PIC32AK1216GC41048** (on-chip
   ADCs and op amps: captures the A-line, 4095 samples at up to ~25 Msps).
 - **Front end:** TC4427/MIC4427-driven 3-level pulser → protected RX → two-stage op-amp gain
   (4 legs per stage via analog mux, ×1 bypass) → PIC ADC.
-- **Transducer:** 3–4 MHz single-element piezo; raw RF A-mode.
+- **Transducer:** 3–4 MHz single-element piezo, separate TX and RX connectors (SMA + U.FL); raw RF A-mode.
+  The probe used for all measurements is characterised from its S11 in datasheet Annex A
+  ([`datasheet/piezo_test/`](datasheet/piezo_test/)).
 - **Open:** open hardware + firmware + docs, designed for JLCPCB fabrication
-  (see [LICENSE.md](LICENSE.md)).
+  (see [LICENSE.md](LICENSE.md)); OSHWA certification planned.
 
 ## Repository map
 
 | Path | What's there |
 |------|--------------|
-| [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, board 3 = `minUS_08112026`), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
+| [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, minus v1.1 = `minUS_08112026`), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
 | [`firmware/`](firmware/README.md) | `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) sources, **built images committed** in `*/build/`, [`VERSIONS.md`](firmware/VERSIONS.md). |
 | [`python/`](python/README.md) | `minus` Python library (one method per CLI command, firmware-sync check, offline tests) + step-by-step [notebooks](python/notebooks/). |
-| [`datasheet/`](datasheet/) | Product datasheet (LaTeX source, figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)). |
-| [`docs/bench/`](docs/bench/) | Bench campaigns: raw captures, capture/analysis scripts and a README per campaign. |
+| [`datasheet/`](datasheet/) | Product datasheet rev 0.2 (LaTeX source, generated values/figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)); [`piezo_test/`](datasheet/piezo_test/) = test-probe S11 (Annex A). |
+| [`docs/bench/`](docs/bench/) | Bench campaigns: raw captures, capture/analysis scripts and a README per campaign (pulse-echo, gain, noise, pattern correction, datasheet, [E3 comb-phase jitter](docs/bench/2026-11-19-jitter/)). |
 | [`docs/claude/`](docs/claude/README.md) | Working notes: session logs, decision memory, TODO/DONE, changelog. |
 | [`TODO_HARDWARE.md`](TODO_HARDWARE.md) | Corrections queued for the next board revision. |
 | [`LICENSE.md`](LICENSE.md), [`LICENSES/`](LICENSES/) | Per-folder licenses. |
@@ -79,8 +82,8 @@ takes the `.uf2` over its USB bootloader, and then programs the PIC itself.
 Makefile already passes the two flags XC-DSC needs for this part: the device linker script
 `-T <DFP>/xc32/support/PIC32A/gld/p32AK1216GC41048.gld` and `-mdfp=` for `xc-dsc-bin2hex`.
 
-**Bench scripts / datasheet:** Python 3 with `numpy`, `matplotlib`, `pyserial`;
-`pdflatex` for the datasheet (`make -C datasheet`).
+**Python library, bench scripts, datasheet:** Python 3 with `pyserial` and `numpy` (plus `matplotlib` and
+`jupyter` for the notebooks and plots); `pdflatex` for the datasheet (`make -C datasheet`).
 
 ### Build
 
@@ -103,7 +106,7 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
 2. **Console:** `picocom /dev/ttyACM0` (any baud; it is USB CDC), or one-shot from a script with
    `python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "version" --wait=1`. Type `help` for the
    command list, then `version` and check the version numbers **before** going further.
-3. **PIC32AK, from the RP:** `pic id` must print `DEVID 0x09da2053 … PIC32AK1216GC41048`, then run
+3. **PIC32AK, from the RP:** `pic id` must print `… DEVID 0x9da2 DEVREV 2 -> PIC32AK1216GC41048`, then run
    `pic flash` (erase, program, verify, ~1 s). It writes the PIC image embedded in the RP firmware,
    so check `version` first. With a Microchip tool on J1 instead:
    `make -C firmware/pic32 flash TOOL=SNAP` (or `PKBASIC`, `PK4`, `PK5`, `ICD4`, `ICD5`, `ICE4`).
@@ -114,6 +117,23 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
    [`docs/bench/`](docs/bench/).
 6. **From Python:** `pip install -e python/library`, then follow [`python/notebooks/`](python/notebooks/)
    (`from minus import Minus; dev = Minus(); dev.pe()`). See [`python/README.md`](python/README.md).
+
+## Known limitations
+
+The full list is in the datasheet errata; the ones that matter when you use the data:
+- **Sample-comb phase (E3):** the pulse falls anywhere within one 40 ns sample from shot to shot, and in 14–31 % of captures
+  the comb slips by a whole sample during the capture. Align shots on the echo of interest before averaging
+  ([`docs/bench/2026-11-19-jitter/`](docs/bench/2026-11-19-jitter/)).
+- **ADC slow lock (E2):** detected on the PIC; `pe` and `acq` re-shoot automatically.
+- **Link speed:** 115 200 Bd between the MCUs, so one 4095-sample shot takes ~0.9 s end to end.
+- **TX and RX are separate nets:** a single-element probe on one connector needs an external tee for now.
+
+## Keeping firmware and Python in sync
+
+`python/library` is checked against the firmware sources (commands, `help` usages, link protocol, versions, a fingerprint
+of every source file) by `python -m minus.fwsync`. It runs automatically after firmware edits in Claude Code and on
+`git commit`; enable the git hook once per clone with `git config core.hooksPath .githooks`. Details in
+[`python/README.md`](python/README.md).
 
 ## Lineage & credits
 

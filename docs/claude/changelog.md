@@ -12,6 +12,7 @@ the sha.
 
 ## Committed
 
+- 2026-11-19  (this)  README: rev 0.2, LP5562 (no digipots), Annex A probe, known limitations (E3/E2), sync hooks, pic id output fixed
 - 2026-11-19  2db5a1a  TODO: OSHWA marking (owner)
 - 2026-11-19  9fdb4a3  .gitignore: ignore .vscode/
 - 2026-11-19  0cc7e98  datasheet Annex A: test transducer from BiViPiezo.s1p (analyze_s1p.py, generated table + plots, VNA screenshot); mechanical paths fixed
