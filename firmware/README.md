@@ -90,7 +90,7 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | Command | Does |
 |---------|------|
 | `version` | firmware name/version, build date, pico-sdk version, chip id / package / revision, 64-bit unique id |
-| `rgb R G B` | RGB LED, 0–255 per channel: **LP5562 U5 over I²C 0x30** on board 3 / v1.1 (reply `rgb R G B (LP5562 0x30: ok\|not found)`, rp ≥ 1.1.1) and the WS2812/SK6812 line on GPIO10 (devkit) |
+| `rgb R G B [pct]` | RGB LED, 0–255 per channel: **LP5562 U5 over I²C 0x30** on board 3 / v1.1 at `pct` % brightness (0–100, default 25 = dim; reply `rgb R G B pct% (LP5562 0x30: ok\|not found)`, rp ≥ 1.1.2) and the WS2812/SK6812 line on GPIO10 (devkit) |
 | `reboot` / `reboot dfu` | reset the RP2354 / reboot into BOOTSEL so the UF2 drive appears (no button needed) |
 | `ping`, `auto`, `stop`, `stat` | one PING/PONG, PING every 500 ms, stop, counters |
 | `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |

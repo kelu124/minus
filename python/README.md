@@ -9,7 +9,7 @@ through them with the real bytes on the wire.
 | [`library/tests/`](library/tests/) | offline tests replaying replies recorded from a real board (`fixtures/board3_transcript.json`) |
 | [`notebooks/`](notebooks/) | step-by-step worked examples, executed on a board (outputs kept) |
 
-Written for firmware **rp 1.1.1 / pic 1.1.0, link protocol 10** (`minus.FIRMWARE`). On connect the library reads
+Written for firmware **rp 1.1.2 / pic 1.1.0, link protocol 10** (`minus.FIRMWARE`). On connect the library reads
 both versions and warns if the board runs something else.
 
 ## Install
@@ -46,7 +46,7 @@ reply. Long captures (`pe`, ~0.9 s, 4097 lines) frame the same way as one-liners
 | `pulse [hi [lo [dead]]]` | `pulse(hi, lo, dead)` | `Pulse` |
 | `gain [leg [u1 [u2]]]` | `gain(leg, u1, u2)` | `Gain` |
 | `pc [0\|1]` | `pattern_correction(on)` | `PatternCorrection` |
-| `rgb R G B` | `rgb(r, g, b)` | True if the LP5562 acknowledged |
+| `rgb R G B [pct]` | `rgb(r, g, b, pct)` (pct = LP5562 brightness %, default 25) | True if the LP5562 acknowledged |
 | `i2c`, `pot <0\|1> [n]` | `i2c_scan()`, `pot(i, n)` | `I2CScan`, `Pot` |
 | `raw AMP1/AMP2 0\|1`, `raw ADCBB n [ovs]` | `amp1(on)`, `amp2(on)`, `adcbb(n, ovs)` | |
 | `pic id/image/flash/verify/erase/pins/mclr/slow/fast/help` | `pic_id()`, `pic_image()`, `pic_flash()`, … | `PicProg`, `PicImage` |

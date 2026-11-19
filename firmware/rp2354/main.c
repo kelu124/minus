@@ -9,7 +9,7 @@
 //   * RGB status LED (U5 + LED1 in parallel on GPIO10): blue = no PIC, green = link ok, red = bad reply.
 //
 // Commands (type on the USB console):
-//   help | version | rgb R G B | reboot [dfu] | ping | auto | stop | reset | rdy | trig | raw <text> | stat
+//   help | version | rgb R G B [pct] | reboot [dfu] | ping | auto | stop | reset | rdy | trig | raw <text> | stat
 //   pic id | pic image | pic flash | pic verify | pic erase     (ICSP programmer on GPIO21/22/24)
 #include <stdio.h>
 #include <string.h>
@@ -604,7 +604,7 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
 static void help(void) {
     printf("minus v1.1 RP2354A CLI\n"
            "  version     firmware version, chip id, unique id\n"
-           "  rgb R G B   set the RGB LED (0-255 each): LP5562 U5 over I2C (board 3) + the WS2812/SK6812 line (devkit), e.g. rgb 255 255 255\n"
+           "  rgb R G B [pct]  set the RGB LED (0-255 each): LP5562 U5 over I2C (board 3) at pct %% brightness (0-100, default 25 = dim) + the WS2812/SK6812 line (devkit, unscaled), e.g. rgb 255 0 0 100\n"
            "  reboot      reset the RP2354; 'reboot dfu' = reboot into BOOTSEL/UF2 mode\n"
            "  ping        send PING n over UART0 (GPIO16/17), expect PONG n from the PIC32\n"
            "  auto|stop   ping every 500 ms / stop\n"
@@ -648,12 +648,14 @@ int main(void) {
                 if (!strcmp(line, "help") || !strcmp(line, "?")) help();
                 else if (!strcmp(line, "version")) cmd_version();
                 else if (!strncmp(line, "rgb", 3)) {
-                    int r, g, b;
-                    if (sscanf(line + 3, "%d %d %d", &r, &g, &b) == 3 && (unsigned)r < 256 && (unsigned)g < 256 && (unsigned)b < 256) {
+                    // rgb R G B [pct]: pct = LP5562 brightness in % (default 25 = dim), scales the PWM; WS2812 line unscaled
+                    int r, g, b, pct = 25;
+                    int na = sscanf(line + 3, "%d %d %d %d", &r, &g, &b, &pct);
+                    if ((na == 3 || na == 4) && (unsigned)r < 256 && (unsigned)g < 256 && (unsigned)b < 256 && (unsigned)pct <= 100) {
                         manual_led = true; led_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b);
-                        int lp = lp5562_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b);
-                        printf("rgb %d %d %d (LP5562 0x30: %s)\n", r, g, b, lp < 0 ? "not found" : "ok");
-                    } else printf("usage: rgb R G B (0-255)\n");
+                        int lp = lp5562_rgb((uint8_t)((r * pct + 50) / 100), (uint8_t)((g * pct + 50) / 100), (uint8_t)((b * pct + 50) / 100));
+                        printf("rgb %d %d %d %d%% (LP5562 0x30: %s)\n", r, g, b, pct, lp < 0 ? "not found" : "ok");
+                    } else printf("usage: rgb R G B [pct]  (0-255 each; pct = LP5562 brightness 0-100 %%, default 25)\n");
                 }
                 else if (!strncmp(line, "reboot", 6)) cmd_reboot(line[6] == ' ' ? line + 7 : NULL);
                 else if (!strncmp(line, "pic", 3) && (line[3] == 0 || line[3] == ' ')) cmd_pic(line[3] == ' ' ? line + 4 : NULL);

@@ -11,7 +11,7 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.1"},
+    "rp": {"name": "minus-rp2354", "version": "1.1.2"},
     "pic": {"name": "minus-pic32", "version": "1.1.0"},
     "proto": 10,
 }
@@ -29,7 +29,7 @@ RP_COMMANDS: Dict[str, Cmd] = {
     "help":    Cmd(None, "help", "command list"),
     "?":       Cmd(None, None, "alias of help"),
     "version": Cmd("version", "version", "RP firmware version, board, chip id, unique id"),
-    "rgb":     Cmd("rgb R G B", "rgb", "set the status LED colour"),
+    "rgb":     Cmd("rgb R G B [pct]", "rgb", "set the status LED colour; pct = LP5562 brightness % (default 25)"),
     "reboot":  Cmd("reboot", "reboot", "reset the RP2354; `reboot dfu` = UF2 bootloader"),
     "ping":    Cmd("ping", "ping", "PING n -> PONG n round trip to the PIC"),
     "auto":    Cmd("auto|stop", "auto_ping", "ping every 500 ms"),

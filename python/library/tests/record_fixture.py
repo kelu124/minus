@@ -13,7 +13,7 @@ sys.path.insert(0, str(HERE.parent))
 from minus import Minus  # noqa: E402
 
 CMDS = ["help", "version", "raw ID?", "ping", "stat", "rdy", "trig", "raw TRIG?", "lb", "gain", "gain 2 0 0",
-        "gain 0 1 1", "gain 7", "gain 0 0 0", "pc", "pc 1", "pulse", "pulse 100 500 27", "i2c", "rgb 0 0 20",
+        "gain 0 1 1", "gain 7", "gain 0 0 0", "pc", "pc 1", "pulse", "pulse 100 500 27", "i2c", "rgb 0 0 20", "rgb 255 0 0 100", "rgb 1 2 3 101",
         "raw AMP1 1", "raw AMP2 0", "raw ADCBB 100 0", "pot 0", "acq 4 0 25 1", "pe", "pe 200 500 25 27",
         "pic help", "pic image", "pic id", "bogus"]
 

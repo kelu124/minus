@@ -12,4 +12,4 @@ from .device import Exchange, FirmwareMismatch, Minus
 from .protocol import Capture, MinusError
 
 __all__ = ["Minus", "Exchange", "Capture", "MinusError", "FirmwareMismatch", "FIRMWARE", "INPUTS"]
-__version__ = "1.1.1"
+__version__ = "1.1.2"

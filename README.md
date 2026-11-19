@@ -12,7 +12,7 @@ experiment with (coded excitation, on-device DSP, add-on boards).
 > ⚠️ **Status: working prototype (minus v1.1, board `minUS_08112026`).** Pulse-echo, the
 > switchable RX gain and the fixed-pattern correction work on the bench, and the
 > [datasheet rev 0.1](datasheet/minus-datasheet.pdf) gives measured figures.
-> Board **minus v1.1**; firmware RP2354A **1.1.1**, PIC32AK **1.1.0**, link protocol **10**.
+> Board **minus v1.1**; firmware RP2354A **1.1.2**, PIC32AK **1.1.0**, link protocol **10**.
 > Non-clinical, for **research / education / NDT** only; not a medical device.
 
 ![minUS board 3](hardware/minUS_angled.png)
@@ -107,7 +107,7 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
    `pic flash` (erase, program, verify, ~1 s). It writes the PIC image embedded in the RP firmware,
    so check `version` first. With a Microchip tool on J1 instead:
    `make -C firmware/pic32 flash TOOL=SNAP` (or `PKBASIC`, `PK4`, `PK5`, `ICD4`, `ICD5`, `ICE4`).
-4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`; `rgb 0 40 0` → LED green.
+4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`; `rgb 0 255 0` → LED green (25 % brightness by default; `rgb 0 255 0 100` = full).
 5. **Pulse-echo:** `pe` fires the pulser and captures one A-line, and `gain [leg [u1 [u2]]]` sets
    the RX gain. The full command reference and pin map are in
    [`firmware/README.md`](firmware/README.md). Measurement campaigns to reproduce are in

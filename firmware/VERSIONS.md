@@ -16,6 +16,7 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 1.1.2 | `rgb R G B [pct]`: LP5562 brightness in % (0–100, **default 25** = dim), scales the PWM; reply `rgb R G B pct% (LP5562 0x30: ok\|not found)`; WS2812 line unscaled; proto 10; embeds pic 1.1.0 |
 | 2026-11-19 | rp2354 | 1.1.1 | `rgb R G B` also drives the **LP5562 U5** (I²C 0x30, internal clock, I²C PWM control) → reply `rgb R G B (LP5562 0x30: ok\|not found)`; `i2c` names 0x30; proto 10; embeds pic 1.1.0 |
 | 2026-11-19 | rp2354 | 1.1.0 | **owner: v1.1** (MAJOR.MINOR set by the owner). FW_NAME `minus-rp2354`; `version`/banner/help print `minus v1.1 (minUS_08112026)` instead of the devkit name; no functional change; proto 10; embeds pic 1.1.0 |
 | 2026-11-19 | pic32  | 1.1.0 | **owner: v1.1**. FW_NAME `minus-pic32` (`ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`); no functional change; proto 10 |

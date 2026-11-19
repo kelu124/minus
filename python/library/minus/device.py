@@ -160,12 +160,15 @@ class Minus:
     def version(self) -> P.Version:
         return self._run("version", P.parse_version)
 
-    def rgb(self, r: int, g: int, b: int) -> bool:
-        """Set the RGB LED (0..255 each). Returns True if the LP5562 (board 3) acknowledged."""
+    def rgb(self, r: int, g: int, b: int, pct: Optional[int] = None) -> bool:
+        """Set the RGB LED (0..255 each). ``pct`` = LP5562 brightness in % (0..100; firmware default 25 = dim),
+        it scales the PWM. Returns True if the LP5562 (board v1.1) acknowledged."""
         for v in (r, g, b):
             if not 0 <= int(v) <= 255:
                 raise ValueError("rgb values are 0..255")
-        lines = self.exchange(f"rgb {int(r)} {int(g)} {int(b)}").lines
+        if pct is not None and not 0 <= int(pct) <= 100:
+            raise ValueError("pct is 0..100")
+        lines = self.exchange(f"rgb {int(r)} {int(g)} {int(b)}" + ("" if pct is None else f" {int(pct)}")).lines
         P._fail_if_error(lines, "rgb")
         return "LP5562 0x30: ok" in lines[0]
 
@@ -203,8 +206,12 @@ class Minus:
         return self._run(f"raw {text}", P.parse_raw)
 
     def pic_ident(self) -> P.PicIdent:
-        """``raw ID?`` -> PIC part, firmware name, version, protocol."""
-        return P.parse_pic_ident(self.raw("ID?"))
+        """``raw ID?`` -> PIC part, firmware name, version, protocol. Retries once: the first link line after an RP
+        reboot can go unanswered."""
+        reply = self.raw("ID?")
+        if reply is None:
+            reply = self.raw("ID?")
+        return P.parse_pic_ident(reply)
 
     def trig_count(self) -> int:
         """``raw TRIG?`` -> number of TRIG rising edges the PIC has counted."""

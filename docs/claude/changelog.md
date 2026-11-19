@@ -12,6 +12,7 @@ the sha.
 
 ## Committed
 
+- 2026-11-19  (this)  rp 1.1.2: `rgb R G B [pct]` LP5562 brightness (default 25 %); library rgb(pct), ID? retry, fixture + notebook 01 re-run, datasheet row
 - 2026-11-19  f61a323  minus v1.1: fw rp 1.1.1 / pic 1.1.0 (names, LP5562 rgb), orphan sheets removed, Python library + notebooks + tests, fwsync Claude/git hooks, E3 jitter study (400 shots, comb slips), datasheet rev 0.2 (licences, repo links)
 - 2026-11-19  f47057f  repo cleanup follow-up: paths fixed after moves (docs/bench, datasheet/, flat hardware/), STEP1 folded into README, README rewritten, LICENSE.md + LICENSES/, built uf2/hex committed, dead submodules removed
 - 2026-11-19  bffae57  docs: session 11 close — lessons learnt (memory 0019), skill updates (minus-firmware, minus-docs), COMMITS.md catch-up, DONE.md

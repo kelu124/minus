@@ -51,7 +51,7 @@
 
 \newcommand{\product}{minus}
 \newcommand{\repo}{\href{https://github.com/kelu124/minus}{github.com/kelu124/minus}}
-\newcommand{\rpfwrel}{1.1.1}\newcommand{\picfwrel}{1.1.0}
+\newcommand{\rpfwrel}{1.1.2}\newcommand{\picfwrel}{1.1.0}
 \newcommand{\board}{v1.1 (minUS\_08112026)}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
 \newcommand{\us}{\,\textmu s}
@@ -465,7 +465,7 @@ SW1 & push button & RP2354A RUN (reset).\\
 SW2 & push button & RP2354A BOOTSEL (QSPI\_SS): hold while plugging in for the UF2 drive.\\
 SW3 & push button & PIC RD4 (10\,kΩ pull-up), user input — not used by the firmware.\\
 LED1 & red LED & PIC RC5 via 330\,Ω: heartbeat (blinks while the PIC firmware runs).\\
-U4 + U5 & RGB LED + LP5562 & I²C LED driver at 0x30 (ADDR\_SEL = GND, EN tied high); driven by \cmd{rgb R G B} since rp~1.1.1 (internal clock, so OSC1 is not needed).\\
+U4 + U5 & RGB LED + LP5562 & I²C LED driver at 0x30 (ADDR\_SEL = GND, EN tied high); driven by \cmd{rgb R G B [pct]} since rp~1.1.1, brightness in \% since 1.1.2 (internal clock, so OSC1 is not needed).\\
 H1–H4 & M2 holes & mounting, padded.\\\bottomrule
 \end{longtable}
 \normalsize
@@ -496,7 +496,7 @@ H1–H4 & M2 holes & mounting, padded.\\\bottomrule
 \cmd{raw <text>} & Send a link line to the PIC and print the reply (e.g. \cmd{raw ID?}).\\
 \cmd{pic id|flash|verify|} \cmd{erase|pins} & ICSP programmer for the PIC (pair 1, GPIO21/22/24).\\
 \cmd{reset}, \cmd{reboot [dfu]} & PIC MCLR pulse; RP reboot / BOOTSEL.\\
-\cmd{rgb R G B} & RGB LED colour, 0–255 per channel (LP5562 U5 on I²C; reply ends \cmd{(LP5562 0x30: ok)}).\\
+\cmd{rgb R G B [pct]} & RGB LED colour, 0–255 per channel, LP5562 U5 on I²C at \cmd{pct}\,\% brightness (0–100, default 25 = dim, scales the PWM); reply ends \cmd{(LP5562 0x30: ok)}.\\
 \cmd{i2c} & I²C bus scan (found: \vitwoc).\\
 \cmd{acqcpu}, \cmd{acqil}, \cmd{raw ADCBB} & Diagnostics / experiments (CPU-loop capture, two-channel interleave, ADC throughput).\\\bottomrule
 \end{longtable}
@@ -603,7 +603,7 @@ Design files & \texttt{hardware/minUS\_08112026/} (KiCad), JLC outputs in \textt
 \begin{tabular}{@{}lll@{}}\toprule
 \textbf{Rev} & \textbf{Date} & \textbf{Change}\\\midrule
 0.1 & 2026-11-19 & First release: board 3 bring-up, firmware rp \vrpfw{} / pic \vpicfw, measurements of session 11.\\
-0.2 & 2026-11-19 & Board named v1.1; firmware rp \rpfwrel{} / pic \picfwrel{} (LP5562 \cmd{rgb}, E7 fixed); Python library + notebooks;\\
+0.2 & 2026-11-19 & Board named v1.1; firmware rp \rpfwrel{} / pic \picfwrel{} (LP5562 \cmd{rgb} with brightness, E7 fixed); Python library + notebooks;\\
     &            & E3 sample-comb phase study (400 shots); licenses and repository links.\\\bottomrule
 \end{tabular}
 

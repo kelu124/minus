@@ -10,7 +10,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of
   captures**, phase-dependent. Next: (a) root-cause the slips + slow lock (start SCCP1 from the ADC clock domain / time-stamp
   conversions; check slips with `acq` on a CW tone); (b) host-side shot rejection on slips in the library (`Capture` helper);
-  (c) confirm LP5562 colour order R/G/B by eye; then the older items below (sine ENOB, scope pulse, LNA gain, supply current,
+  then the older items below (sine ENOB, scope pulse, LNA gain, supply current,
   faster link).
 - **RESUME HERE (2026-11-19, part 6): datasheet rev 0.1 done** (`datasheet/minUS_08112026/`, rp 0.1.34 / pic 0.1.25, proto 10).
   Next: sine test (SINAD ENOB), measure the pulse on a scope (TX node, effective t_hi + 48 ns), LNA gain at 3 MHz, supply current,

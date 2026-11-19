@@ -89,6 +89,12 @@ class TestDevice(unittest.TestCase):
         self.assertAlmostEqual(p.hi_ns, 100, delta=7)
         self.assertEqual(self.d.i2c_scan().devices[0][0], 0x30)
         self.assertTrue(self.d.rgb(0, 0, 20))
+        self.assertIn("25%", self.d.last.text)              # firmware default brightness
+        self.assertTrue(self.d.rgb(255, 0, 0, 100))
+        self.assertIn("100%", self.d.last.text)
+        with self.assertRaises(ValueError):
+            self.d.rgb(1, 2, 3, 101)
+        self.assertIn("usage: rgb R G B [pct]", REPLIES["rgb 1 2 3 101"][0])
         self.assertTrue(self.d.amp1(True))
         self.assertFalse(self.d.amp2(False))
         self.assertGreater(self.d.adcbb(100).ns_per_conversion, 0)
