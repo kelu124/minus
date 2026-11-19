@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 0.1.30 | **pulser** on board 3: `pulser.pio` (pio1 SM0, GPIO8/9 → U3 → Q2/Q1, idle set first in `main`), `pulse [hi [lo [dead]]]` one shot, `pe [hi [lo [in [dead]]]]` pulse-echo (shot on the PIC's RDY rise = ADC start, then `ACQ 4 0 <in> 1`); `acq` input codes 0..31, default 25; proto 7; embeds pic 0.1.22 |
+| 2026-11-19 | pic32  | 0.1.22 | **ADC2 capture**: input codes 16..31 = ADC2 PINSEL (+16), `acq_run_adc2` (AD2CH0 on SCCP1, DMA0 CHSEL 0x40); default input 25 = AD2AN9 (PIC32_ADC on board 3); op amp 2 on at boot; proto 7 |
 | 2026-11-02 | rp2354 | 0.1.29 | `i2c` bus scan, `pot <0|1> [n]` MCP4531 wiper read/set (U11 = OA2 feedback, gain print); proto 6; embeds pic 0.1.21 |
 | 2026-11-02 | pic32  | 0.1.21 | `AMP2 0\|1` op amp 2 enable (OA2: IN+ = OA1OUT, IN- = U11 wiper / R49, OUT = FE_A_OUT); proto 6 |
 | 2026-11-02 | rp2354 | 0.1.28 | clock-change strings: SCCP counts are 5 ns, `acq 8` = 25 Msps, `acqil` default div 24 (120 ns), 32 ns conversions; embeds pic 0.1.20 |

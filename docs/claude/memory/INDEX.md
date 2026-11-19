@@ -17,3 +17,4 @@ One line per memory file. Read this first to find the right topic.
 - [0013-rx-lna-mmic.md](0013-rx-lna-mmic.md) — RX LNA for the next board redesign: BGA2817 MMIC (24 dB, 3.3 V, LCSC C2654187) ahead of OA1 + the FE-A bias/coupling fixes; PIC op-amp ≈ ×10/stage limit; 74HC4051 gain legs.
 - [0014-board-minUS_07112026.md](0014-board-minUS_07112026.md) — New slim board (BGA2817 LNA + 74HC4052 gain mux) and its 2026-11-07 review: 4 must-fix items (floating mux selects, 330 pF LNA input cap, MCLR R17, input clamp).
 - [0015-3d-renders.md](0015-3d-renders.md) — `hardware/render_3d.py`: kicad-cli top/bottom/angled renders; vendored EasyEDA models + stock substitutes; always omit 2×N/IDC headers and SMA.
+- [0016-pulser-pulse-echo.md](0016-pulser-pulse-echo.md) — Board 3 pulser wiring/polarity, `pe` sync on RDY, ADC input codes, first echoes.

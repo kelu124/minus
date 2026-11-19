@@ -9,6 +9,10 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 
 ## Board `hardware/minUS_08112026/` (2nd iteration, review 2026-11-08, memory 0014)
 
+- **[should] (bench 2026-11-19)** GPIO9 (`RP2354 PIO-PWM_L`, U3 IN B → Q1 P-FET gate) has no pull-up: the RP2350 pad default
+  pull-down turns **Q1 on** from power-up until the firmware idles the pins (a few ms): `Transducer` sits at +5 V DC. Add 10 k
+  pull-up on GPIO9 (and 10 k pull-down on GPIO8). The net names are also swapped vs function (PWM_H drives the low-side N-FET).
+
 - All must-fix items resolved (ICSP, mux selects, input caps, clamp, termination, MCLR, AVDD ferrite, ADC node on ADC2).
 - **[should]** C86/C87 56 pF → ~100 pF (anti-alias ~6 MHz). **[nice]** DNP Cf (1–3 pF) OUT→IN− on OA1/OA2; 1–10 kΩ
   bleed at the D2 node; 100 k pull-downs on S0/S1.

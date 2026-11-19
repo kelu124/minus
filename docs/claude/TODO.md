@@ -5,10 +5,11 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-11-19): board 3 (minUS_08112026, id 7D4466C63B374C98) runs rp 0.1.29 / pic 0.1.21 unchanged** (session 11).
-  Next firmware for it: (a) `acq` on ADC2 / AD2AN9 (filtered node) + ADC2 DMA trigger; (b) gain command = 4052 S0/S1 on RP GPIO25/23
-  + PIC `AMPxCON1.UGE` for ×1; (c) board-aware input names in the `acq` header; then the tone test on the new chain.
-
+- **RESUME HERE (2026-11-19, part 2): first pulse-echo works on board 3** (rp 0.1.30 / pic 0.1.22, `pe`, data + plots in
+  `bench/2026-11-19-pe/`: echoes every 40.2 µs at ~3.3 MHz, OA2 clips on the first). Next: (a) gain command = 4052 S0/S1 on
+  RP GPIO25/23 + PIC `AMPxCON1.UGE` (×1) — owner: later; (b) first capture after an input change is slow (18 Msps, status ok)
+  → detect (fill check) + retry, or flag `overrun`; (c) LNA-tap baseline 1.06 V not mid-rail (in 1); (d) averaging over
+  repeated shots (`pe` N times on the RP) and a PC-side viewer; (e) TODO_HARDWARE GPIO9 pull-up.
 - Check `HPEN = 1` on OA2 in the `AMP2` code (session 09).
 - **RESUME HERE (2026-11-02 evening): pic 0.1.20 / rp 0.1.28 = CPU 200 MHz / ADC 250 MHz on board 2; `acq` default
     div 4 = uniform 25 Msps (tone-proven, session 08 part 2, memory 0011). Open from the change: PLL2 → 320 MHz

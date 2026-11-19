@@ -29,6 +29,7 @@ add_custom_command(
 add_executable(minus_rp main.c pic_icsp.c acq_parse.c ${CMAKE_CURRENT_BINARY_DIR}/pic_image.c)
 target_include_directories(minus_rp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/pulser.pio)
 target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_pio hardware_gpio hardware_i2c pico_unique_id pico_bootrom)
 
 pico_enable_stdio_usb(minus_rp 1)    # CLI over USB-C CDC

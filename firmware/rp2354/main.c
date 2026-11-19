@@ -22,6 +22,8 @@
 #include "hardware/pio.h"
 #include "hardware/i2c.h"
 #include "ws2812.pio.h"
+#include "pulser.pio.h"
+#include "hardware/clocks.h"
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
 #include "pico/version.h"
@@ -55,6 +57,64 @@ static void led_set(uint8_t r, uint8_t g, uint8_t b) {
     // GRB order, left-aligned in the 32-bit FIFO word (out shift = 24 bits, MSB first)
     uint32_t grb = ((uint32_t)g << 16) | ((uint32_t)r << 8) | b;
     pio_sm_put_blocking(led_pio, led_sm, grb << 8);
+}
+
+// ---------------------------------------------------------------- pulser (board 3: U3 + Q1/Q2 on GPIO8/9, pulser.pio)
+// Idle = GPIO8 low (Q2 off), GPIO9 high (Q1 off). The RP2350 pad default (pull-down) on GPIO9 turns Q1 ON, so
+// this runs first in main(): until then the "Transducer" net sits at +5 V (see TODO_HARDWARE: pull-up on GPIO9).
+#define PULSE_HI_NS   200u
+#define PULSE_LO_NS   500u
+#define PULSE_DEAD_NS 27u      // both FETs off between +5 V and GND (4 PIO cycles minimum = 26.7 ns at 150 MHz)
+static PIO pulse_pio = pio1; static uint pulse_sm = 0, pulse_off = 0;
+static void pulser_init(void) {
+    pulse_off = pio_add_program(pulse_pio, &pulser_program);
+    pulser_program_init(pulse_pio, pulse_sm, pulse_off, MINUS_PIN_PWM_H, MINUS_PIN_RDY);
+}
+// ns -> PIO cycles at clk_sys, rounded, never below the phase minimum
+static unsigned ns_to_cyc(unsigned ns, unsigned min) {
+    unsigned c = (unsigned)(((uint64_t)ns * clock_get_hz(clk_sys) + 500000000ull) / 1000000000ull);
+    return c < min ? min : c;
+}
+static double cyc_ns(unsigned c) { return c * 1e9 / (double)clock_get_hz(clk_sys); }
+typedef struct { unsigned hi, dead, lo; } pulse_cyc_t;   // actual phase lengths in cycles
+static bool pulser_arm(unsigned hi_ns, unsigned lo_ns, unsigned dead_ns, bool now, pulse_cyc_t *pc) {
+    unsigned hi = ns_to_cyc(hi_ns, 2), dead = ns_to_cyc(dead_ns, 4), lo = ns_to_cyc(lo_ns, 2);
+    if (hi - 2 > 0xFFF || dead - 4 > 0x7F || lo - 2 > 0xFFF) return false;
+    pio_sm_clear_fifos(pulse_pio, pulse_sm);
+    pio_sm_put(pulse_pio, pulse_sm, (now ? 1u : 0u) | (hi - 2) << 1 | (dead - 4) << 13 | (lo - 2) << 20);
+    if (pc) { pc->hi = hi; pc->dead = dead; pc->lo = lo; }
+    return true;
+}
+static bool pulser_fired(void) { return !pio_sm_is_rx_fifo_empty(pulse_pio, pulse_sm); }
+// Cancel a shot that never fired (no RDY edge): restart the SM at the program start, pins back to idle.
+static void pulser_disarm(void) {
+    pio_sm_set_enabled(pulse_pio, pulse_sm, false);
+    pio_sm_clear_fifos(pulse_pio, pulse_sm);
+    pio_sm_restart(pulse_pio, pulse_sm);
+    pio_sm_exec(pulse_pio, pulse_sm, pio_encode_set(pio_pins, 2));
+    pio_sm_exec(pulse_pio, pulse_sm, pio_encode_jmp(pulse_off));   // back to "pull block"
+    pio_sm_set_enabled(pulse_pio, pulse_sm, true);
+}
+static void pulse_print(const pulse_cyc_t *pc) {
+    printf("pulse: +5V %.1f ns, off %.1f ns, GND %.1f ns, then released (clk_sys %lu MHz)\n",
+           cyc_ns(pc->hi), cyc_ns(pc->dead), cyc_ns(pc->lo), (unsigned long)(clock_get_hz(clk_sys) / 1000000));
+}
+static bool pulse_args(const char *arg, unsigned *hi, unsigned *lo, unsigned *dead, int *in) {
+    *hi = PULSE_HI_NS; *lo = PULSE_LO_NS; *dead = PULSE_DEAD_NS;
+    if (arg && *arg) { char *e; *hi = (unsigned)strtoul(arg, &e, 10);
+        if (*e == ' ') { *lo = (unsigned)strtoul(e + 1, &e, 10);
+            if (*e == ' ' && in) { *in = (int)strtol(e + 1, &e, 10); if (*e == ' ') *dead = (unsigned)strtoul(e + 1, NULL, 10); }
+            else if (*e == ' ') *dead = (unsigned)strtoul(e + 1, NULL, 10); } }
+    return *hi >= 1 && *hi <= 20000 && *lo >= 1 && *lo <= 20000 && *dead <= 800;
+}
+static void cmd_pulse(const char *arg) {
+    // pulse [hi_ns [lo_ns [dead_ns]]]: one shot now, no capture (scope check on H5 / RF1 / RF3)
+    unsigned hi, lo, dead; pulse_cyc_t pc;
+    if (!pulse_args(arg, &hi, &lo, &dead, NULL) || !pulser_arm(hi, lo, dead, true, &pc)) { printf("usage: pulse [hi_ns [lo_ns [dead_ns]]]  (1..20000, dead <= 800)\n"); return; }
+    busy_wait_us(50);
+    pulse_print(&pc);
+    printf("%s\n", pulser_fired() ? "fired" : "did NOT fire");
+    pulser_disarm();
 }
 
 // ---------------------------------------------------------------- link UART helpers
@@ -345,6 +405,17 @@ static void cmd_pic(const char *arg) {
 // ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
 #define ACQ_MAX_N 4095u
 static void acq_receive(char *hdr, unsigned hdrlen, const char *note);
+// Input codes (PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. Names for board 3 (minUS_08112026).
+static const char *acq_in_name(int in) {
+    switch (in) {
+    case 25: return "AD2AN9 (PIC32_ADC: OA2OUT after the R67/C86/R68/C87 filter, board 3)";
+    case 17: return "AD2AN1 (OA2OUT, before the filter)";
+    case 0:  return "AD1AN0 (OA1OUT)";
+    case 1:  return "AD1AN1 (OA1IN+ = LNA output after C40, board 3; raw RX node on the devkit)";
+    case 9:  return "AD1AN9 (PIC32_ADC on the devkit; unconnected on board 3)";
+    default: return in < 16 ? "ADC1 input" : "ADC2 input";
+    }
+}
 static void cmd_acq(const char *arg) {
     char hdr[96];
     unsigned div = 0; int samc = -2; int in = -1; int navg = 0;            // div 0 = PIC default; samc -2 / in -1 / navg 0 = not given
@@ -353,21 +424,39 @@ static void cmd_acq(const char *arg) {
         if (*e == ' ') { samc = (int)strtol(e + 1, &e, 10);
             if (*e == ' ') { in = (int)strtol(e + 1, &e, 10); if (*e == ' ') navg = (int)strtol(e + 1, NULL, 10); } }
     }
-    if (in > 15) { printf("acq: in must be 0..15 (ADC1 PINSEL: 9 node, 0 OA1OUT, 1 OA1IN+)\n"); return; }
+    if (in > 31) { printf("acq: in must be 0..31 (0..15 ADC1 PINSEL, 16..31 ADC2: 25 = AD2AN9 node, 0 OA1OUT, 1 OA1IN+)\n"); return; }
     if (navg < 0 || navg > 16) { printf("acq: navg must be 1..16\n"); return; }
     link_flush_rx();
-    if (div && navg) snprintf(hdr, sizeof hdr, "ACQ %u %d %d %d\n", div, samc == -2 ? 0 : samc, in < 0 ? 9 : in, navg);
+    if (div && navg) snprintf(hdr, sizeof hdr, "ACQ %u %d %d %d\n", div, samc == -2 ? 0 : samc, in < 0 ? 25 : in, navg);
     else if (div && in >= 0) snprintf(hdr, sizeof hdr, "ACQ %u %d %d\n", div, samc == -2 ? 0 : samc, in);
     else if (div && samc != -2) snprintf(hdr, sizeof hdr, "ACQ %u %d\n", div, samc);
     else if (div) snprintf(hdr, sizeof hdr, "ACQ %u\n", div);
     else snprintf(hdr, sizeof hdr, "ACQ\n");
     link_puts(hdr);
     // The PIC keeps the last div/samc/in across ACQ calls, so only name the input when this call set it.
-    const char *inname = in < 0 ? "last input (AD1AN9 node unless changed)" : in == 9 ? "AD1AN9 (PIC32_ADC node)" : in == 0 ? "AD1AN0 (OA1OUT, op amp 1 x11 on the RX node)" : in == 1 ? "AD1AN1 (OA1IN+, raw RX node)" : "AD1AN?";
+    const char *inname = in < 0 ? "last input (AD2AN9 node unless changed)" : acq_in_name(in);
     char note[200];
     snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 4, in, inname,
              navg, navg > 1 ? "each value = sum of navg back-to-back 32 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
     acq_receive(hdr, sizeof hdr, note);
+}
+// pe [hi_ns [lo_ns [in [dead_ns]]]]: pulse-echo. Arms the pulser on the PIC's RDY rising edge (the PIC raises RDY
+// one instruction before it starts the SCCP1 ADC trigger), then runs "ACQ 4 0 <in> 1" = 4095 samples at 25 Msps
+// (40 ns) on input <in> (default 25 = AD2AN9, the filtered RX node on board 3), single conversions.
+static void cmd_pe(const char *arg) {
+    unsigned hi, lo, dead; int in = 25; pulse_cyc_t pc; char hdr[96];
+    if (!pulse_args(arg, &hi, &lo, &dead, &in) || in < 0 || in > 31) { printf("usage: pe [hi_ns [lo_ns [in [dead_ns]]]]  (defaults 200 500 25 27; in = 0..15 ADC1, 16..31 ADC2)\n"); return; }
+    link_flush_rx();
+    if (!pulser_arm(hi, lo, dead, false, &pc)) { printf("pe: pulse too long\n"); return; }
+    snprintf(hdr, sizeof hdr, "ACQ 4 0 %d 1\n", in);
+    link_puts(hdr);
+    char note[200];
+    snprintf(note, sizeof note, "pulse-echo: pulse on RDY rise (+5V %.0f / off %.0f / GND %.0f ns), in=%d %s, 40 ns/sample",
+             cyc_ns(pc.hi), cyc_ns(pc.dead), cyc_ns(pc.lo), in, acq_in_name(in));
+    acq_receive(hdr, sizeof hdr, note);
+    bool fired = pulser_fired();
+    pulser_disarm();
+    printf("# pulse %s\n", fired ? "fired" : "did NOT fire (no RDY edge)");
 }
 static void cmd_acqcpu(const char *arg) {
     // acqcpu [trg [rptcnt]]: CPU-loop capture on the PIC (no DMA). trg 2 = back-to-back conversions (period
@@ -441,11 +530,13 @@ static void help(void) {
            "  raw <text>  send <text>\\n to the PIC and print whatever comes back within 200 ms\n"
            "  stat        counters\n"
            "  lb          RP UART0 internal loopback self-test\n"
-           "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 5 ns counts (4 default = 25 Msps: the 32 ns ADC takes every other 20 ns trigger, uniform 40 ns = the DMA cost; 10 = 20 Msps; 5..9 irregular, on the DMA edge), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = ADC1 input: 9 node (default), 0 OA1OUT (op amp 1), 1 OA1IN+ (raw RX node), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
+           "  acq [div [samc [in [navg]]]]  capture 4095 ADC samples on the PIC and print them; div = SCCP1 trigger period in 5 ns counts (4 default = 25 Msps: the 32 ns ADC takes every other 20 ns trigger, uniform 40 ns = the DMA cost; 10 = 20 Msps; 5..9 irregular, on the DMA edge), samc = ADC sampling 0..7 (0.5+2n TAD, default 0) or -1 auto, in = input code: 0..15 ADC1 PINSEL, 16..31 ADC2 (25 = AD2AN9 node, default; 9 = AD1AN9 devkit node, 0 OA1OUT, 1 OA1IN+, 17 OA2OUT), navg = 1 single conversion (default) or 2..16 back-to-back conversions summed per trigger (ADC at 40 Msps)\n"
            "  acqcpu [trg [rptcnt [gap [phase]]]]  experiment: CPU-loop capture (no DMA), 4 CPU cycles = 20 ns per read + gap NOPs (conversions are 32 ns: no integer lock since the 200 MHz clock change); trg 12 (default) = SCCP1 at the last acq div, trg 2 back-to-back / 3 repeat timer (dead in single-sample mode, kept for experiments); phase = NOPs before the loop (moves the read off the ADC result write; pairs in the data = wrong phase); uses the last acq input/samc\n"
            "  acqil [div [off [navg]]]  experiment: two ADC1 channels on the same input, navg-sums (default 2) each, triggered half a period apart (div = per-channel period in 5 ns counts, default 24; parked since the 200 MHz / 250 MHz-ADC clock change: two 2-sums of 32 ns conversions no longer fit in one period, needs the 320 MHz ADC clock from PLL2), two DMA channels, interleaved; off = CH1 timer preload in counts (0 = div/2+1)\n"
            "  raw AMP1 0|1  op amp 1 off/on on the PIC (on at boot)\n"
            "  raw AMP2 0|1  op amp 2 off/on on the PIC (off at boot): OA2IN+ = OA1OUT, gain 1 + R_AW(U11)/R49, OA2OUT = FE_A_OUT (J6.2 / RF13, AD2AN1)\n"
+           "  pulse [hi [lo [dead]]]  one pulser shot now (board 3, GPIO8/9 -> U3 -> Q1/Q2): +5 V hi ns (200), both off dead ns (27, min 4 cycles), GND lo ns (500), then released\n"
+           "  pe [hi [lo [in [dead]]]]  pulse-echo: pulser fires on the PIC's RDY rise = ADC start, 4095 samples at 25 Msps on in (25 = AD2AN9 node default; 0 OA1OUT, 1 LNA/OA1IN+, 17 OA2OUT)\n"
            "  i2c         scan the I2C0 bus (MCP4531 x2, MCP4728, OLED)\n"
            "  pot <0|1> [n]  MCP4531 wiper read / set 0..128: 0 = U11 (OA2 feedback: gain x1..x11, power-on 64 = ~x6), 1 = U18 (AD8338)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
@@ -453,6 +544,7 @@ static void help(void) {
 }
 
 int main(void) {
+    pulser_init();          // first: puts the pulser FETs in the off state (GPIO9 pad pull-down = Q1 on)
     stdio_init_all();
     led_init(); led_rgb(0, 0, 40);
     pic_taps_init();
@@ -500,6 +592,8 @@ int main(void) {
         else if (!strncmp(line, "acqil", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqil(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
+        else if (!strncmp(line, "pe", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pe(line[2] == ' ' ? line + 3 : "");
+        else if (!strncmp(line, "pulse", 5) && (line[5] == 0 || line[5] == ' ')) cmd_pulse(line[5] == ' ' ? line + 6 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);
                 else if (len == 0 && line[0]) printf("unknown '%s' — try help\n", line);

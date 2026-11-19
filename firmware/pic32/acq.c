@@ -15,8 +15,10 @@
 uint16_t acq_buf[ACQ_N] __attribute__((aligned(4)));
 static uint16_t acq_buf1[ACQ_IL_HALF] __attribute__((aligned(4)));   // ACQIL: channel-1 half (DMA1), merged into acq_buf afterwards
 static unsigned acq_div = ACQ_TRIG_DIV;
-static unsigned acq_input = ACQ_INPUT_NODE;   // ADC1 PINSEL: 9 = PIC32_ADC node (RA9), 0 = OA1OUT (RA2), 1 = OA1IN+ (RA4, RX node)
-void     acq_set_input(unsigned pinsel) { acq_input = pinsel & 0xF; }
+static unsigned acq_input = ACQ_INPUT_NODE;   // 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL (in - 16); see acq.h
+void     acq_set_input(unsigned in) { acq_input = in & 0x1F; }
+#define IN_ADC2   (acq_input >= 16u)
+#define IN_PINSEL (acq_input & 0xFu)
 unsigned acq_get_input(void) { return acq_input; }
 static unsigned acq_navg = 1;                 // 1 = single conversion per trigger; N>1 = integration mode, N back-to-back conversions summed
 void     acq_set_navg(unsigned n) { if (n < 1) n = 1; if (n > 16) n = 16; acq_navg = n; }
@@ -45,6 +47,14 @@ void acq_init(void) {
     ANSELAbits.ANSELA2 = 1;  TRISAbits.TRISA2 = 1;
     ANSELAbits.ANSELA4 = 1;  TRISAbits.TRISA4 = 1;
     ANSELAbits.ANSELA3 = 1;  TRISAbits.TRISA3 = 1;
+    ANSELAbits.ANSELA8 = 1;  TRISAbits.TRISA8 = 1;   // RA8 = AD2AN9 (pin 4): net PIC32_ADC on minUS_08112026 (board 3)
+
+    // Op amp 2: on board 3 it is the second gain stage of the RX chain (OA2IN+ = OA1OUT via C1, Rf legs through the
+    // 4052 U1, OA2OUT -> R67/C86/R68/C87 -> PIC32_ADC). On at boot since fw 0.1.22 (was off: devkit FE_A_OUT).
+    AMP2CON1 = 0;
+    AMP2CON1bits.UGE   = 0;
+    AMP2CON1bits.HPEN  = 1;
+    AMP2CON1bits.AMPEN = 1;
 
     // Op amp 1 (DS70005592 ch. 32): the board wires it as a non-inverting x11 stage on the RX node
     // (OA1IN+ = RX node, R47 1k OA1IN- to GND, R48 10k OA1OUT to OA1IN-), DC-coupled to GND so only the
@@ -61,11 +71,21 @@ void acq_init(void) {
     AD1CONbits.RPTCNT = 1;              // repeat timer: 2 TAD = 32 ns (set before ON; used by the ACQCPU trg 3 experiment)
     AD1CONbits.ON = 1;
     for (uint32_t i = 0; i < ACQ_ADRDY_SPINS && AD1CONbits.ADRDY == 0; i++) ;
+    // ADC2 core: same clock (CLKGEN6, Table 18-1 "2 cores ... CLKGEN6"), same trigger table.
+    AD2CONbits.RPTCNT = 1;
+    AD2CONbits.ON = 1;
+    for (uint32_t i = 0; i < ACQ_ADRDY_SPINS && AD2CONbits.ADRDY == 0; i++) ;
+    AD2CH0CON = 0;
+    AD2CH0CONbits.PINSEL  = 9;          // AD2AN9 = PIC32_ADC (board 3)
+    AD2CH0CONbits.MODE    = 0;
+    AD2CH0CONbits.SAMC    = 0;
+    AD2CH0CONbits.DIFF    = 0;
+    AD2CH0CONbits.TRG1SRC = 0;          // idle until an ADC2 capture selects it (12 = SCCP1 Trigger out)
 
     // Channel 0: AN9, single-ended, unsigned right-aligned, one conversion per trigger,
     // sampling 0.5 TAD (8 ns) — the node is driven through 100 R / 56 pF, see pcb-brief.
     AD1CH0CON = 0;
-    AD1CH0CONbits.PINSEL  = ACQ_INPUT_NODE;
+    AD1CH0CONbits.PINSEL  = 9;          // AD1AN9 (devkit PIC32_ADC node)
     AD1CH0CONbits.MODE    = 0;          // single sample initiated by TRG1SRC
     AD1CH0CONbits.SAMC    = 0;          // 0.5 TAD
     AD1CH0CONbits.DIFF    = 0;
@@ -101,10 +121,62 @@ void acq_init(void) {
     DMA1SELbits.CHSEL = 0x2C;           // Table 16-2: 0x2C "ADC1 - AN1" (channel 1) — used by acq_il_run
 }
 
+// ADC2 variant of acq_run (input codes 16..31): identical chain on the second core — SCCP1 Trigger out ->
+// AD2CH0 (TRG1SRC 12) -> DMA0 (CHSEL 0x40 "ADC2 - AN0", Table 16-2) -> acq_buf. Board 3 (minUS_08112026) puts
+// the filtered RX node (net PIC32_ADC) on AD2AN9 = code 25, the default since fw 0.1.22. ADC1 CH0 is idled
+// (TRG1SRC 0) for the run so it does not also convert on every SCCP1 trigger.
+static acq_status_t acq_run_adc2(uint32_t *ticks) {
+    if (AD2CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
+    CCP1PR = acq_div - 1u;
+    AD1CH0CONbits.TRG1SRC = 0;
+    AD2CH0CONbits.PINSEL = IN_PINSEL;
+    if (acq_navg > 1) { AD2CH0CONbits.MODE = 2; AD2CH0CONbits.TRG2SRC = 2; AD2CH0CNT = acq_navg; AD2CH0CONbits.ACCRO = 0; }
+    else              { AD2CH0CONbits.MODE = 0; AD2CH0CONbits.TRG2SRC = 0; }
+    AD2CH0CONbits.SAMC = acq_samc < 0 ? samc_for_div(acq_div) : (unsigned)acq_samc;
+    AD2CH0CONbits.TRG1SRC = 12;         // SCCP1 Trigger out
+
+    IFS2bits.DMA0IF = 0;
+    DMA0CH = 0;
+    DMA0STAT = 0;
+    DMA0SELbits.CHSEL = 0x40;           // ADC2 - AN0 (channel 0)
+    DMA0SRC = (uint32_t)&AD2CH0DATA;
+    DMA0DST = (uint32_t)acq_buf;
+    DMA0CNT = ACQ_N;
+    DMA0CHbits.SIZE = 1; DMA0CHbits.SAMODE = 0; DMA0CHbits.DAMODE = 1; DMA0CHbits.TRMODE = 0;
+    DMA0CHbits.CHEN = 1;
+
+    (void)AD2CH0DATA;
+    CCP1TMR = 0;
+    TMR1 = 0;
+    LATAbits.LATA7 = 1;                 // RDY high: the RP's pulser PIO fires on this edge ("pe")
+    T1CONbits.ON = 1;
+    CCP1CON1bits.ON = 1;
+
+    for (uint32_t spins = 0; DMA0STATbits.DONE == 0 && spins < ACQ_DEADLINE_SPINS; spins++)
+        for (int k = 0; k < ACQ_POLL_NOPS; k++) __builtin_nop();
+
+    uint32_t t = TMR1;
+    LATAbits.LATA7 = 0;
+    CCP1CON1bits.ON = 0;
+    T1CONbits.ON = 0;
+    acq_status_t st = ACQ_OK;
+    if (DMA0STATbits.ADRERR != 0 || DMA0STATbits.BRERR || DMA0STATbits.BWERR) st = ACQ_DMAERR;
+    else if (DMA0STATbits.DONE == 0) st = ACQ_TIMEOUT;
+    else if (DMA0STATbits.OVERRUN) st = ACQ_OVERRUN;
+    DMA0CHbits.CHEN = 0;
+    AD2CH0CONbits.TRG1SRC = 0;          // ADC2 idle again, ADC1 CH0 back on SCCP1
+    AD1CH0CONbits.TRG1SRC = 12;
+    DMA0SELbits.CHSEL = 0x2B;
+    (void)AD2CH0DATA;
+    if (ticks) *ticks = t;
+    return st;
+}
+
 acq_status_t acq_run(uint32_t *ticks) {
+    if (IN_ADC2) return acq_run_adc2(ticks);
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
     CCP1PR = acq_div - 1u;                                // trigger period (see acq_set_div)
-    AD1CH0CONbits.PINSEL = acq_input;                     // input (see acq_set_input)
+    AD1CH0CONbits.PINSEL = IN_PINSEL;                     // input (see acq_set_input)
     // navg > 1: integration mode (DS70005592 §18.4.5 / Example 18-6): the SCCP trigger starts the first
     // conversion, TRG2SRC 2 (back-to-back) re-triggers immediately for the rest, the sum of navg results
     // lands in AD1CH0DATA (12 + log2(navg) bits) and raises the channel-ready DMA request once. Each
@@ -120,6 +192,7 @@ acq_status_t acq_run(uint32_t *ticks) {
     IFS2bits.DMA0IF = 0;
     DMA0CH = 0;
     DMA0STAT = 0;
+    DMA0SELbits.CHSEL = 0x2B;           // ADC1 channel 0 (acq_run_adc2 switches it to 0x40)
     DMA0SRC = (uint32_t)&AD1CH0DATA;
     DMA0DST = (uint32_t)acq_buf;
     DMA0CNT = ACQ_N;
@@ -160,7 +233,7 @@ acq_status_t acq_run(uint32_t *ticks) {
 // 4/16/64/256) and Timer1 (100 ns ticks) times trigger -> channel ready. Answers "how fast is one
 // channel really" independently of the DMA. Restores the SCCP-triggered single-sample setup afterwards.
 uint32_t acq_adc_bb(unsigned n, unsigned ovs, uint32_t *data) {
-    AD1CH0CONbits.PINSEL = acq_input;
+    AD1CH0CONbits.PINSEL = IN_PINSEL;
     AD1CH0CONbits.SAMC   = acq_samc < 0 ? 0 : (unsigned)acq_samc;
     if (ovs) { AD1CH0CONbits.MODE = 3; AD1CH0CONbits.ACCNUM = n >= 256 ? 3 : n >= 64 ? 2 : n >= 16 ? 1 : 0; AD1CH0CONbits.ACCBRST = 1; }
     else     { AD1CH0CONbits.MODE = 2; AD1CH0CNT = n; }
@@ -188,14 +261,14 @@ uint32_t acq_adc_bb(unsigned n, unsigned ovs, uint32_t *data) {
 // trg 3 = repeat timer (bench 2026-10-28: produced no conversions, DATA stayed stale).
 acq_status_t acq_cpu_run(unsigned trg, unsigned rptcnt, unsigned gap, unsigned phase, uint32_t *ticks) {
     if (AD1CONbits.ADRDY == 0) { if (ticks) *ticks = 0; return ACQ_NOTREADY; }
-    AD1CH0CONbits.PINSEL  = acq_input;
+    AD1CH0CONbits.PINSEL  = IN_PINSEL;
     AD1CH0CONbits.SAMC    = acq_samc < 0 ? 0 : (unsigned)acq_samc;
     AD1CH0CONbits.MODE    = 0;
     AD1CH0CONbits.TRG2SRC = 0;
     if (rptcnt != 1) AD1CONbits.RPTCNT = rptcnt & 0x3F;   // may be ignored while ON = 1 (datasheet note 3); 1 is set at init
     // Back-to-back (trg 2) chains from a finished conversion: kick the core with one software-triggered
     // conversion on channel 1 (same input) right after arming channel 0.
-    AD1CH1CON = 0; AD1CH1CONbits.PINSEL = acq_input; AD1CH1CONbits.TRG1SRC = 1;
+    AD1CH1CON = 0; AD1CH1CONbits.PINSEL = IN_PINSEL; AD1CH1CONbits.TRG1SRC = 1;
     volatile uint32_t *src = &AD1CH0DATA;
     uint16_t *dst = acq_buf;
     LATAbits.LATA7 = 1;
@@ -249,9 +322,9 @@ acq_status_t acq_il_run(unsigned off, unsigned navg, uint32_t *ticks) {
     if (off == 0 || off >= div) off = div / 2u + 1u;
     unsigned samc = acq_samc < 0 ? 0 : (unsigned)acq_samc;
 
-    AD1CH0CONbits.PINSEL = acq_input;  AD1CH0CONbits.SAMC = samc;
+    AD1CH0CONbits.PINSEL = IN_PINSEL;  AD1CH0CONbits.SAMC = samc;
     AD1CH1CON = 0;
-    AD1CH1CONbits.PINSEL = acq_input;  AD1CH1CONbits.SAMC = samc;
+    AD1CH1CONbits.PINSEL = IN_PINSEL;  AD1CH1CONbits.SAMC = samc;
     if (navg > 1) {
         AD1CH0CONbits.MODE = 2; AD1CH0CONbits.TRG2SRC = 2; AD1CH0CNT = navg; AD1CH0CONbits.ACCRO = 0;
         AD1CH1CONbits.MODE = 2; AD1CH1CONbits.TRG2SRC = 2; AD1CH1CNT = navg; AD1CH1CONbits.ACCRO = 0;

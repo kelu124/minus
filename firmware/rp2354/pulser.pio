@@ -1,0 +1,57 @@
+; minus — 3-level pulser on the TC4427/MIC4427 U3 + Q1/Q2 totem of board 3 (hardware/minUS_08112026).
+;
+; Wiring (netlist, 2026-11-19): GPIO8 "PWM_H" -> U3 IN A -> OUT A -> R5 -> Q2 IRLML6244 (N, source GND)
+;                               GPIO9 "PWM_L" -> U3 IN B -> OUT B -> R4 -> Q1 IRLML2244 (P, source +5 V)
+; so GPIO8 HIGH = drain "Transducer" pulled to GND, GPIO9 LOW = pulled to +5 V (the net names are swapped
+; vs what they do). set-pins base = GPIO8, count 2: bit0 = GPIO8, bit1 = GPIO9.
+;   0b10 idle / released (both FETs off)   0b00 +5 V (Q1 on)   0b11 GND (Q2 on)   0b01 = shoot-through, never used.
+;
+; One 32-bit word per shot (LSB first): [0] fire now (1) or on the next RDY rising edge (0),
+; [12:1] hi, [19:13] dead, [31:20] lo. Phase lengths in PIO cycles (clkdiv 1 = clk_sys):
+;   +5 V = hi + 2,  both off = dead + 4,  GND = lo + 2.
+; After the shot the SM pushes one word (all ones) so the CPU can tell that it fired.
+; in-base = GPIO7 (RDY <- PIC RA7): the PIC raises RDY right before it starts the ADC trigger timer.
+
+.program pulser
+.wrap_target
+    pull block
+    out y, 1            ; y = fire-now flag
+    out x, 12           ; x = hi
+    jmp y-- go          ; flag set: skip the RDY wait
+    wait 0 pin 0        ; RDY low (the PIC drops it when it parses ACQ) ...
+    wait 1 pin 0        ; ... then the rising edge = ADC start
+go:
+    set pins, 0b00      ; +5 V
+hi:
+    jmp x-- hi
+    set pins, 0b10      ; both off (dead time)
+    out x, 7
+dt:
+    jmp x-- dt
+    out y, 12
+    set pins, 0b11      ; GND (active clamp)
+lo:
+    jmp y-- lo
+    set pins, 0b10      ; released
+    mov isr, ~null
+    push noblock
+.wrap
+
+% c-sdk {
+#include "hardware/clocks.h"
+// pin_base = GPIO8 (two consecutive pins), rdy_pin = GPIO7. Pins are put in the idle state (0b10)
+// before the PIO takes them, so the hand-over never turns a FET on.
+static inline void pulser_program_init(PIO pio, uint sm, uint offset, uint pin_base, uint rdy_pin) {
+    pio_sm_set_pins_with_mask(pio, sm, 2u << pin_base, 3u << pin_base);
+    pio_sm_set_pindirs_with_mask(pio, sm, 3u << pin_base, 3u << pin_base);
+    pio_gpio_init(pio, pin_base);
+    pio_gpio_init(pio, pin_base + 1);
+    pio_sm_config c = pulser_program_get_default_config(offset);
+    sm_config_set_set_pins(&c, pin_base, 2);
+    sm_config_set_in_pins(&c, rdy_pin);
+    sm_config_set_out_shift(&c, true, false, 32);   // shift right, no autopull
+    sm_config_set_clkdiv(&c, 1.0f);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

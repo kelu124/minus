@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  fw: pulser PIO + `pulse`/`pe` (rp 0.1.30), ADC2 capture + AMP2 on (pic 0.1.22), proto 7; first pulse-echo data + plots in bench/2026-11-19-pe
 
 ## Committed
 

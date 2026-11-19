@@ -11,7 +11,8 @@
 #define ACQ_N        4095u
 #define ACQ_IL_HALF  2047u           // acq_il_run: samples per channel (two channels interleaved -> ACQ_IL_N values)
 #define ACQ_IL_N     (2u * ACQ_IL_HALF)
-#define ACQ_INPUT_NODE 9u            // ADC1 PINSEL of the common ADC node (AD1AN9 / RA9); 0 = OA1OUT (AD1AN0), 1 = OA1IN+ (AD1AN1)
+#define ACQ_INPUT_NODE 25u           // input code: 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. 25 = AD2AN9 = PIC32_ADC on board 3 (minUS_08112026, default
+                                     // since fw 0.1.22); 9 = AD1AN9 (devkit node), 0 = AD1AN0 OA1OUT, 1 = AD1AN1 (LNA tap on board 3, RX node on the devkit), 17 = AD2AN1 OA2OUT
 #define ACQ_TRIG_DIV 4u              // SCCP1 time base on CLKGEN12 200 MHz / 4 = 20 ns triggers: the ADC (32 ns) takes every other one -> a uniform 40 ns = 25 Msps comb that the DMA (40 ns per transfer) just sustains. Bench 2026-11-02: div 8 (40 ns triggers) sits on the DMA edge and drops ~1 in 4 (fill 226 us), div 5/6 jitter, div 10 = clean 20 Msps
 #define ACQ_TICK_NS  80u             // Timer1 tick: FPB 100 MHz / prescaler 8 = 80 ns (5.2 ms range); sent to the RP in every ACQ header
 #define ACQ_DEADLINE_TICKS 50000u    // 4 ms DMA deadline, in Timer1 ticks (expected fill ~ 2048 ticks at div 8)
@@ -27,7 +28,7 @@ void         acq_set_div(unsigned div);    // trigger period in CLKGEN12 clocks 
 unsigned     acq_get_div(void);
 void         acq_set_samc(int samc);       // -1 = auto (fit the trigger period), 0..7 = fixed SAMC (0.5 + 2n TAD)
 int          acq_get_samc(void);
-void         acq_set_input(unsigned pinsel); // ADC1 positive input (PINSEL 0..15): 9 node, 0 OA1OUT, 1 OA1IN+
+void         acq_set_input(unsigned in);   // input code 0..31 (see ACQ_INPUT_NODE); acqcpu/acqil/adcbb use only its ADC1 PINSEL
 unsigned     acq_get_input(void);
 void         acq_set_navg(unsigned n);     // 1 = one conversion per trigger; 2..16 = sum of n back-to-back conversions per trigger (ADC core at 31.25 Msps, 32 ns each)
 unsigned     acq_get_navg(void);
