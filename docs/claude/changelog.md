@@ -12,7 +12,7 @@ the sha.
 
 ## Committed
 
-- 2026-11-19  (this)  repo cleanup follow-up: paths fixed after moves (docs/bench, datasheet/, flat hardware/), STEP1 folded into README, README rewritten, LICENSE.md + LICENSES/, built uf2/hex committed, dead submodules removed
+- 2026-11-19  f47057f  repo cleanup follow-up: paths fixed after moves (docs/bench, datasheet/, flat hardware/), STEP1 folded into README, README rewritten, LICENSE.md + LICENSES/, built uf2/hex committed, dead submodules removed
 - 2026-11-19  bffae57  docs: session 11 close — lessons learnt (memory 0019), skill updates (minus-firmware, minus-docs), COMMITS.md catch-up, DONE.md
 - 2026-11-19  340091e  datasheet rev 0.1 of minUS_08112026 (LaTeX + PDF, measured values), fw pic 0.1.25 / rp 0.1.34 (ACQ status slow, re-shot), fine pulse-width sweep, TODO_HARDWARE TX–RX 0 Ω
 - 2026-11-19  d2a1e0f  fw: period-4 fixed-pattern correction on the PIC (pic 0.1.24, `PC`), rp 0.1.33 `pc`, proto 9
