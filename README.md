@@ -7,7 +7,7 @@ built as a conference-workshop badge.**
 the returning echo, and streams the raw data to a host. It is designed to be **cheap,
 small, simple, and hackable**: a badge attendees can use in an ultrasound-conference
 workshop (e.g. **muscle-contraction monitoring**, A-/M-mode) and then extend and
-experiment with (coded excitation, on-device DSP, add-on boards).
+experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/intended-use.md`](docs/intended-use.md).
 
 > ⚠️ **Status: working prototype (minus v1.1, board `minUS_08112026`).** Pulse-echo, the
 > switchable RX gain, the fixed-pattern correction and the RGB LED work on the bench, and the
