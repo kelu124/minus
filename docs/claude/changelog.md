@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  docs: session 11 — firmware bring-up on minUS_08112026 (board 3): RP + PIC flashed, link and acq ok
 
 ## Committed
 
