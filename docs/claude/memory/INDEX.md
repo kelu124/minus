@@ -20,3 +20,4 @@ One line per memory file. Read this first to find the right topic.
 - [0016-pulser-pulse-echo.md](0016-pulser-pulse-echo.md) — Board 3 pulser wiring/polarity, `pe` sync on RDY, ADC input codes, first echoes.
 - [0017-noise-enob.md](0017-noise-enob.md) — Board 3 noise/ENOB: ADC 10.2–10.5 bits, period-4 pin pattern, chain 6.3–8.3 bits full band / 8.2–11.4 in band, front-end limited at max gain.
 - [0018-datasheet.md](0018-datasheet.md) — Board 3 LaTeX datasheet: where it lives, how values/figures are generated, key measured facts.
+- [0019-lessons-session-11.md](0019-lessons-session-11.md) — Lessons learnt: netlist-before-flash, lying net names, ADC phase luck + on-chip slow flag, align-before-average, fixed-pattern check, UF2 flashing race, rpcli timing, LaTeX pitfalls.

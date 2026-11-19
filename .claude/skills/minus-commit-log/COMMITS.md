@@ -6,6 +6,18 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-19 | `6947599` | docs: changelog — record 340091e under Committed | Bookkeeping. |
+| 2026-11-19 | `340091e` | datasheet rev 0.1 of minUS_08112026 + fw ACQ 'slow' status (pic 0.1.25, rp 0.1.34, proto 10) | LaTeX datasheet with generated measured values; on-chip slow-lock flag makes re-shots ms instead of 0.76 s; fine pulse-width sweep; TX–RX 0 Ω TODO. |
+| 2026-11-19 | `9b3de01` | docs: changelog — record d2a1e0f under Committed | Bookkeeping. |
+| 2026-11-19 | `d2a1e0f` | fw: period-4 fixed-pattern correction on the PIC (pic 0.1.24, rp 0.1.33, proto 9) | Removes the fs/4 pin pattern from every capture (8.9 → 3.6 LSB at ×1). |
+| 2026-11-19 | `feed1c1` | docs: changelog — record 8edfc36 under Committed | Bookkeeping. |
+| 2026-11-19 | `8edfc36` | bench: ADC and RX-chain noise / ENOB on board 3 | ADC 10.5 bits, chain noise vs gain, period-4 pattern found, interference lines. |
+| 2026-11-19 | `db223c6` | docs: changelog — record 35c0873 under Committed | Bookkeeping. |
+| 2026-11-19 | `35c0873` | fw: RX gain command + pe retry (rp 0.1.32, pic 0.1.23, proto 8); gain sweep | 9 gain settings 0–42 dB via 4052 + UGE; sweep with pictures. |
+| 2026-11-19 | `8bf1bf5` | docs: changelog — record 970b172 under Committed | Bookkeeping. |
+| 2026-11-19 | `970b172` | fw: board 3 pulser + pulse-echo (rp 0.1.30), ADC2 capture (pic 0.1.22), proto 7 | First pulse-echo on board 3 (PIO pulser fired on RDY, ADC2 node). |
+| 2026-11-19 | `0c520bb` | docs: changelog — record 46d11a7 under Committed | Bookkeeping. |
+| 2026-11-19 | `46d11a7` | docs: session 11 — firmware bring-up on minUS_08112026 (board 3) | Board 3 runs the existing firmware; pin map checked. |
 | 2026-11-11 | `8268830` | docs: session 10 close — DONE.md, commit shas in log | Bookkeeping at session close. |
 | 2026-11-11 | `58529fc` | docs: changelog — record 78dc599 under Committed | Bookkeeping. |
 | 2026-11-11 | `78dc599` | hardware: 3D renders of minUS_08112026 + render_3d.py script | Repeatable populated renders (model paths remapped, U.FL substituted, headers/SMA omitted per owner). |

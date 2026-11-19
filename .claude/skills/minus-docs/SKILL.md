@@ -69,3 +69,8 @@ When a discussion settles something that should outlive the session:
 
 This skill and its instructions apply **only within the minus repo**. Do not
 apply these conventions to, or invoke this skill from, any other repository.
+
+## Datasheets / LaTeX (2026-11-19)
+`datasheet/<board>/` holds `*.tex` + `Makefile` + generated `values.tex`/`noise_rows.tex` + `figures/` + the PDF. Build with
+`make -C datasheet/<board>` (pdflatex ×3; no siunitx/latexmk here; declare Unicode symbols; no `\input` inside tabulars).
+Measured numbers are macros written by the bench analysis script — never type a measured value by hand into the `.tex`.

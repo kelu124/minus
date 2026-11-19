@@ -1,6 +1,6 @@
 ---
 name: minus-firmware
-description: Use when editing, building, versioning or flashing the minus devkit firmware under firmware/ (RP2354A pico-sdk side or PIC32AK side), adding CLI commands, or changing the RP<->PIC link protocol. minus repo ONLY.
+description: Use when editing, building, versioning or flashing the minus firmware under firmware/ (RP2354A pico-sdk side or PIC32AK side) on the devkit or board 3 (minUS_08112026), adding CLI commands, running pulse-echo/gain/noise bench captures, or changing the RP<->PIC link protocol. minus repo ONLY.
 ---
 
 # minus firmware conventions
@@ -45,3 +45,31 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
   step is designed.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; bring-up procedure: `STEP1.md`.
+
+## Board 3 (hardware/minUS_08112026) — current target (2026-11-19, rp 0.1.34 / pic 0.1.25, proto 10)
+Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
+- **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
+  8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.
+- **Gain**: 74HC4052 S0 = GPIO25, S1 = GPIO23 (both stages share them), Rf 2.2/4.7/6.8/10 k, Rg 1 k; PIC `UGE a1 a2` = ×1 per stage.
+- **ADC input codes**: 0–15 ADC1 PINSEL, 16–31 ADC2 + 16. 25 = AD2AN9 ADC node (default), 17 OA2OUT, 0 OA1OUT, 1 LNA tap
+  (aliased noise, not a real measurement), 15/31 band gap, 14/30 15/16 AVDD. DMA trigger ADC2 ch0 = CHSEL 0x40.
+- **Commands**: `pe [hi [lo [in [dead]]]]`, `pulse`, `gain [leg [u1 [u2]]]`, `pc [0|1]` (period-4 pattern correction, on).
+- **ACQ status `slow`** (PIC, no payload) = ADC locked to 40/60/60 ns; `pe`/`acq` re-shoot ≤ 8.
+- Not driven: LP5562 RGB at I²C 0x30 (WS2812 code targets GPIO10 = nothing on board 3). LED1 = PIC RC5 heartbeat.
+
+## Flashing pitfalls (learnt the hard way)
+```bash
+python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "reboot dfu" --wait=1
+for i in $(seq 1 40); do [ -e /media/kelu/RP2350/INFO_UF2.TXT ] && break; sleep 0.5; done   # wait for the MOUNT, not the USB id
+cp firmware/rp2354/build/minus_rp.uf2 /media/kelu/RP2350/ && sync
+for i in $(seq 1 40); do [ -e /dev/ttyACM0 ] && break; sleep 0.5; done; sleep 2               # may come back as ttyACM1
+python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "version" "pic flash" --wait=30            # then: raw ID? (PIC may need ~1 s)
+```
+- If cp fails, `pic flash` still runs and writes the OLD embedded PIC image — always check `version` before `pic flash`.
+- `reboot dfu` intermittently comes back as the app (`2e8a:0009`): ask the owner to hold SW2 (BOOTSEL) at plug-in.
+- `rpcli.py --wait=S` waits at least S seconds: fine for captures (`--wait=2` per `pe`), useless for timing.
+
+## Bench captures
+Keep each campaign as a script + raw files in `bench/<date>-<topic>/` with a README (commands, firmware versions, results).
+`/usr/bin/python3` has matplotlib. Noise: look at per-phase means (mod 4) first; align shots before averaging (sample-comb
+phase is random over one sample). Datasheet numbers come from `bench/2026-11-19-datasheet/analyze.py` → `datasheet/`.

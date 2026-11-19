@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  docs: session 11 close — lessons learnt (memory 0019), skill updates (minus-firmware, minus-docs), COMMITS.md catch-up, DONE.md
 
 ## Committed
 

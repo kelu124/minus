@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-19 (session 11): board 3 (minUS_08112026) bring-up — rp 0.1.29→0.1.34, pic 0.1.21→0.1.25, proto 6→10:
+  PIO pulser + `pe` pulse-echo (first echoes, `bench/2026-11-19-pe/`), ADC2 capture, `gain` (4052 + UGE, sweep
+  `bench/2026-11-19-gain/`), noise/ENOB analysis (`bench/2026-11-19-noise/`), period-4 pattern correction (`pc`), on-chip
+  `slow` flag + re-shot, datasheet rev 0.1 (`datasheet/minUS_08112026/`), lessons in memory 0019. Commits 46d11a7…6947599+.
 - 2026-11-11 — **3D renders of minUS_08112026** (session 10, memory 0015): `hardware/render_3d.py` → `minUS_F.png` / `minUS_B.png` /
   `minUS_angled.png`; vendored EasyEDA models in `hardware/3dmodels/EasyEDA/`, stock substitutes, U.FL shown, 2×N/IDC headers + SMA omitted. Commit 78dc599.
 - 2026-11-02 — **OA2 gain path identified and made controllable** (session 08 part 3, memory 0012): OA2IN+ = OA1OUT, feedback =
