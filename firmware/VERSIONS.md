@@ -16,6 +16,9 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 0.1.32 | `pe` retries (up to 8 shots) when the fill exceeds 4095 × 40 ns + 5 % (ADC locked to the 40/60/60 ns pattern); `acq_receive` returns a status |
+| 2026-11-19 | rp2354 | 0.1.31 | `gain [leg [u1 [u2]]]`: 4052 selects GPIO25 (S0) / GPIO23 (S1) driven low at boot, PIC `UGE` per stage; gain printed in the `pe` header; proto 8; embeds pic 0.1.23 |
+| 2026-11-19 | pic32  | 0.1.23 | `UGE a1 a2` link command: AMP1/AMP2 `UGE` (unity-gain, internal OUT→IN−), amp disabled around the change; proto 8 |
 | 2026-11-19 | rp2354 | 0.1.30 | **pulser** on board 3: `pulser.pio` (pio1 SM0, GPIO8/9 → U3 → Q2/Q1, idle set first in `main`), `pulse [hi [lo [dead]]]` one shot, `pe [hi [lo [in [dead]]]]` pulse-echo (shot on the PIC's RDY rise = ADC start, then `ACQ 4 0 <in> 1`); `acq` input codes 0..31, default 25; proto 7; embeds pic 0.1.22 |
 | 2026-11-19 | pic32  | 0.1.22 | **ADC2 capture**: input codes 16..31 = ADC2 PINSEL (+16), `acq_run_adc2` (AD2CH0 on SCCP1, DMA0 CHSEL 0x40); default input 25 = AD2AN9 (PIC32_ADC on board 3); op amp 2 on at boot; proto 7 |
 | 2026-11-02 | rp2354 | 0.1.29 | `i2c` bus scan, `pot <0|1> [n]` MCP4531 wiper read/set (U11 = OA2 feedback, gain print); proto 6; embeds pic 0.1.21 |

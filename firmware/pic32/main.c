@@ -164,6 +164,16 @@ int main(void) {
                     AMP2CON1bits.AMPEN = line[5] == '1';
                     char out[24]; snprintf(out, sizeof out, "AMP2 %u\n", (unsigned)AMP2CON1bits.AMPEN);
                     uart1_puts(out);
+                } else if (!strncmp(line, "UGE ", 4)) {
+                    // UGE <a1> <a2>: op amp unity-gain enable (AMPxCON1.UGE, DS70005592 §32.4.2.1 = internal OUT -> IN- short,
+                    // gain 1 whatever the external Rf/Rg). Board 3: the RP picks Rf via the 4052 (GPIO25/23); UGE = 1 bypasses
+                    // that stage. The amp is disabled around the change.
+                    char *e; unsigned a1 = (unsigned)strtoul(line + 4, &e, 10) & 1u, a2 = *e == ' ' ? (unsigned)strtoul(e + 1, NULL, 10) & 1u : 0u;
+                    unsigned en1 = AMP1CON1bits.AMPEN, en2 = AMP2CON1bits.AMPEN;
+                    AMP1CON1bits.AMPEN = 0; AMP1CON1bits.UGE = a1; AMP1CON1bits.AMPEN = en1;
+                    AMP2CON1bits.AMPEN = 0; AMP2CON1bits.UGE = a2; AMP2CON1bits.AMPEN = en2;
+                    char out[32]; snprintf(out, sizeof out, "UGE %u %u\n", (unsigned)AMP1CON1bits.UGE, (unsigned)AMP2CON1bits.UGE);
+                    uart1_puts(out);
                 } else if (!strncmp(line, "ACQCPU ", 7)) {
                     // ACQCPU <trg> [rptcnt [gap [phase]]]: CPU-loop capture (no DMA), same reply format as ACQ
                     char *e; unsigned trg = (unsigned)strtoul(line + 7, &e, 10); unsigned r = 1, gap = 0, phase = 0;

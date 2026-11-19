@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  fw: `gain` (4052 mux + PIC UGE, rp 0.1.31 / pic 0.1.23, proto 8), `pe` retry on slow ADC lock (rp 0.1.32); gain sweep data + plots in bench/2026-11-19-gain
 
 ## Committed
 

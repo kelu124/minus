@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
@@ -115,6 +116,25 @@ static void cmd_pulse(const char *arg) {
     pulse_print(&pc);
     printf("%s\n", pulser_fired() ? "fired" : "did NOT fire");
     pulser_disarm();
+}
+
+// ---------------------------------------------------------------- RX gain (board 3)
+// Two non-inverting stages, OA1 and OA2 on the PIC, Rg = 1 k (R28 / R30, AC-coupled by C43 / C44). Rf picked by the
+// SN74HC4052 U1, both sections on the same selects (S0 = GPIO25, S1 = GPIO23): leg 0 = 2.2 k (R1 / R26), 1 = 4.7 k
+// (R2 / R25), 2 = 6.8 k (R3 / R24), 3 = 10 k (R35 / R36). Per-stage gain 1 + Rf/1k (the mux Ron of ~70 ohm is ignored).
+// AMPxCON1.UGE = 1 on the PIC (link "UGE a1 a2") shorts OUT to IN- inside the op amp -> that stage is x1.
+static const unsigned gain_rf[4] = { 2200, 4700, 6800, 10000 };
+static unsigned gain_leg = 0, gain_u1 = 0, gain_u2 = 0;
+static void gain_pins_init(void) {
+    gpio_init(MINUS_PIN_GC1); gpio_put(MINUS_PIN_GC1, 0); gpio_set_dir(MINUS_PIN_GC1, GPIO_OUT);
+    gpio_init(MINUS_PIN_GC2); gpio_put(MINUS_PIN_GC2, 0); gpio_set_dir(MINUS_PIN_GC2, GPIO_OUT);
+}
+static double gain_stage(unsigned unity) { return unity ? 1.0 : 1.0 + gain_rf[gain_leg] / 1000.0; }
+static double gain_total(void) { return gain_stage(gain_u1) * gain_stage(gain_u2); }
+static void gain_desc(char *buf, unsigned n) {
+    double g = gain_total();
+    snprintf(buf, n, "gain leg %u (Rf %.1fk) OA1 x%.2f%s OA2 x%.2f%s = x%.1f (%.1f dB, + LNA)", gain_leg, gain_rf[gain_leg] / 1000.0,
+             gain_stage(gain_u1), gain_u1 ? " (UGE)" : "", gain_stage(gain_u2), gain_u2 ? " (UGE)" : "", g, 20.0 * log10(g));
 }
 
 // ---------------------------------------------------------------- link UART helpers
@@ -404,7 +424,7 @@ static void cmd_pic(const char *arg) {
 
 // ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
 #define ACQ_MAX_N 4095u
-static void acq_receive(char *hdr, unsigned hdrlen, const char *note);
+static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned long max_fill_ns);
 // Input codes (PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. Names for board 3 (minUS_08112026).
 static const char *acq_in_name(int in) {
     switch (in) {
@@ -438,7 +458,7 @@ static void cmd_acq(const char *arg) {
     char note[200];
     snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 4, in, inname,
              navg, navg > 1 ? "each value = sum of navg back-to-back 32 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
-    acq_receive(hdr, sizeof hdr, note);
+    acq_receive(hdr, sizeof hdr, note, 0);
 }
 // pe [hi_ns [lo_ns [in [dead_ns]]]]: pulse-echo. Arms the pulser on the PIC's RDY rising edge (the PIC raises RDY
 // one instruction before it starts the SCCP1 ADC trigger), then runs "ACQ 4 0 <in> 1" = 4095 samples at 25 Msps
@@ -446,17 +466,42 @@ static void cmd_acq(const char *arg) {
 static void cmd_pe(const char *arg) {
     unsigned hi, lo, dead; int in = 25; pulse_cyc_t pc; char hdr[96];
     if (!pulse_args(arg, &hi, &lo, &dead, &in) || in < 0 || in > 31) { printf("usage: pe [hi_ns [lo_ns [in [dead_ns]]]]  (defaults 200 500 25 27; in = 0..15 ADC1, 16..31 ADC2)\n"); return; }
-    link_flush_rx();
-    if (!pulser_arm(hi, lo, dead, false, &pc)) { printf("pe: pulse too long\n"); return; }
-    snprintf(hdr, sizeof hdr, "ACQ 4 0 %d 1\n", in);
-    link_puts(hdr);
-    char note[200];
-    snprintf(note, sizeof note, "pulse-echo: pulse on RDY rise (+5V %.0f / off %.0f / GND %.0f ns), in=%d %s, 40 ns/sample",
-             cyc_ns(pc.hi), cyc_ns(pc.dead), cyc_ns(pc.lo), in, acq_in_name(in));
-    acq_receive(hdr, sizeof hdr, note);
-    bool fired = pulser_fired();
-    pulser_disarm();
-    printf("# pulse %s\n", fired ? "fired" : "did NOT fire (no RDY edge)");
+    char note[360], g[160]; gain_desc(g, sizeof g);
+    // The 32 ns ADC on 20 ns SCCP triggers locks to every 2nd trigger (40 ns) most of the time, but some starts lock to a
+    // 40/60/60 ns pattern (53.3 ns mean, echoes at 0.75x the sample index, fill ~226 us instead of 164.7): bench
+    // 2026-11-19. Uniform 40 ns = 4095 x 40 = 163.8 us; anything above +5 % is rejected and the shot repeated.
+    const unsigned long max_fill_ns = 4095ul * 40ul * 105ul / 100ul;
+    int r = 1, tries = 0; bool fired = false;
+    while (r == 1 && tries < 8) {
+        tries++;
+        link_flush_rx();
+        if (!pulser_arm(hi, lo, dead, false, &pc)) { printf("pe: pulse too long\n"); return; }
+        snprintf(hdr, sizeof hdr, "ACQ 4 0 %d 1\n", in);
+        link_puts(hdr);
+        snprintf(note, sizeof note, "pulse-echo: pulse on RDY rise (+5V %.0f / off %.0f / GND %.0f ns), in=%d %s, 40 ns/sample; %s; try %d",
+                 cyc_ns(pc.hi), cyc_ns(pc.dead), cyc_ns(pc.lo), in, acq_in_name(in), g, tries);
+        r = acq_receive(hdr, sizeof hdr, note, max_fill_ns);
+        fired = pulser_fired();
+        pulser_disarm();
+        if (r == 1) sleep_ms(2);   // a different start phase next time
+    }
+    if (r == 1) printf("pe: %d shots, every capture had a non-uniform (slow) sample clock — nothing printed\n", tries);
+    printf("# pulse %s, %d shot(s)\n", fired ? "fired" : "did NOT fire (no RDY edge)", tries);
+}
+// gain [leg [u1 [u2]]]: leg 0..3 = 4052 Rf on both stages (2.2k/4.7k/6.8k/10k), u1/u2 = 1 -> that op amp at x1 (UGE)
+static void cmd_gain(const char *arg) {
+    if (arg && *arg) {
+        char *e; unsigned leg = (unsigned)strtoul(arg, &e, 10), u1 = 0, u2 = 0;
+        if (*e == ' ') { u1 = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') u2 = (unsigned)strtoul(e + 1, NULL, 10); }
+        if (leg > 3 || u1 > 1 || u2 > 1) { printf("usage: gain [leg 0..3 [u1 0|1 [u2 0|1]]]   leg: Rf 2.2k/4.7k/6.8k/10k (x3.2/x5.7/x7.8/x11 per stage); u = 1: that stage x1\n"); return; }
+        char tx[24], rx[48]; snprintf(tx, sizeof tx, "UGE %u %u\n", u1, u2);
+        link_flush_rx(); link_puts(tx);
+        if (link_readline(rx, sizeof rx, LINK_TIMEOUT_US) < 0 || strncmp(rx, tx, strlen(tx) - 1)) { printf("gain: PIC did not confirm '%s' (got '%s')\n", "UGE", rx); return; }
+        gpio_put(MINUS_PIN_GC1, leg & 1u); gpio_put(MINUS_PIN_GC2, (leg >> 1) & 1u);
+        gain_leg = leg; gain_u1 = u1; gain_u2 = u2;
+        sleep_ms(5);   // let the AC coupling (C1, C43/C44) settle after the switch
+    }
+    char d[160]; gain_desc(d, sizeof d); printf("%s\n", d);
 }
 static void cmd_acqcpu(const char *arg) {
     // acqcpu [trg [rptcnt]]: CPU-loop capture on the PIC (no DMA). trg 2 = back-to-back conversions (period
@@ -470,7 +515,7 @@ static void cmd_acqcpu(const char *arg) {
     char note[160];
     if (trg == 3) snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read), ADC repeat timer %u x 16 ns = %.1f ns; last input/samc", gap, r + 1, (r + 1) * 16.0);
     else snprintf(note, sizeof note, "CPU-loop reader (no DMA, +%u NOPs per read, phase %u), trigger %u (12 = SCCP1 at the last acq div; 2 back-to-back / 3 repeat timer are dead); last input/samc", gap, phase, trg);
-    acq_receive(hdr, sizeof hdr, note);
+    acq_receive(hdr, sizeof hdr, note, 0);
 }
 static void cmd_acqil(const char *arg) {
     // acqil [div [off [navg]]]: two ADC1 channels on the same input, each summing navg (default 2) 32 ns
@@ -486,9 +531,11 @@ static void cmd_acqil(const char *arg) {
     char note[200];
     snprintf(note, sizeof note, "two-channel interleave: per-channel period %u x 5 ns = %.1f ns, CH1 offset %s counts, each value = sum of %u conversions (%u bits); last input/samc",
              div, div * 5.0, off ? "given" : "div/2+1", navg, 12 + (navg >= 16 ? 4 : navg >= 8 ? 3 : navg >= 4 ? 2 : navg >= 2 ? 1 : 0));
-    acq_receive(hdr, sizeof hdr, note);
+    acq_receive(hdr, sizeof hdr, note, 0);
 }
-static void acq_receive(char *hdr, unsigned hdrlen, const char *note) {
+// Returns 0 = printed, 1 = fill longer than max_fill_ns (payload drained, NOT printed; caller retries), -1 = error.
+// max_fill_ns 0 = no check.
+static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned long max_fill_ns) {
     static uint8_t payload[2 * ACQ_MAX_N];
     // RP-side timing of the capture window: the PIC holds RDY high from trigger start to DMA done.
     absolute_time_t t_arm = make_timeout_time_ms(100); int64_t rp_fill_us = -1;
@@ -500,21 +547,23 @@ static void acq_receive(char *hdr, unsigned hdrlen, const char *note) {
         rp_fill_us = absolute_time_diff_us(t0, get_absolute_time());
     }
     int n = link_readline(hdr, hdrlen, 500000);                      // capture itself takes ~0.1 ms, deadline 5 ms
-    if (n < 0) { printf("acq: no reply from PIC\n"); return; }
-    if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return; }
+    if (n < 0) { printf("acq: no reply from PIC\n"); return -1; }
+    if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return -1; }
     acq_hdr_t h;
-    if (!acq_parse_header(hdr, &h)) { printf("acq: bad header '%s'\n", hdr); return; }
+    if (!acq_parse_header(hdr, &h)) { printf("acq: bad header '%s'\n", hdr); return -1; }
     char rate[64]; acq_format_rate(&h, rate, sizeof rate);
-    if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return; }
-    if (h.n == 0 || h.n > ACQ_MAX_N) { printf("acq: n=%u out of range\n", h.n); return; }   // parser already bounds it
+    if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return -1; }
+    if (h.n == 0 || h.n > ACQ_MAX_N) { printf("acq: n=%u out of range\n", h.n); return -1; }   // parser already bounds it
     unsigned want = 2 * h.n;
     absolute_time_t deadline = make_timeout_time_us(1500000);         // 8190 B at 115200 baud ~ 0.71 s
     unsigned got = 0;
     while (got < want && !time_reached(deadline))
         if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
-    if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return; }
+    if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return -1; }
+    if (max_fill_ns && (unsigned long long)h.ticks * h.tick_ns > max_fill_ns) return 1;
     printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s\n", h.n, rate, (long long)rp_fill_us, note);
     for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
+    return 0;
 }
 
 static void help(void) {
@@ -537,6 +586,7 @@ static void help(void) {
            "  raw AMP2 0|1  op amp 2 off/on on the PIC (off at boot): OA2IN+ = OA1OUT, gain 1 + R_AW(U11)/R49, OA2OUT = FE_A_OUT (J6.2 / RF13, AD2AN1)\n"
            "  pulse [hi [lo [dead]]]  one pulser shot now (board 3, GPIO8/9 -> U3 -> Q1/Q2): +5 V hi ns (200), both off dead ns (27, min 4 cycles), GND lo ns (500), then released\n"
            "  pe [hi [lo [in [dead]]]]  pulse-echo: pulser fires on the PIC's RDY rise = ADC start, 4095 samples at 25 Msps on in (25 = AD2AN9 node default; 0 OA1OUT, 1 LNA/OA1IN+, 17 OA2OUT)\n"
+           "  gain [leg [u1 [u2]]]  RX gain (board 3): leg 0..3 = 4052 Rf 2.2k/4.7k/6.8k/10k on both stages (x3.2/x5.7/x7.8/x11 each, Rg 1k); u1/u2 = 1 -> OA1/OA2 at x1 (PIC UGE). No args = show\n"
            "  i2c         scan the I2C0 bus (MCP4531 x2, MCP4728, OLED)\n"
            "  pot <0|1> [n]  MCP4531 wiper read / set 0..128: 0 = U11 (OA2 feedback: gain x1..x11, power-on 64 = ~x6), 1 = U18 (AD8338)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
@@ -545,6 +595,7 @@ static void help(void) {
 
 int main(void) {
     pulser_init();          // first: puts the pulser FETs in the off state (GPIO9 pad pull-down = Q1 on)
+    gain_pins_init();       // 4052 selects driven low = leg 0 (what the pad pull-downs gave before)
     stdio_init_all();
     led_init(); led_rgb(0, 0, 40);
     pic_taps_init();
@@ -593,6 +644,7 @@ int main(void) {
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "pe", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pe(line[2] == ' ' ? line + 3 : "");
+        else if (!strncmp(line, "gain", 4) && (line[4] == 0 || line[4] == ' ')) cmd_gain(line[4] == ' ' ? line + 5 : "");
         else if (!strncmp(line, "pulse", 5) && (line[5] == 0 || line[5] == ' ')) cmd_pulse(line[5] == ' ' ? line + 6 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);
