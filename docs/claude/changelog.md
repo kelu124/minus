@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-19  fw: pulser PIO + `pulse`/`pe` (rp 0.1.30), ADC2 capture + AMP2 on (pic 0.1.22), proto 7; first pulse-echo data + plots in bench/2026-11-19-pe
+- (none)
 
 ## Committed
 
+- 2026-11-19  970b172  fw: pulser PIO + `pulse`/`pe` (rp 0.1.30), ADC2 capture + AMP2 on (pic 0.1.22), proto 7; first pulse-echo data + plots in bench/2026-11-19-pe
 - 2026-11-19  46d11a7  docs: session 11 — firmware bring-up on minUS_08112026 (board 3): RP + PIC flashed, link and acq ok
 - 2026-11-11  8268830  docs: session 10 close — DONE.md entry, commit shas in session log
 - 2026-11-11  78dc599  hardware: 3D renders (top/bottom/angled) of minUS_08112026 + `hardware/render_3d.py` + vendored EasyEDA 3D models; headers/SMA omitted, U.FL substituted
