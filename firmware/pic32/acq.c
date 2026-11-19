@@ -145,6 +145,16 @@ static void acq_pc_apply(void) {
     }
 }
 
+// Slow-lock check (bench 2026-11-19): with 20 ns triggers the 32 ns conversion normally takes every 2nd trigger (40 ns), but
+// some start phases lock to 40/60/60 ns (fill ~226 us instead of 164.7 us, nothing dropped, so DMA status is clean). Expected
+// sample period = the smallest multiple of the trigger period >= 32 ns (SAMC 0 only); > +5 % = ACQ_SLOW.
+static acq_status_t acq_check_slow(acq_status_t st, uint32_t t) {
+    if (st != ACQ_OK || acq_samc != 0 || acq_navg > 1) return st;
+    uint32_t per = acq_div * 5u, k = (32u + per - 1u) / per;
+    uint64_t exp_ticks = (uint64_t)ACQ_N * per * k / ACQ_TICK_NS;
+    return (uint64_t)t * 100u > exp_ticks * 105u ? ACQ_SLOW : st;
+}
+
 // ADC2 variant of acq_run (input codes 16..31): identical chain on the second core — SCCP1 Trigger out ->
 // AD2CH0 (TRG1SRC 12) -> DMA0 (CHSEL 0x40 "ADC2 - AN0", Table 16-2) -> acq_buf. Board 3 (minUS_08112026) puts
 // the filtered RX node (net PIC32_ADC) on AD2AN9 = code 25, the default since fw 0.1.22. ADC1 CH0 is idled
@@ -192,6 +202,7 @@ static acq_status_t acq_run_adc2(uint32_t *ticks) {
     AD1CH0CONbits.TRG1SRC = 12;
     DMA0SELbits.CHSEL = 0x2B;
     (void)AD2CH0DATA;
+    st = acq_check_slow(st, t);
     if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;
@@ -249,6 +260,7 @@ acq_status_t acq_run(uint32_t *ticks) {
     else if (DMA0STATbits.DONE == 0) st = ACQ_TIMEOUT;
     else if (DMA0STATbits.OVERRUN) st = ACQ_OVERRUN;   // a trigger arrived while the previous transfer was still running: samples dropped
     DMA0CHbits.CHEN = 0;
+    st = acq_check_slow(st, t);
     if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;

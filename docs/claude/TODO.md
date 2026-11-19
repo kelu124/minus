@@ -5,6 +5,9 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **RESUME HERE (2026-11-19, part 6): datasheet rev 0.1 done** (`datasheet/minUS_08112026/`, rp 0.1.34 / pic 0.1.25, proto 10).
+  Next: sine test (SINAD ENOB), measure the pulse on a scope (TX node, effective t_hi + 48 ns), LNA gain at 3 MHz, supply current,
+  drive the LP5562 RGB (I²C 0x30) instead of WS2812, faster RP↔PIC link (115 200 Bd = 0.71 s/shot), sample-comb phase fix.
 - **RESUME HERE (2026-11-19, part 3): gain works on board 3** (rp 0.1.32 / pic 0.1.23, `gain [leg [u1 [u2]]]`, sweep in
   `bench/2026-11-19-gain/`). Next: (a) root-cause the ADC 40/60/60 ns lock (start phase SCCP1 vs ADC; `pe` retries for now; plain
   `acq` has no retry yet); (b) `reboot dfu` intermittently returns to the app instead of BOOTSEL (since 0.1.30?); (c) TGC = gain

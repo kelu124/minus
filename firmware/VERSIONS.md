@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 0.1.34 | `acq_receive` re-shoots on PIC status `slow` (`pe` and `acq`, ≤ 8, no payload transfer); proto 10; embeds pic 0.1.25 |
+| 2026-11-19 | pic32  | 0.1.25 | **ACQ status `slow`**: fill > expected + 5 % (smallest multiple of the trigger period ≥ 32 ns, SAMC 0, navg 1) → no payload, so a re-shot costs ms instead of 0.76 s; proto 10 |
 | 2026-11-19 | rp2354 | 0.1.33 | `pc [0\|1]` (pattern-correction state + last offsets); proto 9; embeds pic 0.1.24 |
 | 2026-11-19 | pic32  | 0.1.24 | **period-4 fixed-pattern correction** in `acq_run`/`acq_run_adc2` (per-phase mean of samples 64..N minus the mean, 1/16 LSB, clamped; navg 1 only; on at boot), `PC 0\|1` / `PC?`; proto 9. Bench: σ 8.94 → 3.57 LSB at ×1, residual pattern 0.17 LSB rms (`bench/2026-11-19-pc/`) |
 | 2026-11-19 | rp2354 | 0.1.32 | `pe` retries (up to 8 shots) when the fill exceeds 4095 × 40 ns + 5 % (ADC locked to the 40/60/60 ns pattern); `acq_receive` returns a status |

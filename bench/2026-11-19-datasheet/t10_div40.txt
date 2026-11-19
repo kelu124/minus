@@ -1,0 +1,1 @@
+# acq n=4095 fill=823.2us fs=4.97Msps rp_fill=820us (RDY window timed by the RP crystal) trigger div 40; in=25 AD2AN9 (PIC32_ADC: OA2OUT after the R67/C86/R68/C87 filter, board 3); navg=1 (12-bit unsigned)

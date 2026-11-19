@@ -19,3 +19,4 @@ One line per memory file. Read this first to find the right topic.
 - [0015-3d-renders.md](0015-3d-renders.md) — `hardware/render_3d.py`: kicad-cli top/bottom/angled renders; vendored EasyEDA models + stock substitutes; always omit 2×N/IDC headers and SMA.
 - [0016-pulser-pulse-echo.md](0016-pulser-pulse-echo.md) — Board 3 pulser wiring/polarity, `pe` sync on RDY, ADC input codes, first echoes.
 - [0017-noise-enob.md](0017-noise-enob.md) — Board 3 noise/ENOB: ADC 10.2–10.5 bits, period-4 pin pattern, chain 6.3–8.3 bits full band / 8.2–11.4 in band, front-end limited at max gain.
+- [0018-datasheet.md](0018-datasheet.md) — Board 3 LaTeX datasheet: where it lives, how values/figures are generated, key measured facts.

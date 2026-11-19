@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-19  datasheet rev 0.1 of minUS_08112026 (LaTeX + PDF, measured values), fw pic 0.1.25 / rp 0.1.34 (ACQ status slow, re-shot), fine pulse-width sweep, TODO_HARDWARE TX–RX 0 Ω
 
 ## Committed
 

@@ -458,7 +458,9 @@ static void cmd_acq(const char *arg) {
     char note[200];
     snprintf(note, sizeof note, "trigger div %u; in=%d %s; navg=%d (%s)", div ? div : 4, in, inname,
              navg, navg > 1 ? "each value = sum of navg back-to-back 32 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
-    acq_receive(hdr, sizeof hdr, note, 0);
+    // the PIC answers "slow" (no payload) when the ADC locked to the 40/60/60 ns pattern: capture again, up to 8 times
+    char cmdline[96]; memcpy(cmdline, hdr, sizeof cmdline);
+    for (int tries = 1; acq_receive(hdr, sizeof hdr, note, 0xFFFFFFFFul) == 1 && tries < 8; tries++) { link_flush_rx(); memcpy(hdr, cmdline, sizeof cmdline); link_puts(hdr); }
 }
 // pe [hi_ns [lo_ns [in [dead_ns]]]]: pulse-echo. Arms the pulser on the PIC's RDY rising edge (the PIC raises RDY
 // one instruction before it starts the SCCP1 ADC trigger), then runs "ACQ 4 0 <in> 1" = 4095 samples at 25 Msps
@@ -564,6 +566,7 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     acq_hdr_t h;
     if (!acq_parse_header(hdr, &h)) { printf("acq: bad header '%s'\n", hdr); return -1; }
     char rate[64]; acq_format_rate(&h, rate, sizeof rate);
+    if (!strcmp(h.status, "slow") && max_fill_ns) return 1;     // PIC flagged the 40/60/60 ns lock: caller re-shoots (no payload)
     if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return -1; }
     if (h.n == 0 || h.n > ACQ_MAX_N) { printf("acq: n=%u out of range\n", h.n); return -1; }   // parser already bounds it
     unsigned want = 2 * h.n;

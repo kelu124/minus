@@ -1,0 +1,21 @@
+T1 rp 0.1.34 pic 0.1.25 proto 10 uid 7D4466C63B374C98 i2c 0x30 ping 1308 us (n=20)
+T3 pe end-to-end (time_pe.py) median 0.878 s over 12 single-shot captures; payload transfer 0.71 s
+T6 echo 1 spectrum: peak 3.37 MHz, -6 dB 2.88-3.55 MHz (centre 3.22, 21 % FBW); -6 dB pulse length 764 ns; echo spacing 39.72 us
+T4 fine hi sweep (programmed ns: echo1 / echo2 pp): 13.3: 86/22; 26.7: 1362/267; 40.0: 1722/316; 53.3: 1958/370; 60.0: 2056/392; 73.3: 2248/389; 86.7: 2322/412; 100.0: 2357/441; 113.3: 2362/430; 126.7: 2315/441; 140.0: 2076/430; 146.7: 2155/416; 153.3: 2110/366; 173.3: 1794/364; 200.0: 1250/276; 253.3: 880/180; 300.0: 1092/205; 400.0: 1728/289; 600.0: 1260/258
+T4 fit: effective +5 V pulse = t_hi + 48.0 ns (R^2 0.66, f 3.22 MHz)
+T4 lo sweep (dead zone us, echo1 pp): 1 ns 7.6 us 1287; 100 ns 7.9 us 1145; 250 ns 8.2 us 1379; 500 ns 8.2 us 1258; 1000 ns 8.2 us 1357; 2000 ns 8.1 us 1277
+T5 main-bang onset (ns after ADC start): in0 0, in17 0, in25 0
+T7 g200: shots/capture [1, 3, 2, 1, 1, 2, 1, 3, 3, 5, 1, 2, 3, 1, 1, 1]; echo3 amp mean 1038 CV 2.94 %; arrival jitter 11.32 ns rms (span 36 ns); noise of an N-average (aligned, half-difference) {1: 13.95, 2: 9.68, 4: 6.07, 8: 3.66, 16: 2.59}
+T7 g010: shots/capture [1, 1, 3, 1, 3, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1]; echo2 amp mean 292 CV 2.57 %; arrival jitter 14.06 ns rms (span 43 ns); noise of an N-average (aligned, half-difference) {1: 3.34, 2: 3.1, 4: 1.79, 8: 1.25, 16: 0.88}
+T9 noise with firmware pattern correction (full band / 1.5-5 MHz, LSB; ENOB_n):
+   g011 G    1.0:  3.52 (8.39 b) /  0.44 (11.39 b); in-band input-ref at OA1 in 191.0 nV/rtHz
+   g010 G    3.7:  4.01 (8.20 b) /  0.52 (11.15 b); in-band input-ref at OA1 in 61.4 nV/rtHz
+   g110 G    6.9:  4.55 (8.02 b) /  0.59 (10.96 b); in-band input-ref at OA1 in 37.3 nV/rtHz
+   g210 G    9.8:  4.83 (7.93 b) /  0.67 (10.78 b); in-band input-ref at OA1 in 29.8 nV/rtHz
+   g310 G   13.1:  4.79 (7.95 b) /  0.77 (10.59 b); in-band input-ref at OA1 in 25.5 nV/rtHz
+   g000 G   13.2:  5.48 (7.75 b) /  1.04 (10.16 b); in-band input-ref at OA1 in 34.1 nV/rtHz
+   g100 G   40.0:  6.80 (7.44 b) /  1.99 (9.21 b); in-band input-ref at OA1 in 21.6 nV/rtHz
+   g200 G   77.4:  9.32 (6.99 b) /  2.83 (8.71 b); in-band input-ref at OA1 in 15.8 nV/rtHz
+   g300 G  133.6: 14.51 (6.35 b) /  4.03 (8.20 b); in-band input-ref at OA1 in 13.1 nV/rtHz
+   ADC alone (AD2AN15, SAMC 3): 0.81 LSB = 10.52 bits
+T10 sample rate options: div 4: fill 164.6 us, 24.87 Msps; div 10: fill 205.8 us, 19.89 Msps; div 20: fill 411.6 us, 9.94 Msps; div 40: fill 823.2 us, 4.97 Msps

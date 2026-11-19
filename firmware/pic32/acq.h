@@ -19,7 +19,7 @@
 #define ACQ_POLL_NOPS      1024      // NOPs between two DMA0STAT polls: each CPU SFR access stalls the DMA (~one lost trigger)
 #define ACQ_DEADLINE_SPINS 800u      // deadline in wait-loop iterations (~13 us each) ~ 10 ms
 
-typedef enum { ACQ_OK = 0, ACQ_TIMEOUT, ACQ_DMAERR, ACQ_OVERRUN, ACQ_NOTREADY } acq_status_t;
+typedef enum { ACQ_OK = 0, ACQ_TIMEOUT, ACQ_DMAERR, ACQ_OVERRUN, ACQ_NOTREADY, ACQ_SLOW } acq_status_t;   // SLOW: fill > expected + 5 % (ADC locked to a 40/60/60 ns pattern), no payload
 #define ACQ_ADRDY_SPINS 2000000u     // bounded wait for the ADC calibration (~5000 ADC clocks = 16 us; this is >> that)
 
 void         acq_init(void);               // ADC1 on + ready, CH0 config, SCCP1/Timer1/DMA set up; once, after clocks_init()

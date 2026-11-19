@@ -9,6 +9,10 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 
 ## Board `hardware/minUS_08112026/` (2nd iteration, review 2026-11-08, memory 0014)
 
+- **[todo] (owner, 2026-11-19)** Add a **0 Ω (DNP-able) link between TX (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) and RX
+  (`TRANSDUCER`, C45, RF22/RF23/H10)** so a single-element probe works on one connector without an external tee. RX is
+  protected by C45 10 nF + D2 BAV99 (±0.6 V); keep the pad DNP-able for separate TX/RX probes.
+
 - **[should] (bench 2026-11-19)** GPIO9 (`RP2354 PIO-PWM_L`, U3 IN B → Q1 P-FET gate) has no pull-up: the RP2350 pad default
   pull-down turns **Q1 on** from power-up until the firmware idles the pins (a few ms): `Transducer` sits at +5 V DC. Add 10 k
   pull-up on GPIO9 (and 10 k pull-down on GPIO8). The net names are also swapped vs function (PWM_H drives the low-side N-FET).

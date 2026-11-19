@@ -145,7 +145,7 @@ int main(void) {
                     }
                     RDY_LAT = 0;                        // PONG may have left RDY high; the RP times the RDY pulse of this capture
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
-                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     uart1_puts(out);
                     if (st == ACQ_OK)
@@ -198,7 +198,7 @@ int main(void) {
                         if (*e == ' ') { off = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
                     RDY_LAT = 0;
                     uint32_t t = 0; acq_status_t st = acq_il_run(off, navg, &t);
-                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : "notready";
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_IL_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     uart1_puts(out);
                     if (st == ACQ_OK)
