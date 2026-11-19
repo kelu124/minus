@@ -30,6 +30,11 @@ Then you are "up and running" with the past discussions and discoveries.
 - **Built firmware images are committed**: `firmware/rp2354/build/minus_rp.uf2` and
   `firmware/pic32/build/minus_pic.hex` (everything else under `build/` is ignored).
   Rebuild both and commit them with every firmware version bump.
+- **Firmware ↔ Python library stay in sync**: any change to a CLI command, a reply format, a PIC link command or a
+  firmware version must be reflected in `python/library/minus/` (commands.py / device.py / protocol.py), the test
+  fixture (`tests/record_fixture.py`) and the notebooks; then `python3 -m minus.fwsync --update` (from
+  `python/library`). A PostToolUse hook (`.claude/hooks/fwsync-check.sh`) and the git pre-commit hook
+  (`.githooks/pre-commit`, `git config core.hooksPath .githooks`) enforce it.
 - **Repo size:** overall size is fine, but **never commit a single file larger than
   45 MB**. Skip/trim oversized files (or note them and link instead).
 
@@ -38,6 +43,8 @@ Then you are "up and running" with the past discussions and discoveries.
 - `hardware/` — the current board (KiCad project `minUS.*`, board 3 = minUS_08112026),
   `production/` (JLCPCB outputs), `3dmodels/`, `render_3d.py`. Older boards: git history.
 - `firmware/` — `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) + `VERSIONS.md`.
+- `python/` — `library/minus/` (one `Minus` method per CLI command, parsers, `fwsync` check, offline tests)
+  and `notebooks/` (worked examples, executed on a board).
 - `datasheet/` — the product datasheet (LaTeX → `minus-datasheet.pdf`).
 - `docs/` — `claude/` (memory, logs, TODO/DONE, changelog), `bench/` (test data);
   will also hold the GitHub Pages material.

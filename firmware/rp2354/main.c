@@ -1,4 +1,4 @@
-// minus devkit — RP2354A "manager" firmware, step 1: inter-MCU link bring-up.
+// minus v1.1 (board minUS_08112026) — RP2354A "manager" firmware: USB CLI, RP<->PIC link, pulser, gain, PIC ICSP programmer.
 //
 // What it does
 //   * USB-C CDC console (115200 8N1 virtual, any baud) with a tiny command line.
@@ -234,7 +234,7 @@ static void i2c_ensure(void) {
 }
 static const char *i2c_name(unsigned a) {
     return a == 0x2E ? "MCP4531 U11 (OA2 feedback rheostat)" : a == 0x2F ? "MCP4531 U18 (AD8338 gain, via JP6/JP7)" :
-           a == 0x60 ? "MCP4728 U13 (DAC)" : a == 0x3C ? "OLED1" : "?";
+           a == 0x60 ? "MCP4728 U13 (DAC)" : a == 0x3C ? "OLED1" : a == 0x30 ? "LP5562 U5 (RGB LED driver)" : "?";
 }
 static void cmd_i2c(void) {
     // i2c: scan 0x08..0x77 with a zero-length write (ACK = device present)
@@ -244,6 +244,26 @@ static void cmd_i2c(void) {
         if (r >= 0) { printf("  0x%02X  %s\n", a, i2c_name(a)); found++; }
     }
     printf("i2c scan: %d device(s)\n", found);
+}
+// LP5562 U5 (board 3, I2C 0x30: ADDR_SEL0/1 = GND, EN tied to VCC) -> RGB LED U4 on its R/G/B outputs (W unused).
+// Datasheet programming sequence: ENABLE (0x00) = 0x40 chip_en, wait 500 us, CONFIG (0x08) = 0x01 internal clock (so the
+// external 32 kHz OSC1 is not needed), LED_MAP (0x70) = 0x00 all channels under I2C control, then the PWM registers
+// B 0x02 / G 0x03 / R 0x04 (0..255). Currents stay at the power-on 17.5 mA per channel.
+static bool lp5562_ready = false;
+static int lp5562_wr(uint8_t reg, uint8_t v) {
+    uint8_t tx[2] = { reg, v };
+    return i2c_write_timeout_us(i2c0, 0x30, tx, 2, false, 5000) == 2 ? 0 : -1;
+}
+static int lp5562_rgb(uint8_t r, uint8_t g, uint8_t b) {
+    i2c_ensure();
+    if (!lp5562_ready) {
+        if (lp5562_wr(0x00, 0x40) < 0) return -1;
+        sleep_us(500);
+        if (lp5562_wr(0x08, 0x01) < 0 || lp5562_wr(0x70, 0x00) < 0) return -1;
+        lp5562_ready = true;
+    }
+    if (lp5562_wr(0x04, r) < 0 || lp5562_wr(0x03, g) < 0 || lp5562_wr(0x02, b) < 0) { lp5562_ready = false; return -1; }
+    return 0;
 }
 // MCP4531 (7-bit, 129 taps, volatile wiper 0): write = [addr W] [0x00 | D8] [D7..0]; read = [addr W] [0x0C] then
 // [addr R] 2 bytes (D8 in bit 0 of the first). RAB 10k typ, RW ~75 ohm: R_AW(n) = RAB x (128 - n) / 128 + RW.
@@ -272,7 +292,7 @@ static void cmd_version(void) {
     char uid[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
     pico_get_unique_board_id_string(uid, sizeof uid);
     printf("%s %s proto %d (built " __DATE__ " " __TIME__ ", pico-sdk " PICO_SDK_VERSION_STRING ")\n", FW_NAME, FW_VERSION, PROTO_VERSION);
-    printf("board: minus_devkit (hardware/minUS_10102026), flash %u kB\n", PICO_FLASH_SIZE_BYTES / 1024);
+    printf("board: minus v1.1 (minUS_08112026), flash %u kB\n", PICO_FLASH_SIZE_BYTES / 1024);
     printf("chip: RP2354A  chip_id=0x%08lx package_sel=0x%lx version=A%u\n",
            (unsigned long)sysinfo_hw->chip_id, (unsigned long)sysinfo_hw->package_sel, rp2350_chip_version());
     printf("unique id: %s\n", uid);
@@ -582,9 +602,9 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
 }
 
 static void help(void) {
-    printf("minus devkit RP2354A link test\n"
+    printf("minus v1.1 RP2354A CLI\n"
            "  version     firmware version, chip id, unique id\n"
-           "  rgb R G B   set the WS2812/SK6812 colour (0-255 each), e.g. rgb 255 255 255\n"
+           "  rgb R G B   set the RGB LED (0-255 each): LP5562 U5 over I2C (board 3) + the WS2812/SK6812 line (devkit), e.g. rgb 255 255 255\n"
            "  reboot      reset the RP2354; 'reboot dfu' = reboot into BOOTSEL/UF2 mode\n"
            "  ping        send PING n over UART0 (GPIO16/17), expect PONG n from the PIC32\n"
            "  auto|stop   ping every 500 ms / stop\n"
@@ -619,7 +639,7 @@ int main(void) {
 
     char line[96]; int len = 0;
     absolute_time_t next_auto = get_absolute_time();
-    printf("\nminus devkit (hardware/minUS_10102026) RP2354A link test. 'help' for commands.\n");
+    printf("\nminus v1.1 (minUS_08112026) RP2354A. 'help' for commands.\n");
     while (true) {
         int c = getchar_timeout_us(1000);
         if (c != PICO_ERROR_TIMEOUT) {
@@ -630,7 +650,9 @@ int main(void) {
                 else if (!strncmp(line, "rgb", 3)) {
                     int r, g, b;
                     if (sscanf(line + 3, "%d %d %d", &r, &g, &b) == 3 && (unsigned)r < 256 && (unsigned)g < 256 && (unsigned)b < 256) {
-                        manual_led = true; led_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b); printf("rgb %d %d %d\n", r, g, b);
+                        manual_led = true; led_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b);
+                        int lp = lp5562_rgb((uint8_t)r, (uint8_t)g, (uint8_t)b);
+                        printf("rgb %d %d %d (LP5562 0x30: %s)\n", r, g, b, lp < 0 ? "not found" : "ok");
                     } else printf("usage: rgb R G B (0-255)\n");
                 }
                 else if (!strncmp(line, "reboot", 6)) cmd_reboot(line[6] == ' ' ? line + 7 : NULL);

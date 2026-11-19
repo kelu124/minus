@@ -9,10 +9,10 @@ small, simple, and hackable**: a badge attendees can use in an ultrasound-confer
 workshop (e.g. **muscle-contraction monitoring**, A-/M-mode) and then extend and
 experiment with (coded excitation, on-device DSP, add-on boards).
 
-> ⚠️ **Status: working prototype (board 3, `minUS_08112026`).** Pulse-echo, the
+> ⚠️ **Status: working prototype (minus v1.1, board `minUS_08112026`).** Pulse-echo, the
 > switchable RX gain and the fixed-pattern correction work on the bench, and the
 > [datasheet rev 0.1](datasheet/minus-datasheet.pdf) gives measured figures.
-> Firmware: RP2354A **0.1.34**, PIC32AK **0.1.25**, link protocol **10**.
+> Board **minus v1.1**; firmware RP2354A **1.1.1**, PIC32AK **1.1.0**, link protocol **10**.
 > Non-clinical, for **research / education / NDT** only; not a medical device.
 
 ![minUS board 3](hardware/minUS_angled.png)
@@ -34,6 +34,7 @@ experiment with (coded excitation, on-device DSP, add-on boards).
 |------|--------------|
 | [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, board 3 = `minUS_08112026`), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
 | [`firmware/`](firmware/README.md) | `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) sources, **built images committed** in `*/build/`, [`VERSIONS.md`](firmware/VERSIONS.md). |
+| [`python/`](python/README.md) | `minus` Python library (one method per CLI command, firmware-sync check, offline tests) + step-by-step [notebooks](python/notebooks/). |
 | [`datasheet/`](datasheet/) | Product datasheet (LaTeX source, figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)). |
 | [`docs/bench/`](docs/bench/) | Bench campaigns: raw captures, capture/analysis scripts and a README per campaign. |
 | [`docs/claude/`](docs/claude/README.md) | Working notes: session logs, decision memory, TODO/DONE, changelog. |
@@ -106,11 +107,13 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
    `pic flash` (erase, program, verify, ~1 s). It writes the PIC image embedded in the RP firmware,
    so check `version` first. With a Microchip tool on J1 instead:
    `make -C firmware/pic32 flash TOOL=SNAP` (or `PKBASIC`, `PK4`, `PK5`, `ICD4`, `ICD5`, `ICE4`).
-4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-devkit-pic32 0.1.25 proto 10`.
+4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`; `rgb 0 40 0` → LED green.
 5. **Pulse-echo:** `pe` fires the pulser and captures one A-line, and `gain [leg [u1 [u2]]]` sets
    the RX gain. The full command reference and pin map are in
    [`firmware/README.md`](firmware/README.md). Measurement campaigns to reproduce are in
    [`docs/bench/`](docs/bench/).
+6. **From Python:** `pip install -e python/library`, then follow [`python/notebooks/`](python/notebooks/)
+   (`from minus import Minus; dev = Minus(); dev.pe()`). See [`python/README.md`](python/README.md).
 
 ## Lineage & credits
 
@@ -123,5 +126,5 @@ to reduce risk.
 
 ## License
 
-Hardware: TAPR OHL v1.0. Firmware and scripts: GPL-3.0-or-later. Documentation, datasheet and
+Hardware: TAPR OHL v1.0. Firmware, Python library and scripts: GPL-3.0-or-later. Documentation, datasheet and
 bench data: CC-BY-SA-4.0. Details and third-party exceptions are in [LICENSE.md](LICENSE.md).

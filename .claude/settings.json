@@ -11,6 +11,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/fwsync-check.sh\"",
+            "timeout": 30,
+            "statusMessage": "minus: firmware <-> python library sync check"
+          }
+        ]
+      }
     ]
   }
 }

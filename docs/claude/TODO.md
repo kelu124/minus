@@ -5,6 +5,13 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **RESUME HERE (2026-11-19, session 12): minus v1.1** — rp 1.1.1 / pic 1.1.0 (proto 10) flashed on board 3; `rgb` drives the
+  LP5562; Python library `python/library/minus` + notebooks; fwsync hooks; E3 jitter study (`docs/bench/2026-11-19-jitter/`):
+  φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of
+  captures**, phase-dependent. Next: (a) root-cause the slips + slow lock (start SCCP1 from the ADC clock domain / time-stamp
+  conversions; check slips with `acq` on a CW tone); (b) host-side shot rejection on slips in the library (`Capture` helper);
+  (c) confirm LP5562 colour order R/G/B by eye; then the older items below (sine ENOB, scope pulse, LNA gain, supply current,
+  faster link).
 - **RESUME HERE (2026-11-19, part 6): datasheet rev 0.1 done** (`datasheet/minUS_08112026/`, rp 0.1.34 / pic 0.1.25, proto 10).
   Next: sine test (SINAD ENOB), measure the pulse on a scope (TX node, effective t_hi + 48 ns), LNA gain at 3 MHz, supply current,
   drive the LP5562 RGB (I²C 0x30) instead of WS2812, faster RP↔PIC link (115 200 Bd = 0.71 s/shot), sample-comb phase fix.

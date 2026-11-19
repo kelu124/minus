@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-19 (session 12): repo cleanup (flat `hardware/`, `datasheet/`, `docs/bench/`; STEP1 folded into README; licenses;
+  built uf2/hex committed; orphan sheets + dead submodules removed); minus **v1.1** naming, fw rp 1.1.0→1.1.1 / pic 1.1.0
+  (LP5562 `rgb`, E7 fixed); Python library + 3 executed notebooks + offline tests; fwsync check with Claude PostToolUse and git
+  pre-commit hooks; E3 sample-comb jitter study (400 shots) in the datasheet (rev 0.2).
 - 2026-11-19 (session 11): board 3 (minUS_08112026) bring-up — rp 0.1.29→0.1.34, pic 0.1.21→0.1.25, proto 6→10:
   PIO pulser + `pe` pulse-echo (first echoes, `bench/2026-11-19-pe/`), ADC2 capture, `gain` (4052 + UGE, sweep
   `bench/2026-11-19-gain/`), noise/ENOB analysis (`bench/2026-11-19-noise/`), period-4 pattern correction (`pc`), on-chip

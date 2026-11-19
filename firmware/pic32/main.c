@@ -1,4 +1,4 @@
-// minus devkit — PIC32AK1216GC41048 "capture engine" firmware, step 1: inter-MCU link bring-up.
+// minus v1.1 (board minUS_08112026) — PIC32AK1216GC41048 "capture engine" firmware.
 //
 // Answers "PING n\n" received on UART1 (U1RX = RP39/RC6, pin 25, net UART_TX <- RP2354 GPIO16)
 // with "PONG n\n" on U1TX = RP40/RC7 (pin 26, net UART_RX -> RP2354 GPIO17). Net names are from

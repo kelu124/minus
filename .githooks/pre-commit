@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# minus pre-commit: if firmware sources or the Python library are staged, the library must be in sync with the
+# firmware (python/library/minus/fwsync.py) and its offline tests must pass. Enable once per clone with:
+#   git config core.hooksPath .githooks
+if git diff --cached --name-only | grep -qE '^(firmware/|python/library/)'; then
+  cd "$(git rev-parse --show-toplevel)/python/library" || exit 1
+  PY=/usr/bin/python3; [ -x "$PY" ] || PY=python3
+  "$PY" -m minus.fwsync || { echo "pre-commit: firmware and python/library are out of sync (see above)"; exit 1; }
+  "$PY" -m unittest discover -s tests -q 2>&1 | tail -3
+  [ "${PIPESTATUS[0]}" -eq 0 ] || { echo "pre-commit: python/library tests fail"; exit 1; }
+fi
+exit 0

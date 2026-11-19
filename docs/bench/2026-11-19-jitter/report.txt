@@ -1,0 +1,14 @@
+400 shots (300 back-to-back, 100 with a random 0-50 ms pause), rp 1.1.1 / pic 1.1.0, `pe 200 500 25 27`, gain leg 2 (Rf 6.8k) OA1 x7.80 OA2 x7.80 = x60.8 (35.7 dB, + LNA)
+sample period 40.195 ns; fill_us [164.6]; re-shots (shots>1): 0; all fired: True
+MAIN-BANG template fit: residual 11 LSB rms per sample (main bang spans ~4000 LSB); phi at the search edge: 0 shots
+ECHO check (strongest echo, 37.2-50.2 µs): slow acoustic drift 161 ns p-p over the run (removed); shot-to-shot part vs main-bang phi: r = 0.47, slope 0.76 (1 = echo moves with the pulse), residual 16.3 ns rms
+SLIPS echo 37.2-50.2 µs: shots by offset (samples) -2..+2 [0, 6, 343, 51, 0], off by >2 (RF-cycle mis-picks, ignored) 0; aligned shots' residual 8.1 ns rms
+SLIPS echo 76.4-84.4 µs: shots by offset (samples) -2..+2 [2, 48, 243, 58, 3], off by >2 (RF-cycle mis-picks, ignored) 46; aligned shots' residual 8.6 ns rms
+PHI (pulse vs sample comb): rms 11.3 ns, span 39.0 ns p-p, central 95 % 38.1 ns; uniform over one sample would be 40.2 ns p-p / 11.6 ns rms
+  percentiles 0.5/2.5/25/50/75/97.5/99.5 %: -19.5 -19.1 -10.5 +0.0 +7.1 +19.0 +19.5 ns
+  KS vs uniform over its span: D = 0.089, p = 0.0034
+  largest gap in the sorted phases: 2.4 ns between +2.0 and +4.4 ns; shots above it: 144
+  clustering periodogram |<exp(2πi phi/P)>|: max 0.266 at P = 4.19 ns (3/√N = 0.150); P = 4 ns 0.192, 5 ns 0.058, 6.67 ns 0.026, 20 ns 0.122
+  shot-to-shot autocorrelation (lag 1..5): -0.03 -0.01 +0.02 +0.03 -0.00
+  set A (back-to-back) rms 11.6 ns, set B (random pause) rms 10.5 ns; corr(pause, phi) in B -0.07
+  rp_fill (RDY window timed by the RP, 1 µs resolution): {164: 347, 165: 53}; mean phi per value 164: -1.0, 165: -0.1 ns

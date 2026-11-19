@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-# minus devkit — RP2354A side ("manager": USB-C CLI, inter-MCU link, PIC reset/ICSP taps)
+# minus v1.1 — RP2354A side ("manager": USB-C CLI, inter-MCU link, PIC reset/ICSP taps)
 set(PICO_PLATFORM rp2350-arm-s CACHE STRING "")
 set(PICO_BOARD minus_devkit CACHE STRING "")
 list(APPEND PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/board)

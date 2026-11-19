@@ -1,4 +1,4 @@
-// minus devkit — PIC32AK "acq": one 4095-sample capture of an ADC1 input (default AN9 = the common
+// minus v1.1 — PIC32AK "acq": one 4095-sample capture of an ADC1 input (default AN9 = the common
 // ADC node, net PIC32_ADC, pin 5 / RA9; or AN0 = OA1OUT, AN1 = OA1IN+) at up to 25 Msps (DMA
 // ceiling at CPU 200 MHz: 4 standard-bus clocks = 40 ns per transfer; the ADC core converts every 32 ns
 // with its 250 MHz clock), into RAM, via DMA. acq_il_run = two channels interleaved (memory 0011).

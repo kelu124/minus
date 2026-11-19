@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minus"
+version = "1.1.1"
+description = "Python interface to the minus single-channel ultrasound board (RP2354A + PIC32AK)"
+readme = "../README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.8"
+dependencies = ["pyserial>=3.4", "numpy>=1.20"]
+
+[project.optional-dependencies]
+notebooks = ["matplotlib", "jupyter"]
+
+[tool.setuptools]
+packages = ["minus"]
+
+[tool.setuptools.package-data]
+minus = ["firmware_sync.json"]

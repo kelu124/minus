@@ -18,3 +18,8 @@ fp-lib-table.bak
 .superpowers/
 # host test binaries
 firmware/rp2354/tests/test_acq_parse
+# Python caches / notebook checkpoints
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/

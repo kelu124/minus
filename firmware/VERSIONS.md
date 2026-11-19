@@ -16,6 +16,9 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-19 | rp2354 | 1.1.1 | `rgb R G B` also drives the **LP5562 U5** (I²C 0x30, internal clock, I²C PWM control) → reply `rgb R G B (LP5562 0x30: ok\|not found)`; `i2c` names 0x30; proto 10; embeds pic 1.1.0 |
+| 2026-11-19 | rp2354 | 1.1.0 | **owner: v1.1** (MAJOR.MINOR set by the owner). FW_NAME `minus-rp2354`; `version`/banner/help print `minus v1.1 (minUS_08112026)` instead of the devkit name; no functional change; proto 10; embeds pic 1.1.0 |
+| 2026-11-19 | pic32  | 1.1.0 | **owner: v1.1**. FW_NAME `minus-pic32` (`ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`); no functional change; proto 10 |
 | 2026-11-19 | rp2354 | 0.1.34 | `acq_receive` re-shoots on PIC status `slow` (`pe` and `acq`, ≤ 8, no payload transfer); proto 10; embeds pic 0.1.25 |
 | 2026-11-19 | pic32  | 0.1.25 | **ACQ status `slow`**: fill > expected + 5 % (smallest multiple of the trigger period ≥ 32 ns, SAMC 0, navg 1) → no payload, so a re-shot costs ms instead of 0.76 s; proto 10 |
 | 2026-11-19 | rp2354 | 0.1.33 | `pc [0\|1]` (pattern-correction state + last offsets); proto 9; embeds pic 0.1.24 |

@@ -5,6 +5,13 @@ description: Use when editing, building, versioning or flashing the minus firmwa
 
 # minus firmware conventions
 
+## Python library sync (2026-11-19)
+Every CLI / reply-format / link-protocol / version change must land in `python/library/minus/` in the same commit:
+`commands.py` (dispatch token, exact `help` usage, method, `FIRMWARE`), `device.py`, `protocol.py`, re-record
+`tests/fixtures` with `tests/record_fixture.py`, re-run the notebooks, `python3 -m unittest discover -s tests`, then
+`python3 -m minus.fwsync --update` (cwd `python/library`). The PostToolUse hook reports drift after each firmware edit.
+Board 3 LED = LP5562 at I²C 0x30 (`rgb R G B`, rp ≥ 1.1.1).
+
 ## Versioning (owner rule, 2026-10-26)
 Each firmware has `version.h` with `FW_VERSION_MAJOR/MINOR/PATCH` + `PROTO_VERSION`.
 **Owner controls MAJOR.MINOR; Claude bumps PATCH on every change that alters a binary** and
@@ -46,7 +53,7 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (minUS_08112026, KiCad in `hardware/`) — current target (2026-11-19, rp 0.1.34 / pic 0.1.25, proto 10)
+## Board 3 (minUS_08112026, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-19, rp 1.1.1 / pic 1.1.0, proto 10)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.

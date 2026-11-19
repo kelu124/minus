@@ -1,0 +1,14 @@
+{
+ "date": "2026-11-19 14:41:21",
+ "rp": "1.1.1",
+ "pic": "1.1.0",
+ "proto": 10,
+ "board": "minus v1.1 (minUS_08112026)",
+ "unique_id": "7D4466C63B374C98",
+ "command": "pe 200 500 25 27",
+ "gain": "gain leg 2 (Rf 6.8k) OA1 x7.80 OA2 x7.80 = x60.8 (35.7 dB, + LNA)",
+ "pattern_correction": true,
+ "n_back_to_back": 300,
+ "n_random_delay": 100,
+ "note": "set A = back-to-back shots; set B = random 0-50 ms sleep before each shot"
+}

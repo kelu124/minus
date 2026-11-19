@@ -90,7 +90,7 @@ Then open the USB CDC port (`/dev/ttyACM0`, any baud) and type `help` — or scr
 | Command | Does |
 |---------|------|
 | `version` | firmware name/version, build date, pico-sdk version, chip id / package / revision, 64-bit unique id |
-| `rgb R G B` | set the WS2812/SK6812 colour, 0–255 per channel (`rgb 255 255 255` = white); disables status colours |
+| `rgb R G B` | RGB LED, 0–255 per channel: **LP5562 U5 over I²C 0x30** on board 3 / v1.1 (reply `rgb R G B (LP5562 0x30: ok\|not found)`, rp ≥ 1.1.1) and the WS2812/SK6812 line on GPIO10 (devkit) |
 | `reboot` / `reboot dfu` | reset the RP2354 / reboot into BOOTSEL so the UF2 drive appears (no button needed) |
 | `ping`, `auto`, `stop`, `stat` | one PING/PONG, PING every 500 ms, stop, counters |
 | `reset` | pulse PIC MCLR low via GPIO24 (needs the R53 fix) |
@@ -140,7 +140,7 @@ ASCII lines, `\n`-terminated, 115200 8N1 (PIC side: FUART = FPB = 80 MHz, `U1BRG
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-devkit-pic32 0.1.1 proto 2` |
+| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
 | `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|notready>` then, only on `ok`, **n × u16 little-endian** (8190 bytes, ~0.71 s). `ticks × tick_ns` = fill time measured on the PIC (Timer1), so the RP can print the effective rate and spot dropped triggers. Arguments persist on the PIC between calls. The RP drains the link until it is idle 50 ms before every command, so a timed-out `ACQ` cannot poison the next one. |
 | `ACQIL [div [off [navg]]]` | same reply format as `ACQ` with n = 4094 (two 2047-sample halves interleaved on the PIC); two-channel interleaved integration capture (see `acqil`). proto 5 |

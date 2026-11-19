@@ -1,4 +1,4 @@
-; minus — 3-level pulser on the TC4427/MIC4427 U3 + Q1/Q2 totem of board 3 (hardware/minUS_08112026).
+; minus — 3-level pulser on the TC4427/MIC4427 U3 + Q1/Q2 totem of board 3 (minus v1.1, hardware/).
 ;
 ; Wiring (netlist, 2026-11-19): GPIO8 "PWM_H" -> U3 IN A -> OUT A -> R5 -> Q2 IRLML6244 (N, source GND)
 ;                               GPIO9 "PWM_L" -> U3 IN B -> OUT B -> R4 -> Q1 IRLML2244 (P, source +5 V)
