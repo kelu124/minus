@@ -12,6 +12,7 @@ the sha.
 
 ## Committed
 
+- 2026-11-19  (this)  .gitignore: ignore .vscode/
 - 2026-11-19  0cc7e98  datasheet Annex A: test transducer from BiViPiezo.s1p (analyze_s1p.py, generated table + plots, VNA screenshot); mechanical paths fixed
 - 2026-11-19  41dd5a6  rp 1.1.2: `rgb R G B [pct]` LP5562 brightness (default 25 %); library rgb(pct), ID? retry, fixture + notebook 01 re-run, datasheet row
 - 2026-11-19  f61a323  minus v1.1: fw rp 1.1.1 / pic 1.1.0 (names, LP5562 rgb), orphan sheets removed, Python library + notebooks + tests, fwsync Claude/git hooks, E3 jitter study (400 shots, comb slips), datasheet rev 0.2 (licences, repo links)

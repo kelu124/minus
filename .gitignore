@@ -23,3 +23,5 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.egg-info/
+# editor settings (local)
+.vscode/
