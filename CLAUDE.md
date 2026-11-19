@@ -23,24 +23,25 @@ Then you are "up and running" with the past discussions and discoveries.
   and add its pointer to `docs/claude/memory/INDEX.md`.
 - **Work items** → keep `docs/claude/TODO.md` current; when done, move the item
   to `docs/claude/DONE.md` with the date.
-- **Downloaded PDFs** (papers, datasheets, reference-design docs) → save into
-  `pdfs/` (not a temp dir) with a descriptive name; index them in `pdfs/README.md`.
-  **Always keep a Markdown sibling next to each PDF** (same basename, `.md`) so the
-  text is greppable and cheap to read without re-parsing the PDF. Generate it with
-  the locally-installed **markitdown**: `markitdown foo.pdf -o foo.md`. Commit the
-  `.md` alongside the PDF. (This applies to text-bearing PDFs in `pdfs/`; skip it for
-  purely graphical schematic PDFs in `design/` where markitdown yields no useful text.)
-- **Schematics / design files** (KiCad, Gerbers, PDF schematics, BOMs) → save into
-  `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`).
+- **Bench data** (captures, analysis scripts, plots) → `docs/bench/<YYYY-MM-DD>-<topic>/`
+  with a README (commands, firmware versions, results), so every number can be reproduced.
+- **Reference PDFs / third-party datasheets are not stored in the repo** (removed in the
+  2026-11-19 cleanup; they live in git history before that date). Link to them instead.
+- **Built firmware images are committed**: `firmware/rp2354/build/minus_rp.uf2` and
+  `firmware/pic32/build/minus_pic.hex` (everything else under `build/` is ignored).
+  Rebuild both and commit them with every firmware version bump.
 - **Repo size:** overall size is fine, but **never commit a single file larger than
   45 MB**. Skip/trim oversized files (or note them and link instead).
 
 ## Project layout
 
-- `systems/` — device datasheets (one subfolder per design) + `TEMPLATE.md` +
-  `literature.md`. See `systems/README.md`.
-- `pdfs/` — source PDFs (papers, datasheets, reference designs).
-- `design/` — schematics & design files, one subfolder per design.
+- `hardware/` — the current board (KiCad project `minUS.*`, board 3 = minUS_08112026),
+  `production/` (JLCPCB outputs), `3dmodels/`, `render_3d.py`. Older boards: git history.
+- `firmware/` — `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) + `VERSIONS.md`.
+- `datasheet/` — the product datasheet (LaTeX → `minus-datasheet.pdf`).
+- `docs/` — `claude/` (memory, logs, TODO/DONE, changelog), `bench/` (test data);
+  will also hold the GitHub Pages material.
+- `LICENSE.md` + `LICENSES/` — per-folder licenses.
 
 ## On every commit
 

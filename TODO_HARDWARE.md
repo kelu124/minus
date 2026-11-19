@@ -1,13 +1,13 @@
 # TODO_HARDWARE — corrections for the next revision of the minus devkit
 
-Board under test: `hardware/minUS_10102026` (JLCPCB batch, 2 boards). This file lists what the
+Board under test: devkit `minUS_10102026` (removed from the tree 2026-11-19, see git history; current board = `hardware/`) (JLCPCB batch, 2 boards). This file lists what the
 next hardware revision must change, learned while bringing up this one. Keep it updated as the
 exploration progresses (session logs in `docs/claude/log/`, flaw review in
-`design/devkit/review-findings.md`, as-built notes in `docs/claude/memory/0008-*.md`).
+`design/devkit/review-findings.md` (git history), as-built notes in `docs/claude/memory/0008-*.md`).
 
 Legend: **[must]** blocks a function · **[should]** works with rework · **[nice]** convenience.
 
-## Board `hardware/minUS_08112026/` (2nd iteration, review 2026-11-08, memory 0014)
+## Board 3 `minUS_08112026` (now `hardware/`) (2nd iteration, review 2026-11-08, memory 0014)
 
 - **[todo] (owner, 2026-11-19)** Add a **0 Ω (DNP-able) link between TX (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) and RX
   (`TRANSDUCER`, C45, RF22/RF23/H10)** so a single-element probe works on one connector without an external tee. RX is
@@ -118,7 +118,7 @@ Legend: **[must]** blocks a function · **[should]** works with rework · **[nic
 - **[nice] LNA ahead of OA1:** BGA2817 MMIC (24 dB, 3.3 V, SOT363, LCSC C2654187), 10 nF couplers, BAV99 clamp,
   51 Ω termination to a decoupled Vmid that also biases OA1 IN+ — to be bench-checked at 1–5 MHz first.
 
-## Analog path (from `design/devkit/review-findings.md`, not yet re-checked on hardware)
+## Analog path (from `design/devkit/review-findings.md` (git history), not yet re-checked on hardware)
 
 - Gain distribution / digipot bandwidth, anti-alias RC corner (~6–8 MHz), LVP-only programming
   (never 9 V VPP on the shared ICSP net), HV P-FET gate drive — see sections B–E of the review.

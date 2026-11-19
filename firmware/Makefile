@@ -1,14 +1,14 @@
 # minus devkit firmware — top level. Builds both chips.
 #   make            -> both (PIC only if xc-dsc-gcc is installed)
 #   make rp | pic   -> one side        make flash-rp | flash-pic   make info   make clean
-all: rp pic
+all: pic rp
 
 rp:
 	$(MAKE) -C rp2354
 
 pic:
 	@if [ -x "$$($(MAKE) -s -C pic32 info | sed -n 's/^CC=//p')" ]; then $(MAKE) -C pic32; \
-	 else echo "pic32: skipped — xc-dsc-gcc not installed (see STEP1.md §2b)"; fi
+	 else echo "pic32: skipped — xc-dsc-gcc not installed (see README.md, Getting started)"; fi
 
 flash-rp:
 	$(MAKE) -C rp2354 flash

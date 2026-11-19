@@ -44,9 +44,9 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - RP is the **only master** of digipots/I²C; PIC SPI/I²C pins stay Hi-Z until the SPI-client
   step is designed.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
-- Pin map and board flaws: `firmware/README.md`; bring-up procedure: `STEP1.md`.
+- Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (hardware/minUS_08112026) — current target (2026-11-19, rp 0.1.34 / pic 0.1.25, proto 10)
+## Board 3 (minUS_08112026, KiCad in `hardware/`) — current target (2026-11-19, rp 0.1.34 / pic 0.1.25, proto 10)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.
@@ -70,6 +70,6 @@ python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "version" "pic flash" --wait
 - `rpcli.py --wait=S` waits at least S seconds: fine for captures (`--wait=2` per `pe`), useless for timing.
 
 ## Bench captures
-Keep each campaign as a script + raw files in `bench/<date>-<topic>/` with a README (commands, firmware versions, results).
+Keep each campaign as a script + raw files in `docs/bench/<date>-<topic>/` with a README (commands, firmware versions, results).
 `/usr/bin/python3` has matplotlib. Noise: look at per-phase means (mod 4) first; align shots before averaging (sample-comb
-phase is random over one sample). Datasheet numbers come from `bench/2026-11-19-datasheet/analyze.py` → `datasheet/`.
+phase is random over one sample). Datasheet numbers come from `docs/bench/2026-11-19-datasheet/analyze.py` → `datasheet/`.

@@ -1,9 +1,19 @@
-# build outputs
-firmware/*/build/
-# KiCad lock / autosave files
+# build outputs — ignored, except the flashable images, which are committed
+# (rebuild both + commit them with every firmware version bump)
+firmware/*/build/*
+!firmware/rp2354/build/minus_rp.uf2
+!firmware/pic32/build/minus_pic.hex
+# LaTeX intermediates
+*.aux
+*.log
+*.out
+*.toc
+# KiCad lock / autosave / local UI state
 *.lck
 ~*.kicad_*
-**/*-backups/*.zip
+*.kicad_prl
+*-backups/
+fp-lib-table.bak
 # superpowers plan workspaces (ledgers, briefs)
 .superpowers/
 # host test binaries

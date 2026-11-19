@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render top / bottom / angled 3D views of a minUS board with kicad-cli.
 
-Usage:  python3 hardware/render_3d.py hardware/minUS_08112026 [--quick]
+Usage:  python3 hardware/render_3d.py hardware [--quick]
 
 Writes <board>/minUS_F.png, minUS_B.png, minUS_angled.png.
 The design file is never modified: a patched copy goes to a temp dir.

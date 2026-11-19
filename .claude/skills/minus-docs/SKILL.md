@@ -42,20 +42,14 @@ When a discussion settles something that should outlive the session:
 - When an item is finished, move it to `docs/claude/DONE.md` with the date
   (`YYYY-MM-DD — what was done`, newest first).
 
-## 4b. Store artifacts (PDFs & design files)
+## 4b. Store artifacts (bench data, built firmware, design files)
 
-- Downloaded PDFs (papers, datasheets, reference-design docs) → `pdfs/` with a
-  descriptive name; index them in `pdfs/README.md`. Never leave them in a temp dir.
-  Keep a **Markdown sibling** next to each PDF (same basename `.md`) so the text is
-  greppable — generate with the local **markitdown**: `markitdown foo.pdf -o foo.md`,
-  and commit the `.md` with the PDF. (Skip for purely graphical schematic PDFs.)
-- Schematics / design files (KiCad, Gerbers, PDF schematics, BOMs) →
-  `design/<name>/`, one subfolder per design (slug matching `systems/<name>/`); note
-  the upstream source (repo URL + version) in a short `SOURCE.md`.
-- Survey/datasheet work lives in `systems/` (one subfolder per design, `TEMPLATE.md`
-  at root, `literature.md` for the broad review).
-- **File-size cap:** never commit a single file larger than **45 MB** (repo total
-  size is otherwise fine). Trim/skip oversized files and link to the source instead.
+- Bench data (captures, scripts, plots) → `docs/bench/<YYYY-MM-DD>-<topic>/` with a README
+  (commands, firmware versions, results).
+- Built images are committed: `firmware/rp2354/build/minus_rp.uf2`, `firmware/pic32/build/minus_pic.hex`.
+- The current board lives flat in `hardware/` (KiCad `minUS.*` + `production/`); older boards,
+  reference designs, the systems survey and source PDFs were removed on 2026-11-19 (see git history).
+- Never commit a single file > 45 MB.
 
 ## 5. On every commit
 
