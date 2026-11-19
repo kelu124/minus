@@ -8,10 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-19  bench: ADC + RX-chain noise / ENOB analysis on board 3 (bench/2026-11-19-noise, memory 0017)
+- (none)
 
 ## Committed
 
+- 2026-11-19  8edfc36  bench: ADC + RX-chain noise / ENOB analysis on board 3 (bench/2026-11-19-noise, memory 0017)
 - 2026-11-19  35c0873  fw: `gain` (4052 mux + PIC UGE, rp 0.1.31 / pic 0.1.23, proto 8), `pe` retry on slow ADC lock (rp 0.1.32); gain sweep data + plots in bench/2026-11-19-gain
 - 2026-11-19  970b172  fw: pulser PIO + `pulse`/`pe` (rp 0.1.30), ADC2 capture + AMP2 on (pic 0.1.22), proto 7; first pulse-echo data + plots in bench/2026-11-19-pe
 - 2026-11-19  46d11a7  docs: session 11 — firmware bring-up on minUS_08112026 (board 3): RP + PIC flashed, link and acq ok
