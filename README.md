@@ -148,7 +148,8 @@ to reduce risk.
 Hardware: TAPR OHL v1.0. Firmware, Python library and scripts: GPL-3.0-or-later. Documentation, datasheet and
 bench data: CC-BY-SA-4.0. Details and third-party exceptions are in [LICENSE.md](LICENSE.md).
 
-<img src="docs/images/oshw_facts.svg" alt="Open Source Licenses: hardware TAPR-OHL-1.0, software GPL-3.0-or-later, documentation CC-BY-SA-4.0" width="360">
+<img src="docs/images/oshw_facts.svg" alt="Open Source Licenses: hardware TAPR-OHL-1.0, software GPL-3.0-or-later, documentation CC-BY-SA-4.0" height="187">
+<a href="https://certification.oshwa.org/fr000032.html"><img src="docs/images/FR000032.svg" alt="OSHWA certified open source hardware, UID FR000032" height="187"></a>
 
 Certified by the Open Source Hardware Association as **[FR000032](https://certification.oshwa.org/fr000032.html)**
 ("minUS - low cost pic32/rp2354 pulse-echo", 2026-11-20). The certification mark is used under the
