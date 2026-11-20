@@ -1,7 +1,7 @@
 # TODO_HARDWARE — changes for the next board revision
 
 **Current board:** minus v1.1 ("board 3"), KiCad project in [`hardware/`](hardware/),
-firmware rp 1.1.2 / pic 1.1.0. Items below come from the bench bring-up (session logs in `docs/claude/log/`,
+firmware rp 1.1.3 / pic 1.1.0. Items below come from the bench bring-up (session logs in `docs/claude/log/`,
 campaigns in `docs/bench/2026-11-19-*`), the datasheet errata (E1–E11, `datasheet/minus-datasheet.pdf`) and the
 design reviews (repo memory `docs/claude/memory/0014`, `0016`, `0017`, `0020`).
 

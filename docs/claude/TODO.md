@@ -5,6 +5,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **Flash rp 1.1.3 on board 3** (built 2026-11-20, not flashed: board absent) → `version` shows `board: minus v1.1`; then
+  re-record `python/library/tests/record_fixture.py` (fixture + notebook 01 outputs were hand-edited) and re-run the notebooks.
 - **RESUME HERE (2026-11-19, session 12): minus v1.1** — rp 1.1.1 / pic 1.1.0 (proto 10) flashed on board 3; `rgb` drives the
   LP5562; Python library `python/library/minus` + notebooks; fwsync hooks; E3 jitter study (`docs/bench/2026-11-19-jitter/`):
   φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of

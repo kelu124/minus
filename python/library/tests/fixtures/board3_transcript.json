@@ -1,6 +1,6 @@
 {
 "firmware": {
-"rp": "1.1.2",
+"rp": "1.1.3",
 "pic": "1.1.0"
 },
 "replies": {
@@ -32,8 +32,8 @@
 "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)"
 ],
 "version": [
-"minus-rp2354 1.1.2 proto 10 (built Nov 19 2026 14:59:07, pico-sdk 2.1.0)",
-"board: minus v1.1 (minUS_08112026), flash 2048 kB",
+"minus-rp2354 1.1.3 proto 10 (built Nov 20 2026 21:13:05, pico-sdk 2.1.0)",
+"board: minus v1.1, flash 2048 kB",
 "chip: RP2354A  chip_id=0x30004927 package_sel=0x1 version=A3",
 "unique id: 7D4466C63B374C98"
 ],

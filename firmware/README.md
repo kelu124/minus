@@ -7,7 +7,7 @@ library [`python/library/minus/`](../python/library/minus/) (kept in sync by `py
 
 | Dir | Chip | Toolchain | Output (committed) | Status |
 |-----|------|-----------|--------------------|--------|
-| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.2**, running on board 3 |
+| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.3**, running on board 3 |
 | `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.0, proto 10**, flashed by the RP |
 
 Toolchain install and the build/flash walk-through are in the top-level
@@ -82,7 +82,7 @@ Talk to it: `/dev/ttyACM0` (USB CDC, any baud), type `help`, or script it:
 The `make -C firmware/pic32 flash` target (MPLAB IPE + PICkit/Snap) is for boards with an ICSP header only;
 v1.1 has none.
 
-## RP CLI commands (rp 1.1.2)
+## RP CLI commands (rp 1.1.3)
 
 | Command | Does |
 |---------|------|

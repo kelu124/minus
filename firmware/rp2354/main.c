@@ -292,7 +292,7 @@ static void cmd_version(void) {
     char uid[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
     pico_get_unique_board_id_string(uid, sizeof uid);
     printf("%s %s proto %d (built " __DATE__ " " __TIME__ ", pico-sdk " PICO_SDK_VERSION_STRING ")\n", FW_NAME, FW_VERSION, PROTO_VERSION);
-    printf("board: minus v1.1 (minUS_08112026), flash %u kB\n", PICO_FLASH_SIZE_BYTES / 1024);
+    printf("board: minus v1.1, flash %u kB\n", PICO_FLASH_SIZE_BYTES / 1024);
     printf("chip: RP2354A  chip_id=0x%08lx package_sel=0x%lx version=A%u\n",
            (unsigned long)sysinfo_hw->chip_id, (unsigned long)sysinfo_hw->package_sel, rp2350_chip_version());
     printf("unique id: %s\n", uid);
@@ -639,7 +639,7 @@ int main(void) {
 
     char line[96]; int len = 0;
     absolute_time_t next_auto = get_absolute_time();
-    printf("\nminus v1.1 (minUS_08112026) RP2354A. 'help' for commands.\n");
+    printf("\nminus v1.1 RP2354A. 'help' for commands.\n");
     while (true) {
         int c = getchar_timeout_us(1000);
         if (c != PICO_ERROR_TIMEOUT) {

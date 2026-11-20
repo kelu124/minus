@@ -11,7 +11,7 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.2"},
+    "rp": {"name": "minus-rp2354", "version": "1.1.3"},
     "pic": {"name": "minus-pic32", "version": "1.1.0"},
     "proto": 10,
 }
