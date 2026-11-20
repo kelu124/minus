@@ -14,6 +14,8 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 > [datasheet rev 0.2](datasheet/minus-datasheet.pdf) gives measured figures, errata and the
 > test transducer (Annex A). Firmware RP2354A **1.1.2**, PIC32AK **1.1.0**, link protocol **10**.
 > Source: <https://github.com/kelu124/minus>.
+> **OSHWA-certified open source hardware, UID [FR000032](https://certification.oshwa.org/fr000032.html)**
+> (2026-11-20); the mark and UID are on the front silkscreen.
 > Non-clinical, for **research / education / NDT** only; not a medical device.
 
 ![minUS board 3](hardware/minUS_angled.png)
@@ -30,7 +32,7 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
   The probe used for all measurements is characterised from its S11 in datasheet Annex A
   ([`datasheet/piezo_test/`](datasheet/piezo_test/)).
 - **Open:** open hardware + firmware + docs, designed for JLCPCB fabrication
-  (see [LICENSE.md](LICENSE.md)); OSHWA certification planned.
+  (see [LICENSE.md](LICENSE.md)); OSHWA certified, UID [FR000032](https://certification.oshwa.org/fr000032.html).
 
 ## Repository map
 
@@ -145,3 +147,10 @@ to reduce risk.
 
 Hardware: TAPR OHL v1.0. Firmware, Python library and scripts: GPL-3.0-or-later. Documentation, datasheet and
 bench data: CC-BY-SA-4.0. Details and third-party exceptions are in [LICENSE.md](LICENSE.md).
+
+<img src="docs/images/oshw_facts.svg" alt="Open Source Licenses: hardware TAPR-OHL-1.0, software GPL-3.0-or-later, documentation CC-BY-SA-4.0" width="360">
+
+Certified by the Open Source Hardware Association as **[FR000032](https://certification.oshwa.org/fr000032.html)**
+("minUS - low cost pic32/rp2354 pulse-echo", 2026-11-20). The certification mark is used under the
+[OSHWA mark license agreement](https://certification.oshwa.org/license-agreement.html); its source files are in
+[`hardware/certification-mark/`](hardware/certification-mark/).

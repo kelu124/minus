@@ -5,10 +5,6 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **OSHWA marking (owner, 2026-11-19).** The owner will add the OSHWA certification mark to the board: apply for the UID at
-  certification.oshwa.org (licences already in place: TAPR-OHL-1.0 hardware, GPL-3.0-or-later firmware/software, CC-BY-SA-4.0
-  docs, see `LICENSE.md`), then put the logo + UID on the silkscreen in `hardware/minUS.kicad_pcb`, and mention the UID in the
-  README and the datasheet (Mechanical table, License and resources).
 - **RESUME HERE (2026-11-19, session 12): minus v1.1** — rp 1.1.1 / pic 1.1.0 (proto 10) flashed on board 3; `rgb` drives the
   LP5562; Python library `python/library/minus` + notebooks; fwsync hooks; E3 jitter study (`docs/bench/2026-11-19-jitter/`):
   φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of

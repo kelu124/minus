@@ -12,6 +12,7 @@ the sha.
 
 ## Committed
 
+- 2026-11-20  PENDINGSHA  OSHWA certification FR000032: mark + UID on F.SilkS, mark kit (KiCad only), renders redone, README + datasheet (licence box oshw_facts, fixed to TAPR/CC-BY-SA) — no version bump
 - 2026-11-20  d39fe5d  README: removed Tag-Connect/J1 Microchip-programmer and MPLAB X steps (v1.1: RP is the only PIC programmer), front end with BGA2817 LNA + 9 gains 0–42.5 dB, docs/costs + intended-use in the map
 - 2026-11-19  6340166  docs/costs/cost_bom.xls (BOM cost sheet)
 - 2026-11-19  454d31d  GitHub Pages: README published as the site on push to main (.github/workflows/pages.yml, .github/pages/build.py)

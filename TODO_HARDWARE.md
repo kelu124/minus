@@ -14,8 +14,6 @@ history (this file before 2026-11-19).
 - **[must] U3 = MIC4427YMM (LCSC C152165)** in the schematic, PCB and `hardware/production/bom.csv`: they still say
   TC4427AEUA713 (C628548, out of stock). Same MSOP-8 and pin order. Check live stock at order time (13 on 2026-10-24);
   fallback TC4427AEOA713 (C20551, SOIC-8, footprint change). Datasheet E9.
-- **[must] OSHWA mark (owner):** apply for the UID (licences in `LICENSE.md`), put the logo + UID on the silkscreen,
-  then cite the UID in the README and the datasheet.
 - **[should] TX at +5 V during power-up (E1):** GPIO9 (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) has no pull-up, so the
   RP2350 pad pull-down turns Q1 on until the firmware idles the pins (a few ms). Add 10 kΩ pull-up on GPIO9 and
   10 kΩ pull-down on GPIO8.
