@@ -23,8 +23,9 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 - **Two MCUs:** a Raspberry Pi **RP2354A** (USB-C console, pulse timing via PIO, gain mux,
   LP5562 RGB LED over I²C, ICSP programmer for the PIC) and a Microchip **PIC32AK1216GC41048** (on-chip
   ADCs and op amps: captures the A-line, 4095 samples at up to ~25 Msps).
-- **Front end:** TC4427/MIC4427-driven 3-level pulser → protected RX → two-stage op-amp gain
-  (4 legs per stage via analog mux, ×1 bypass) → PIC ADC.
+- **Front end:** TC4427/MIC4427-driven 3-level pulser → protected RX (10 nF DC block, BAV99 clamp) →
+  BGA2817 LNA (24 dB) → two on-chip op-amp stages (feedback legs via a 4052 mux, ×1 bypass): 9 gain settings,
+  0–42.5 dB → PIC 12-bit ADC.
 - **Transducer:** 3–4 MHz single-element piezo, separate TX and RX connectors (SMA + U.FL); raw RF A-mode.
   The probe used for all measurements is characterised from its S11 in datasheet Annex A
   ([`datasheet/piezo_test/`](datasheet/piezo_test/)).
@@ -39,6 +40,8 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 | [`firmware/`](firmware/README.md) | `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) sources, **built images committed** in `*/build/`, [`VERSIONS.md`](firmware/VERSIONS.md). |
 | [`python/`](python/README.md) | `minus` Python library (one method per CLI command, firmware-sync check, offline tests) + step-by-step [notebooks](python/notebooks/). |
 | [`datasheet/`](datasheet/) | Product datasheet rev 0.2 (LaTeX source, generated values/figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)); [`piezo_test/`](datasheet/piezo_test/) = test-probe S11 (Annex A). |
+| [`docs/intended-use.md`](docs/intended-use.md) | Intended use (workshop badge, research / education / NDT). |
+| [`docs/costs/`](docs/costs/) | BOM cost sheet ([`cost_bom.xls`](docs/costs/cost_bom.xls)). |
 | [`docs/bench/`](docs/bench/) | Bench campaigns: raw captures, capture/analysis scripts and a README per campaign (pulse-echo, gain, noise, pattern correction, datasheet, [E3 comb-phase jitter](docs/bench/2026-11-19-jitter/)). |
 | [`docs/claude/`](docs/claude/README.md) | Working notes: session logs, decision memory, TODO/DONE, changelog. |
 | [`TODO_HARDWARE.md`](TODO_HARDWARE.md) | Corrections queued for the next board revision. |
@@ -68,15 +71,10 @@ takes the `.uf2` over its USB bootloader, and then programs the PIC itself.
 2. **Device Family Pack `Microchip.PIC32AK-GC_DFP`** (1.1.53 tested) from
    <https://packs.download.microchip.com/>. The `.atpack` is a zip: unpack it to
    `~/microchip/packs/PIC32AK-GC_DFP/1.1.53/`. MPLAB X can also install it (*Tools → Packs*).
-3. **MPLAB X IDE** (6.35 tested): only needed to flash the PIC with a Microchip tool, through
-   `ipecmd`. Keep "MPLAB IPE" ticked in the installer. It takes ~3 GB and also installs ~8 GB of
-   device packs, so keep ≥ 2 GB free on `/`. For programmer access without root, install
-   Microchip's udev rules (`/etc/udev/rules.d/z010_mchp_tools.rules`), then run
-   `sudo udevadm control --reload && sudo udevadm trigger` and replug.
-4. **Optional Microchip programmer** on J1 (Tag-Connect TC2030-NL, ICSP pinout 1 MCLR · 2 VDD ·
-   3 GND · 4 PGD · 5 PGC · 6 NC). MPLAB **Snap** or **PICkit Basic** (~€30 each), or PICkit 4/5,
-   ICD 4/5, ICE 4. These do not power the target, so keep the board on USB-C. In normal use the
-   RP2354A programs the PIC (`pic flash`), so you don't need one.
+
+No Microchip programmer and no MPLAB X are needed: board v1.1 has **no ICSP / Tag-Connect header**,
+and the RP2354A is the only PIC programmer (`pic flash`, bit-banged ICSP on GPIO21/22/24). A recovery
+ICSP header for the next revision is listed in [`TODO_HARDWARE.md`](TODO_HARDWARE.md).
 
 `make -C firmware/pic32 info` shows the XC-DSC / MPLAB X / DFP paths the build will use. The
 Makefile already passes the two flags XC-DSC needs for this part: the device linker script
@@ -108,8 +106,7 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
    command list, then `version` and check the version numbers **before** going further.
 3. **PIC32AK, from the RP:** `pic id` must print `… DEVID 0x9da2 DEVREV 2 -> PIC32AK1216GC41048`, then run
    `pic flash` (erase, program, verify, ~1 s). It writes the PIC image embedded in the RP firmware,
-   so check `version` first. With a Microchip tool on J1 instead:
-   `make -C firmware/pic32 flash TOOL=SNAP` (or `PKBASIC`, `PK4`, `PK5`, `ICD4`, `ICD5`, `ICE4`).
+   so check `version` first.
 4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`; `rgb 0 255 0` → LED green (25 % brightness by default; `rgb 0 255 0 100` = full).
 5. **Pulse-echo:** `pe` fires the pulser and captures one A-line, and `gain [leg [u1 [u2]]]` sets
    the RX gain. The full command reference and pin map are in
