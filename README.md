@@ -26,8 +26,8 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
   LP5562 RGB LED over I²C, ICSP programmer for the PIC) and a Microchip **PIC32AK1216GC41048** (on-chip
   ADCs and op amps: captures the A-line, 4095 samples at up to ~25 Msps).
 - **Front end:** TC4427/MIC4427-driven 3-level pulser → protected RX (10 nF DC block, BAV99 clamp) →
-  BGA2817 LNA (24 dB) → two on-chip op-amp stages (feedback legs via a 4052 mux, ×1 bypass): 9 gain settings,
-  0–42.5 dB → PIC 12-bit ADC.
+  24 dB LNA (BGA2817, nominal) + 9-step switchable 0–42.5 dB op-amp gain (two on-chip stages, feedback legs via a
+  4052 mux, ×1 bypass; measured), ≈ 24–66 dB total → PIC 12-bit ADC.
 - **Transducer:** 3–4 MHz single-element piezo, separate TX and RX connectors (SMA + U.FL); raw RF A-mode.
   The probe used for all measurements is characterised from its S11 in datasheet Annex A
   ([`datasheet/piezo_test/`](datasheet/piezo_test/)).

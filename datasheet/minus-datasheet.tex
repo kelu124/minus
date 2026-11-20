@@ -95,7 +95,7 @@
 \begin{tcolorbox}[colback=accent,colframe=accent,coltext=white,arc=0mm,boxrule=0pt,left=6pt,right=6pt,top=6pt,bottom=6pt]
 {\Huge\bfseries \product}\hfill{\large\bfseries board \board}\\[2pt]
 {\large Single-channel, USB-powered pulse-echo ultrasound front end with 3-level 5\,V pulser,\\
-switchable 0–42\,dB receive chain and 12-bit 25\,Msps acquisition}
+24\,dB LNA + 9-step switchable 0–42.5\,dB gain ($\approx$\,24–66\,dB total) and 12-bit 25\,Msps acquisition}
 \end{tcolorbox}
 
 \vspace{2pt}
@@ -106,7 +106,7 @@ switchable 0–42\,dB receive chain and 12-bit 25\,Msps acquisition}
   \item One transmit / one receive channel for a single-element piezo transducer
   \item \textbf{3-level pulser}: +5\,V, active GND clamp, high-impedance; phase lengths programmable in 6.67\,ns steps (default 200\,ns / 27\,ns / 500\,ns)
   \item Pulser fires on the ADC start edge: main bang within the first sample (\vonsetns\,ns)\meas{}
-  \item \textbf{Receive chain}: 24\,dB wideband MMIC LNA (BGA2817) + two on-chip op-amp stages, 9 gain settings from \textbf{0 to 42.5\,dB}\meas{}
+  \item \textbf{Receive chain}: 24\,dB LNA (BGA2817, nominal\des) + 9-step switchable \textbf{0–42.5\,dB} op-amp gain (two on-chip stages\meas), $\approx$\,24–66\,dB total
   \item \textbf{12-bit ADC} at \textbf{24.86\,Msps}\meas{}, 4095 samples = 164.7\us{} = 12.7\,cm depth at 1540\,m/s
   \item ADC alone: \vadcenob{}~noise-limited bits\meas{}; in-band input noise \veninmax{}\,nV/$\sqrt{\text{Hz}}$ at the OA1 input at full gain\meas{}
   \item On-chip fixed-pattern correction (period-4 pin pattern removed, \cmd{pc})
