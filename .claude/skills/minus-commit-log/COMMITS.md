@@ -6,6 +6,7 @@ Maintained by the `minus-commit-log` skill on every commit; audit with
 
 | Date | Commit | Subject | Why / what it enabled |
 |------|--------|---------|------------------------|
+| 2026-11-20 | `d39fe5d` | docs(README): drop Tag-Connect/J1 programmer and MPLAB X step | README matched board v1.1 (no ICSP header; RP flashes the PIC). |
 | 2026-11-19 | `bffae57` | docs: session 11 close — lessons learnt, skill updates, commit-log catch-up | Durable lessons + skills so the next session starts from what was learnt. |
 | 2026-11-19 | `6947599` | docs: changelog — record 340091e under Committed | Bookkeeping. |
 | 2026-11-19 | `340091e` | datasheet rev 0.1 of minUS_08112026 + fw ACQ 'slow' status (pic 0.1.25, rp 0.1.34, proto 10) | LaTeX datasheet with generated measured values; on-chip slow-lock flag makes re-shots ms instead of 0.76 s; fine pulse-width sweep; TX–RX 0 Ω TODO. |
