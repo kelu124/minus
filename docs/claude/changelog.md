@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-20  (this)  firmware/README.md rewritten for board 3 / v1.1 from the netlist: U8/U9 pin map (R22/R23/R27 0 Ω, R19 442 Ω, R18 pull-up), devkit flaws 1/2/4 marked fixed, JTAG + one-I²C-master notes kept, RP-only flashing, rp 1.1.2 command table, proto 10 link table (FPB 100 MHz, U1BRG 868) — no version bump
 
 ## Committed
 
