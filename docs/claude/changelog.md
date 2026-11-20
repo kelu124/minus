@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-20  cd4ab8c  Drop the minUS_08112026 name: board = minus v1.1 (board 3) in datasheet (PDF rebuilt), README, CLAUDE.md, TODOs, firmware README + source comments (no binary change, fwsync refreshed), python comments, notebook intro, skill, memory, bench READMEs; history files untouched; no version bump
+
 - 2026-11-20  652e3eb  Gain wording in README + datasheet (title box, Features): 24 dB LNA (nominal) + 9-step switchable 0–42.5 dB op-amp gain (measured), ≈ 24–66 dB total; datasheet PDF rebuilt, no version bump
 
 - 2026-11-20  02b183b  OSHWA mark docs/images/FR000032.svg placed next to oshw_facts.svg in README (License) and datasheet §10 (figures/FR000032.pdf via inkscape); datasheet PDF rebuilt, no version bump
