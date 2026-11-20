@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-20  652e3eb  Gain wording in README + datasheet (title box, Features): 24 dB LNA (nominal) + 9-step switchable 0–42.5 dB op-amp gain (measured), ≈ 24–66 dB total; datasheet PDF rebuilt, no version bump
+
 - 2026-11-20  02b183b  OSHWA mark docs/images/FR000032.svg placed next to oshw_facts.svg in README (License) and datasheet §10 (figures/FR000032.pdf via inkscape); datasheet PDF rebuilt, no version bump
 
 - 2026-11-20  3843989  firmware/README.md rewritten for board 3 / v1.1 from the netlist: U8/U9 pin map (R22/R23/R27 0 Ω, R19 442 Ω, R18 pull-up), devkit flaws 1/2/4 marked fixed, JTAG + one-I²C-master notes kept, RP-only flashing, rp 1.1.2 command table, proto 10 link table (FPB 100 MHz, U1BRG 868) — no version bump
