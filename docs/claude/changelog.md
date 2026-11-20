@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-20  318a043  rp 1.1.3: `version` board line + boot banner print "minus v1.1" (minUS_08112026 dropped), uf2 rebuilt (not flashed, board absent); library 1.1.3 + fwsync; fixture and notebook 01 outputs hand-edited pending re-record; docs bumped to rp 1.1.3 (datasheet left at 1.1.2)
+
 - 2026-11-20  cd4ab8c  Drop the minUS_08112026 name: board = minus v1.1 (board 3) in datasheet (PDF rebuilt), README, CLAUDE.md, TODOs, firmware README + source comments (no binary change, fwsync refreshed), python comments, notebook intro, skill, memory, bench READMEs; history files untouched; no version bump
 
 - 2026-11-20  652e3eb  Gain wording in README + datasheet (title box, Features): 24 dB LNA (nominal) + 9-step switchable 0–42.5 dB op-amp gain (measured), ≈ 24–66 dB total; datasheet PDF rebuilt, no version bump
