@@ -47,7 +47,7 @@ void acq_init(void) {
     ANSELAbits.ANSELA2 = 1;  TRISAbits.TRISA2 = 1;
     ANSELAbits.ANSELA4 = 1;  TRISAbits.TRISA4 = 1;
     ANSELAbits.ANSELA3 = 1;  TRISAbits.TRISA3 = 1;
-    ANSELAbits.ANSELA8 = 1;  TRISAbits.TRISA8 = 1;   // RA8 = AD2AN9 (pin 4): net PIC32_ADC on minUS_08112026 (board 3)
+    ANSELAbits.ANSELA8 = 1;  TRISAbits.TRISA8 = 1;   // RA8 = AD2AN9 (pin 4): net PIC32_ADC on board 3 (v1.1)
 
     // Op amp 2: on board 3 it is the second gain stage of the RX chain (OA2IN+ = OA1OUT via C1, Rf legs through the
     // 4052 U1, OA2OUT -> R67/C86/R68/C87 -> PIC32_ADC). On at boot since fw 0.1.22 (was off: devkit FE_A_OUT).
@@ -156,7 +156,7 @@ static acq_status_t acq_check_slow(acq_status_t st, uint32_t t) {
 }
 
 // ADC2 variant of acq_run (input codes 16..31): identical chain on the second core — SCCP1 Trigger out ->
-// AD2CH0 (TRG1SRC 12) -> DMA0 (CHSEL 0x40 "ADC2 - AN0", Table 16-2) -> acq_buf. Board 3 (minUS_08112026) puts
+// AD2CH0 (TRG1SRC 12) -> DMA0 (CHSEL 0x40 "ADC2 - AN0", Table 16-2) -> acq_buf. Board 3 (v1.1) puts
 // the filtered RX node (net PIC32_ADC) on AD2AN9 = code 25, the default since fw 0.1.22. ADC1 CH0 is idled
 // (TRG1SRC 0) for the run so it does not also convert on every SCCP1 trigger.
 static acq_status_t acq_run_adc2(uint32_t *ticks) {

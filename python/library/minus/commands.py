@@ -89,7 +89,7 @@ PIC_LINK: Dict[str, Optional[str]] = {
     "CLK12": None,           # clock-source diagnostic: raw("CLK12 n")
 }
 
-# ACQ input codes (board minUS_08112026, PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16
+# ACQ input codes (board 3 / v1.1, PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16
 INPUTS = {
     25: "AD2AN9: OA2 output after the anti-alias filter (default)",
     17: "AD2AN1: OA2 output before the filter",

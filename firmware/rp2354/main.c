@@ -1,4 +1,4 @@
-// minus v1.1 (board minUS_08112026) — RP2354A "manager" firmware: USB CLI, RP<->PIC link, pulser, gain, PIC ICSP programmer.
+// minus v1.1 (board 3) — RP2354A "manager" firmware: USB CLI, RP<->PIC link, pulser, gain, PIC ICSP programmer.
 //
 // What it does
 //   * USB-C CDC console (115200 8N1 virtual, any baud) with a tiny command line.
@@ -445,7 +445,7 @@ static void cmd_pic(const char *arg) {
 // ---------------------------------------------------------------- acq: 4095 ADC samples from the PIC
 #define ACQ_MAX_N 4095u
 static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned long max_fill_ns);
-// Input codes (PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. Names for board 3 (minUS_08112026).
+// Input codes (PIC fw >= 0.1.22): 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. Names for board 3 (v1.1).
 static const char *acq_in_name(int in) {
     switch (in) {
     case 25: return "AD2AN9 (PIC32_ADC: OA2OUT after the R67/C86/R68/C87 filter, board 3)";

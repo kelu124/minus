@@ -12,7 +12,7 @@
 - Use `/usr/bin/python3` (has pyserial, numpy, matplotlib, nbformat/nbclient); the pyenv python lacks matplotlib.
 - `acqil` changes the PIC div (24): run `acq 4 0 25 1` after it. `pic id/verify` reset the PIC (UGE/pc go back to boot values). The first link line after an RP reboot can go unanswered: `pic_ident()` retries once.
 
-**Naming / versions (owner, 2026-11-19):** the board is "minus v1.1" (= minUS_08112026, board 3); firmware 1.1.x
+**Naming / versions (owner, 2026-11-19):** the board is "minus v1.1" (= board 3); firmware 1.1.x
 (`minus-rp2354`, `minus-pic32`). The datasheet keeps the measurement firmware (rp 0.1.34 / pic 0.1.25) in `values.tex`.
 
 **LP5562 U5** (board 3): I²C 0x30, EN tied high, OSC1 32 kHz on CLK; firmware uses ENABLE 0x40 → 500 µs → CONFIG 0x01 (internal

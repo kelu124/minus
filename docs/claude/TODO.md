@@ -12,7 +12,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
   conversions; check slips with `acq` on a CW tone); (b) host-side shot rejection on slips in the library (`Capture` helper);
   then the older items below (sine ENOB, scope pulse, LNA gain, supply current,
   faster link).
-- **RESUME HERE (2026-11-19, part 6): datasheet rev 0.1 done** (`datasheet/minUS_08112026/`, rp 0.1.34 / pic 0.1.25, proto 10).
+- **RESUME HERE (2026-11-19, part 6): datasheet rev 0.1 done** (`datasheet/`, rp 0.1.34 / pic 0.1.25, proto 10).
   Next: sine test (SINAD ENOB), measure the pulse on a scope (TX node, effective t_hi + 48 ns), LNA gain at 3 MHz, supply current,
   drive the LP5562 RGB (I²C 0x30) instead of WS2812, faster RP↔PIC link (115 200 Bd = 0.71 s/shot), sample-comb phase fix.
 - **RESUME HERE (2026-11-19, part 3): gain works on board 3** (rp 0.1.32 / pic 0.1.23, `gain [leg [u1 [u2]]]`, sweep in
@@ -116,7 +116,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 - Firmware text cleanup at the next rp PATCH bump (2026-11-20): RP `help()` (`reset` "needs R53", `raw AMP2` U11, `i2c`/`pot` MCP4531/OLED), `pic help` ("R53 = 0R, JP1 cut, J1"), `i2c_name`, `firmware/pic32/Makefile` header (J1 Tag-Connect) still describe the devkit; `firmware/README.md` is the board 3 truth.
 
-- **Firmware for board minUS_08112026 (memory 0014):** ADC2 capture of AD2AN9 (filtered node) with ADC2 DMA trigger;
+- **Firmware for board 3 (v1.1) (memory 0014):** ADC2 capture of AD2AN9 (filtered node) with ADC2 DMA trigger;
     dual-gain capture ADC1 (OA1OUT/LNA) + ADC2; gain command = RP GPIO25/23 (4052 S0/S1) + PIC `AMPxCON1.UGE` per stage.
 - **Board redesign candidate — RX LNA (owner 2026-11-06, memory 0013):** BGA2817 MMIC (24 dB, 3.3 V, LCSC C2654187)
     ahead of OA1, with the FE-A bias/coupling fixes (TODO_HARDWARE). No devkit test now; bench-check its 1–5 MHz gain

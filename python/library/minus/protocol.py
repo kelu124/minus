@@ -39,7 +39,7 @@ class Version:
     proto: int             # RP<->PIC link protocol
     built: str
     pico_sdk: str
-    board: str             # e.g. "minus v1.1 (minUS_08112026)"
+    board: str             # e.g. "minus v1.1"
     flash_kb: int
     chip: str
     chip_id: int

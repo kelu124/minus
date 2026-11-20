@@ -1,4 +1,4 @@
-# 2026-11-19 — ADC and RX-chain noise / ENOB, board 3 (minUS_08112026)
+# 2026-11-19 — ADC and RX-chain noise / ENOB, board 3 (v1.1)
 
 fw rp 0.1.32 / pic 0.1.23. No pulse; transducer connected (same setup as `../2026-11-19-gain/`). 12-bit, full scale =
 AVDD; AVDD from the 0.8 V band gap = **3.32 V / 3.31 V** (ADC1 / ADC2) → 1 LSB ≈ 0.81 mV (the scripts use 3.3 V).

@@ -11,7 +11,7 @@
 #define ACQ_N        4095u
 #define ACQ_IL_HALF  2047u           // acq_il_run: samples per channel (two channels interleaved -> ACQ_IL_N values)
 #define ACQ_IL_N     (2u * ACQ_IL_HALF)
-#define ACQ_INPUT_NODE 25u           // input code: 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. 25 = AD2AN9 = PIC32_ADC on board 3 (minUS_08112026, default
+#define ACQ_INPUT_NODE 25u           // input code: 0..15 = ADC1 PINSEL, 16..31 = ADC2 PINSEL + 16. 25 = AD2AN9 = PIC32_ADC on board 3 (v1.1, default
                                      // since fw 0.1.22); 9 = AD1AN9 (devkit node), 0 = AD1AN0 OA1OUT, 1 = AD1AN1 (LNA tap on board 3, RX node on the devkit), 17 = AD2AN1 OA2OUT
 #define ACQ_TRIG_DIV 4u              // SCCP1 time base on CLKGEN12 200 MHz / 4 = 20 ns triggers: the ADC (32 ns) takes every other one -> a uniform 40 ns = 25 Msps comb that the DMA (40 ns per transfer) just sustains. Bench 2026-11-02: div 8 (40 ns triggers) sits on the DMA edge and drops ~1 in 4 (fill 226 us), div 5/6 jitter, div 10 = clean 20 Msps
 #define ACQ_TICK_NS  80u             // Timer1 tick: FPB 100 MHz / prescaler 8 = 80 ns (5.2 ms range); sent to the RP in every ACQ header

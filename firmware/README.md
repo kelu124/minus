@@ -1,4 +1,4 @@
-# minus firmware — RP2354A + PIC32AK (minus v1.1 = board 3 `minUS_08112026`)
+# minus firmware — RP2354A + PIC32AK (minus v1.1 = board 3)
 
 Two MCUs, two firmwares, one USB-C cable: the RP2354A is the USB device, the CLI, the pulser
 and the **only programmer of the PIC** (the RP UF2 embeds the PIC hex and `pic flash` writes it

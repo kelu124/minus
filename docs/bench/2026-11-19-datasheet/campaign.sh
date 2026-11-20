@@ -1,5 +1,5 @@
 #!/bin/bash
-# Datasheet measurement campaign, board 3 (minUS_08112026), rp 0.1.33 / pic 0.1.24. Run from the repo root.
+# Datasheet measurement campaign, board 3 (v1.1), rp 0.1.33 / pic 0.1.24. Run from the repo root.
 D=docs/bench/2026-11-19-datasheet; R="python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0"
 log() { echo "$@" | tee -a $D/campaign.log; }
 : > $D/campaign.log

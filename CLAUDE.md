@@ -40,7 +40,7 @@ Then you are "up and running" with the past discussions and discoveries.
 
 ## Project layout
 
-- `hardware/` — the current board (KiCad project `minUS.*`, board 3 = minUS_08112026),
+- `hardware/` — the current board (KiCad project `minUS.*`, board 3 = minus v1.1),
   `production/` (JLCPCB outputs), `3dmodels/`, `render_3d.py`. Older boards: git history.
 - `firmware/` — `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) + `VERSIONS.md`.
 - `python/` — `library/minus/` (one `Minus` method per CLI command, parsers, `fwsync` check, offline tests)

@@ -1,4 +1,4 @@
-# 2026-11-19 — gain sweep, pulse-echo on board 3 (minUS_08112026)
+# 2026-11-19 — gain sweep, pulse-echo on board 3 (v1.1)
 
 Firmware rp 0.1.32 / pic 0.1.23 (proto 8). Pulse +5 V 200 ns / off 27 ns / GND 500 ns; `pe` (4095 samples, 24.86 Msps,
 auto-retry when the ADC locks to the slow 53 ns pattern). Same target as `docs/bench/2026-11-19-pe/` (echo train every 40.2 µs).

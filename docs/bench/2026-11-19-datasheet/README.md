@@ -1,4 +1,4 @@
-# 2026-11-19 — datasheet measurement campaign, board 3 (minUS_08112026)
+# 2026-11-19 — datasheet measurement campaign, board 3 (v1.1)
 
 Feeds `datasheet/` (LaTeX). Firmware rp 0.1.33/pic 0.1.24 for `campaign.sh`, rp 0.1.34/pic 0.1.25 for
 `time_pe.py`, `t1_*` and `t4b/`. 3.3 MHz piezo connected to TX and RX, USB power, 25 °C.

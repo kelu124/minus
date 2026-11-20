@@ -9,7 +9,7 @@ small, simple, and hackable**: a badge attendees can use in an ultrasound-confer
 workshop (e.g. **muscle-contraction monitoring**, A-/M-mode) and then extend and
 experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/intended-use.md`](docs/intended-use.md).
 
-> ⚠️ **Status: working prototype (minus v1.1, board `minUS_08112026`).** Pulse-echo, the
+> ⚠️ **Status: working prototype (minus v1.1, board 3).** Pulse-echo, the
 > switchable RX gain, the fixed-pattern correction and the RGB LED work on the bench, and the
 > [datasheet rev 0.2](datasheet/minus-datasheet.pdf) gives measured figures, errata and the
 > test transducer (Annex A). Firmware RP2354A **1.1.2**, PIC32AK **1.1.0**, link protocol **10**.
@@ -38,7 +38,7 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 
 | Path | What's there |
 |------|--------------|
-| [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, minus v1.1 = `minUS_08112026`), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
+| [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, minus v1.1), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
 | [`firmware/`](firmware/README.md) | `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) sources, **built images committed** in `*/build/`, [`VERSIONS.md`](firmware/VERSIONS.md). |
 | [`python/`](python/README.md) | `minus` Python library (one method per CLI command, firmware-sync check, offline tests) + step-by-step [notebooks](python/notebooks/). |
 | [`datasheet/`](datasheet/) | Product datasheet rev 0.2 (LaTeX source, generated values/figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)); [`piezo_test/`](datasheet/piezo_test/) = test-probe S11 (Annex A). |

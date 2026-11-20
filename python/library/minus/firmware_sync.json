@@ -5,7 +5,7 @@
   "firmware/rp2354/acq_parse.c": "dfd53ff650da3d57705dd0fe788cf4058044e6e825e3827a3d25e231e6bd927b",
   "firmware/rp2354/acq_parse.h": "21665592c1024709ef35b4aa3126ff5eec343b62484bc0358a690d43e6a13cf5",
   "firmware/rp2354/board/minus_devkit.h": "93b71b628060589f2d04836126c26809864ae6396a77de1a00f0f48552ca7986",
-  "firmware/rp2354/main.c": "870cb1f691396d1b419d41eeb7a31f0e0d612ecdfca1ebedff5b013877197bb8",
+  "firmware/rp2354/main.c": "b6d29c1a761b192c815b09d55c426d9f3ba5c06ac4810edf2c551ffe834f12f5",
   "firmware/rp2354/pic_icsp.c": "1e572c13e53276f4ce4939c9915cab51d3e9372428f4482d57a5183dcda2e1f2",
   "firmware/rp2354/pic_icsp.h": "055b05efb45703cab3e5f6b69b827bb7acce9e5a80a1e7f849c043a756e06846",
   "firmware/rp2354/pic_image.h": "972278a14b050e12fee8d51f96126090c97c31357a3391db82cb5ca504b686e2",
@@ -13,9 +13,9 @@
   "firmware/rp2354/tests/test_acq_parse.c": "5f1d0d4092b48a66ed79d36f414ee4cb55be85db9e4b3a9295d5b63f43e8f6cb",
   "firmware/rp2354/version.h": "6927bba8937ea40bc49eba3cfb370bae3336807195757fff2337ec6af1a2f933",
   "firmware/rp2354/ws2812.pio": "86512842a17bdb74cc7d3b51a2a98ede9808c0b04a132a175488b8477e754369",
-  "firmware/pic32/acq.c": "baa4758118e62dac0cf4a2539becd864956ad9e01c0bcbc0d684d8bc3dc1e455",
-  "firmware/pic32/acq.h": "8570453e79f2e0cf013678025001b7e86f0c774e1bacc1697a853ae62bb9dca8",
-  "firmware/pic32/main.c": "0f7bb8e2ffd834f0ae62fa449db90ddb67c5681755fb1f8b9d8bf16fcf334b84",
+  "firmware/pic32/acq.c": "696b570c7a7b13ba13b42d6f39661dbfa7fbea8a144ee4a65fd06694029cf7bd",
+  "firmware/pic32/acq.h": "1e23b116aaaecd5745294e4c33088ffae1c7977dce302767c9844169d22da8aa",
+  "firmware/pic32/main.c": "3084f2bdf18d392f47b4c3b1c0c2c54a175373d79404f34b5ca643c1ed952d7c",
   "firmware/pic32/version.h": "fa19bc61703a83d9233f884755564a8be3813156f91335b832cdde6df1618f57"
  }
 }

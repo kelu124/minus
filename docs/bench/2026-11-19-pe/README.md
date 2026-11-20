@@ -1,4 +1,4 @@
-# 2026-11-19 — first pulse-echo on board 3 (minUS_08112026, RP id 7D4466C63B374C98)
+# 2026-11-19 — first pulse-echo on board 3 (v1.1, RP id 7D4466C63B374C98)
 
 Firmware rp 0.1.30 / pic 0.1.22 (proto 7). Pulse +5 V 200 ns / both off 27 ns / GND 500 ns / released,
 fired by the RP PIO on the PIC's RDY rise (= ADC start). 4095 samples at 24.86 Msps (40.2 ns), single conversions,
