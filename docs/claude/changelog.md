@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-20  02b183b  OSHWA mark docs/images/FR000032.svg placed next to oshw_facts.svg in README (License) and datasheet §10 (figures/FR000032.pdf via inkscape); datasheet PDF rebuilt, no version bump
+
 - 2026-11-20  3843989  firmware/README.md rewritten for board 3 / v1.1 from the netlist: U8/U9 pin map (R22/R23/R27 0 Ω, R19 442 Ω, R18 pull-up), devkit flaws 1/2/4 marked fixed, JTAG + one-I²C-master notes kept, RP-only flashing, rp 1.1.2 command table, proto 10 link table (FPB 100 MHz, U1BRG 868) — no version bump
 - 2026-11-20  80e997e  OSHWA certification FR000032: mark + UID on F.SilkS, mark kit (KiCad only), renders redone, README + datasheet (licence box oshw_facts, fixed to TAPR/CC-BY-SA) — no version bump
 - 2026-11-20  d39fe5d  README: removed Tag-Connect/J1 Microchip-programmer and MPLAB X steps (v1.1: RP is the only PIC programmer), front end with BGA2817 LNA + 9 gains 0–42.5 dB, docs/costs + intended-use in the map
@@ -210,6 +212,8 @@ the sha.
   options; 5V/±5V HV options; requirements RF-ACCESS; memory 0006. **Pushed.**
 
 ## Committed
+
+- 2026-11-20  02b183b  OSHWA mark docs/images/FR000032.svg placed next to oshw_facts.svg in README (License) and datasheet §10 (figures/FR000032.pdf via inkscape); datasheet PDF rebuilt, no version bump
 
 - 2026-09-17  1a6975b  requirements: plan OSHWA cert + reserve silkscreen for the mark/UID.
 - 2026-09-17  785d3c0  requirements v0.3 refinements: bipolar-if-cheap-±rail (T6),
