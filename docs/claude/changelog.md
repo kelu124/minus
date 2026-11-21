@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  1552ba1  Review fixes (rp 1.1.8 / pic 1.1.5): tof/env/RELOCK standard settings, acqos margin + slow check, RDY settle after PING, SPIX 0 / ENV error paths, stale-reply drop in the library, viewer self-join; PC estimator A/B (no change); soaks 2700/2700 + 2000/2000
+
 - 2026-11-22  5e7d73f  Live viewer (python -m minus.live window + Jupyter LiveView, notebook 04), library 1.1.7, proto 14 docs, TODO cleanup (older items closed/parked, stale hardware entries fixed)
 
 - 2026-11-22  299a809  Proto 14 (rp 1.1.7 / pic 1.1.4): fmt b64 sample output (30 vs 110 ms per capture), tgc gain-leg steps (switch transient ~17 us), ACQ navg reset, acqos RF warning; library b64 + tgc + framing fix (split end-marker line); bench docs/bench/2026-11-22-tgc-b64
