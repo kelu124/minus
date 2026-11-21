@@ -11,8 +11,9 @@ history (this file before 2026-11-19).
 
 ## Before the next order
 
-- **[must] U3 = MIC4427YMM (LCSC C152165)** in the schematic, PCB and `hardware/production/bom.csv`: they still say
-  TC4427AEUA713 (C628548, out of stock). Same MSOP-8 and pin order. Check live stock at order time (13 on 2026-10-24);
+- **[must] U3 = MIC4427YMM (LCSC C152165) — done in the design files 2026-11-21:** schematic (value, datasheet, LCSC),
+  PCB footprint fields and `hardware/production/bom.csv` now say MIC4427YMM / C152165 (was TC4427AEUA713 / C628548, out
+  of stock). Same MSOP-8 footprint and pin order. Still to do: check live stock at order time (13 on 2026-10-24);
   fallback TC4427AEOA713 (C20551, SOIC-8, footprint change). Datasheet E9.
 - **[should] TX at +5 V during power-up (E1) — in schematic + placed, routing pending (2026-11-21):** GPIO9
   (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) had no pull-up, so the RP2350 pad pull-down turned Q1 on until the firmware

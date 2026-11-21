@@ -29360,7 +29360,7 @@
 		(layer "F.Cu")
 		(uuid "d98c529d-10a6-43a4-b90c-3f078597fc47")
 		(at 134.911697 85.6828)
-		(tags "TC4427AEUA713 ")
+		(tags "MIC4427YMM ")
 		(property "Reference" "U3"
 			(at -0.111999 -2.414998 0)
 			(unlocked yes)
@@ -29373,7 +29373,7 @@
 				)
 			)
 		)
-		(property "Value" "TC4427AEUA713"
+		(property "Value" "MIC4427YMM"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -29385,7 +29385,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "TC4427AEUA713"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C152165.pdf"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -29407,7 +29407,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C628548"
+		(property "LCSC Part" "C152165"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")

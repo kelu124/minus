@@ -1708,7 +1708,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "EasyEDA:TC4427AEUA713"
+		(symbol "EasyEDA:MIC4427YMM"
 			(pin_names
 				(offset 0.254)
 			)
@@ -1727,7 +1727,7 @@
 					)
 				)
 			)
-			(property "Value" "TC4427AEUA713"
+			(property "Value" "MIC4427YMM"
 				(at 22.86 7.62 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1749,7 +1749,7 @@
 					)
 				)
 			)
-			(property "Datasheet" "TC4427AEUA713"
+			(property "Datasheet" "MIC4427YMM"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1772,7 +1772,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "TC4427AEUA713"
+			(property "ki_keywords" "MIC4427YMM"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1794,7 +1794,7 @@
 					)
 				)
 			)
-			(symbol "TC4427AEUA713_0_1"
+			(symbol "MIC4427YMM_0_1"
 				(polyline
 					(pts
 						(xy 7.62 5.08) (xy 7.62 -12.7)
@@ -2832,7 +2832,7 @@
 		)
 	)
 	(symbol
-		(lib_id "EasyEDA:TC4427AEUA713")
+		(lib_id "EasyEDA:MIC4427YMM")
 		(at 73.66 54.61 0)
 		(mirror x)
 		(unit 1)
@@ -2854,7 +2854,7 @@
 				)
 			)
 		)
-		(property "Value" "TC4427AEUA713"
+		(property "Value" "MIC4427YMM"
 			(at 96.52 62.23 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2876,7 +2876,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "TC4427AEUA713"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C152165.pdf"
 			(at 73.66 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -2899,7 +2899,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C628548"
+		(property "LCSC Part" "C152165"
 			(at 73.66 54.61 0)
 			(hide yes)
 			(show_name no)

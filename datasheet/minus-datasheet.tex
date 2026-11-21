@@ -564,7 +564,7 @@ E5 & \textbf{Interference lines} at 2.72\,MHz (in band) and 0.49\,MHz entering a
 E6 & \textbf{LNA output tap (input 1)} reads 26\,mV rms of flat, aliased noise that does not reach OA1OUT: GHz-wide LNA noise or an oscillation folded by the ADC sample-and-hold. Not a valid measurement point; to check with a fast scope.\\
 E7 & \textbf{RGB LED} — \emph{fixed in rp 1.1.1}: \cmd{rgb} now drives the LP5562 over I²C (the WS2812 driver on GPIO10 was for the devkit).\\
 E8 & \textbf{\cmd{reboot dfu}} occasionally restarts the application instead of BOOTSEL; use SW2 at plug-in.\\
-E9 & U3 is fitted as MIC4427YMM (TC4427 out of stock); design files still list TC4427AEUA713.\\
+E9 & U3 is fitted as MIC4427YMM (TC4427 out of stock); fixed in the design files (2026-11-21).\\
 E10 & Internal 15/16\,AVDD channel reads 3480 instead of 3840 codes; internal references need SAMC ≥ 3.\\
 E11 & \textbf{TX and RX are separate nets}: a single-element probe needs an external tee (a 0\,Ω TX–RX link is planned for the next revision).\\\bottomrule
 \end{tabularx}
