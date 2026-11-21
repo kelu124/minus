@@ -241,8 +241,8 @@ class LiveView:
 
     def stop(self, timeout: float = 5.0) -> None:
         self._stop.set()
-        if self._thread:
-            self._thread.join(timeout)
+        if self._thread and self._thread is not threading.current_thread():   # stop() can run on the worker (via the
+            self._thread.join(timeout)                                          # run toggle in its finally): no self-join
         if self.w_run.value:
             self.w_run.value = False
         if not self.error:

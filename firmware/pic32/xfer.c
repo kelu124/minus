@@ -1,8 +1,8 @@
 // minus — PIC32AK capture payload transfer (proto 11). See xfer.h and docs/claude/specs/2026-11-21-dac-spi-link-design.md.
 //
 // SPI1 client on board 3 (no hardware change): SCK1 <- RP50 (RD1, net SPI_CLK = RP GPIO2), SDI1 <- RP51 (RD2, SPI_MOSI =
-// GPIO3, not used: DISSDI), SS1 <- RP49 (RD0, SPI_CS = GPIO5), SDO1 -> RP35 (RC2, SPI_MISO -> GPIO4). Mode 0 (CKP 0,
-// CKE 1), 8-bit, enhanced buffer, MSB first. Client max SCK = 25 MHz with PPS pins (DS70005592 SP10, Table 40-35/36).
+// GPIO3, not used: DISSDI), SS1 <- RP49 (RD0, SPI_CS = GPIO5), SDO1 -> RP35 (RC2, SPI_MISO -> GPIO4). Mode 1 since pic 1.1.2
+// (CKP 0, CKE 0), 8-bit, enhanced buffer, MSB first. Client max SCK = 25 MHz with PPS pins (DS70005592 SP10, Table 40-35/36).
 // The 16 KB RAM leaves no room for a frame copy, so the frame is streamed: header, acq_buf bytes (little-endian u16),
 // CRC-32. The FIFO is fed by a CPU loop (>= 64 CPU cycles per byte even at 25 MHz) — the PIC has nothing else to do.
 #include <xc.h>
@@ -71,7 +71,7 @@ static uint32_t crc_t[16] = {
 
 int xfer_spix(void (*reply)(const char *), uint16_t *seq_out) {
     static uint8_t hdr[XFER_HDR];
-    if (xfer_n == 0) { reply("SPIX 0\n"); return -1; }
+    if (xfer_n == 0) { RDY_LAT = 0; reply("SPIX 0\n"); return -1; }
     RDY_LAT = 0;
     xfer_seq++;
     hdr[0] = XFER_MAGIC0; hdr[1] = XFER_MAGIC1; hdr[2] = XFER_MAGIC2; hdr[3] = XFER_MAGIC3;

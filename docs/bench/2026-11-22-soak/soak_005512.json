@@ -1,0 +1,32 @@
+{
+ "rounds": 200,
+ "seconds": 197.1699345111847,
+ "ok": {
+  "acq19": 200,
+  "acq": 200,
+  "env": 200,
+  "pe": 200,
+  "tof": 200,
+  "acqos4": 200,
+  "tgc_pe": 200,
+  "ping": 200,
+  "relock": 200,
+  "linktest": 200
+ },
+ "errors": {},
+ "median_ms": {
+  "acq19": 32.59862191043794,
+  "acq": 32.026248052716255,
+  "env": 31.493264948949218,
+  "pe": 32.216407940723,
+  "tof": 9.463855996727943,
+  "acqos4": 32.06810599658638,
+  "tgc_pe": 33.898623078130186,
+  "ping": 4.204618977382779,
+  "relock": 12.95768702402711,
+  "linktest": 762.3628010042012
+ },
+ "link": "LinkStatus(spi=True, mhz=12.5, frames=2200, frame_errors=0, fallbacks=0, no_reply=0, last_bytes=8202, last_us=5705)",
+ "lock": "PicLock(tries=1, slow=0)",
+ "first_errors": []
+}

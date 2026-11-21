@@ -158,7 +158,11 @@ static void acq_pc_apply(void) {
 // some start phases lock to 40/60/60 ns (fill ~226 us instead of 164.7 us, nothing dropped, so DMA status is clean). Expected
 // sample period = the smallest multiple of the trigger period >= 32 ns (SAMC 0 only); > +5 % = ACQ_SLOW.
 static acq_status_t acq_check_slow(acq_status_t st, uint32_t t) {
-    if (st != ACQ_OK || acq_samc != 0 || acq_navg > 1 || acq_os) return st;
+    if (st != ACQ_OK || acq_samc != 0 || acq_navg > 1) return st;
+    if (acq_os) {                                         // oversampling: one sample per trigger period (div fits the burst)
+        uint64_t exp_os = (uint64_t)ACQ_N * acq_div * 5u / ACQ_TICK_NS;
+        return (uint64_t)t * 100u > exp_os * 105u ? ACQ_SLOW : st;
+    }
     uint32_t per = acq_div * 5u, k = (32u + per - 1u) / per;
     uint64_t exp_ticks = (uint64_t)ACQ_N * per * k / ACQ_TICK_NS;
     return (uint64_t)t * 100u > exp_ticks * 105u ? ACQ_SLOW : st;

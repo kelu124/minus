@@ -94,11 +94,19 @@ static void clocks_relock(void) {
     uart1_init();
     acq_init();
 }
-static unsigned lock_check(void) {           // slow captures out of LOCK_TEST_N (default settings: div 4, last input)
+static unsigned lock_check(void) {           // slow captures out of LOCK_TEST_N, at the standard settings (div 4, samc 0, navg 1)
     unsigned slow = 0; uint32_t t;
+    acq_saved_t sv = pe_std_begin();          // a user's navg / samc would disable the slow check (review 2026-11-22)
     for (unsigned i = 0; i < LOCK_TEST_N; i++) if (acq_run(&t) == ACQ_SLOW) slow++;
+    pe_std_end(sv);
     RDY_LAT = 0;
     return slow;
+}
+// RDY may have been left high by PING (it toggles RDY per reply): make the low phase before a capture / SPI frame long enough
+// for the RP's polling to see it (review 2026-11-22; the plain RDY_LAT = 0 lasted well under 1 us).
+static void rdy_low_settle(void) {
+    if (RDY_LAT) { RDY_LAT = 0; for (volatile unsigned i = 0; i < 400; i++) ; }   // ~8 us at 200 MHz
+    RDY_LAT = 0;
 }
 static void lock_until_uniform(void) {
     for (lock_tries = 1; ; lock_tries++) {
@@ -192,7 +200,7 @@ int main(void) {
                                 if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
                     }
                     acq_set_navg(navg);
-                    RDY_LAT = 0;                        // PONG may have left RDY high; the RP times the RDY pulse of this capture
+                    rdy_low_settle();                   // PONG may have left RDY high; the RP times the RDY pulse of this capture
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
@@ -232,7 +240,7 @@ int main(void) {
                     // ACQCPU <trg> [rptcnt [gap [phase]]]: CPU-loop capture (no DMA), same reply format as ACQ
                     char *e; unsigned trg = (unsigned)strtoul(line + 7, &e, 10); unsigned r = 1, gap = 0, phase = 0;
                     if (*e == ' ') { r = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') { gap = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') phase = (unsigned)strtoul(e + 1, NULL, 10); } }
-                    RDY_LAT = 0;
+                    rdy_low_settle();
                     uint32_t t = 0; acq_status_t st = acq_cpu_run(trg, r, gap, phase, &t);
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, st == ACQ_OK ? "ok" : "notready");
                     xfer_set_n(st == ACQ_OK ? ACQ_N : 0);
@@ -243,18 +251,19 @@ int main(void) {
                     unsigned off = 0, navg = 2;
                     if (line[5] == ' ') { char *e; acq_set_div((unsigned)strtoul(line + 6, &e, 10));
                         if (*e == ' ') { off = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
-                    RDY_LAT = 0;
+                    rdy_low_settle();
                     uint32_t t = 0; acq_status_t st = acq_il_run(off, navg, &t);
+                    pe_env_invalidate();                // its DMA1 just overwrote the ENV running sum
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_IL_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     xfer_set_n(st == ACQ_OK ? ACQ_IL_N : 0);
                     uart1_puts(out);
                 } else if (!strncmp(line, "ACQOS ", 6)) {
-                    // ACQOS <4|16> [in]: one capture with hardware oversampling (MODE 11): 13 / 14-bit, 175 / 565 ns per sample
+                    // ACQOS <4|16> [in]: one capture with hardware oversampling (MODE 11): 13 / 14-bit, 185 / 565 ns per sample
                     // (div raised to fit, restored after); reply = an ACQ header, payload pulled by SPIX / UTX
                     char *e; unsigned os = (unsigned)strtoul(line + 6, &e, 10);
                     if (*e == ' ') acq_set_input((unsigned)strtoul(e + 1, NULL, 10));
-                    RDY_LAT = 0;
+                    rdy_low_settle();
                     uint32_t t = 0; acq_status_t st = pe_os(os, &t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
@@ -266,7 +275,7 @@ int main(void) {
                     char *e; unsigned thr = (unsigned)strtoul(line + 4, &e, 10), blank = 0, ref = 0;
                     if (*e == ' ') { blank = (unsigned)strtoul(e + 1, &e, 10);
                         if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10)); if (*e == ' ') ref = (unsigned)strtoul(e + 1, NULL, 10); } }
-                    RDY_LAT = 0;
+                    rdy_low_settle();
                     tof_t r; acq_status_t st = pe_tof(thr, blank, ref, &r);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
                     xfer_set_n(st == ACQ_OK ? ACQ_N : 0);   // the A-line stays pullable (SPIX / UTX) for checks
@@ -279,7 +288,7 @@ int main(void) {
                     // (n values) is pulled by SPIX / UTX
                     char *e; unsigned dec = (unsigned)strtoul(line + 4, &e, 10), acc = 0;
                     if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10)); if (*e == ' ') acc = (unsigned)strtoul(e + 1, NULL, 10); }
-                    RDY_LAT = 0;
+                    rdy_low_settle();
                     env_t r; acq_status_t st = pe_env(dec, acc, &r);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
                     xfer_set_n(st == ACQ_OK ? r.n : 0);
@@ -288,6 +297,7 @@ int main(void) {
                 } else if (!strcmp(line, "SPIX")) {
                     // SPIX (proto 12): send the last capture (or XTEST pattern) as one SPI frame, announced on RDY (high = clock
                     // now, low = done); no UART reply except "SPIX 0" when nothing is pending. The RP falls back to UTX on failure.
+                    rdy_low_settle();
                     (void)xfer_spix(uart1_puts, NULL);
                 } else if (!strcmp(line, "UTX")) {
                     // UTX: the same payload over the UART (fallback / reference): "UTX <n>" then 2n bytes, u16 little-endian

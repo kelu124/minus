@@ -11,28 +11,37 @@ static unsigned buf_mean(void) {
     return (unsigned)((s + ACQ_N / 2u) / ACQ_N);
 }
 
+acq_saved_t pe_std_begin(void) {
+    acq_saved_t s = { acq_get_div(), acq_get_navg(), acq_get_samc() };
+    acq_set_div(4); acq_set_samc(0); acq_set_navg(1);
+    return s;
+}
+void pe_std_end(acq_saved_t s) { acq_set_div(s.div); acq_set_samc(s.samc); acq_set_navg(s.navg); }
+
 // Oversampling: N back-to-back 32 ns conversions + ~40 ns sequence overhead per trigger -> the trigger period must be at
-// least N*32 + 48 ns: div = ceil(/5 ns). 4 -> 35 (175 ns, 5.71 Msps, 13-bit); 16 -> 113 (565 ns, 1.77 Msps, 14-bit).
+// least N*32 + 48 ns, plus margin: div = (N*32 + 52) / 5 + 1 -> 4: 37 (185 ns, 5.4 Msps, 13-bit); 16: 113 (565 ns,
+// 1.77 Msps, 14-bit) — measured 186.0 / 565.4 ns. (pic 1.1.3 used 36 / 112: zero margin at 16, review 2026-11-22.)
 acq_status_t pe_os(unsigned os, uint32_t *ticks) {
     if (os != 4u && os != 16u) return ACQ_NOTREADY;
-    unsigned div_old = acq_get_div(), navg_old = acq_get_navg();
-    acq_set_div((os * 32u + 48u + 4u) / 5u);
-    acq_set_navg(1);
+    acq_saved_t s = pe_std_begin();
+    acq_set_div((os * 32u + 48u + 4u) / 5u + 1u);
     acq_set_os(os);
     acq_status_t st = acq_run(ticks);
     acq_set_os(0);
-    acq_set_div(div_old); acq_set_navg(navg_old);
+    pe_std_end(s);
     return st;
 }
 
 acq_status_t pe_tof(unsigned thr, unsigned blank, unsigned ref_in, tof_t *r) {
     unsigned ref = ref_in ? ref_in : 2048u;               // the hardware comparator needs its bounds before the capture
     unsigned lo = ref > thr ? ref - thr : 0u, hi = ref + thr > 4095u ? 4095u : ref + thr;
+    r->idx = -1; r->peak_idx = -1; r->peak = 0; r->ref = ref; r->hw = 0; r->ticks = 0;
+    acq_saved_t sv = pe_std_begin();                      // 12-bit samples at 40 ns, whatever the last ACQ set
     acq_set_cmp(1u, lo, hi);                              // CMPMOD 001: result out of [lo, hi]
     acq_status_t st = acq_run(&r->ticks);
     r->hw = acq_cmp_flag();
     acq_set_cmp(0u, 0u, 0u);
-    r->idx = -1; r->peak_idx = -1; r->peak = 0; r->ref = ref;
+    pe_std_end(sv);
     if (st != ACQ_OK) return st;
     if (!ref_in) r->ref = ref = buf_mean();
     for (unsigned i = blank; i < ACQ_N; i++) {
@@ -50,9 +59,13 @@ acq_status_t pe_tof(unsigned thr, unsigned blank, unsigned ref_in, tof_t *r) {
 }
 
 static unsigned env_shots, env_dec_cur;
+void pe_env_invalidate(void) { env_dec_cur = 0; env_shots = 0; }
 acq_status_t pe_env(unsigned dec, unsigned acc, env_t *r) {
+    r->n = 0; r->dec = dec; r->shots = env_shots; r->ticks = 0;
     if (dec < ENV_DEC_MIN || dec > ENV_DEC_MAX) return ACQ_NOTREADY;
+    acq_saved_t sv = pe_std_begin();
     acq_status_t st = acq_run(&r->ticks);
+    pe_std_end(sv);
     r->dec = dec; r->n = ACQ_N / dec; r->shots = env_shots;
     if (st != ACQ_OK) return st;
     unsigned words; uint32_t *sum = acq_scratch32(&words);

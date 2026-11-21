@@ -12,7 +12,7 @@
 
 uint32_t crc32_update(uint32_t crc, const uint8_t *p, unsigned n);   // CRC-32/IEEE (reflected 0xEDB88320), crc 0 to start
 
-void     xfer_spi_init(void);           // SPI1 client, mode 0, 8-bit, SS enabled (PPS set in main.c pps_init)
+void     xfer_spi_init(void);           // SPI1 client, mode 1 (pic >= 1.1.2), 8-bit, SS enabled (PPS set in main.c pps_init)
 void     xfer_set_n(unsigned n);        // samples available in acq_buf for SPIX/UTX (0 = none)
 unsigned xfer_get_n(void);
 // SPIX (proto 12): drops RDY, preloads the TX FIFO, raises RDY ("clock now"), feeds header + payload + CRC (computed on the

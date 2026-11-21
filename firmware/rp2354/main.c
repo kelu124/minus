@@ -819,12 +819,12 @@ static int pe_ext_shot(const char *tx, bool pulse, char *rx, unsigned rxlen, boo
         sleep_ms(2);
     }
 }
-// acqos <4|16> [in [pe]]: hardware oversampling (13 / 14-bit, 175 / 565 ns per sample = 0.72 / 2.3 ms window); pe 1 = pulse on RDY
+// acqos <4|16> [in [pe]]: hardware oversampling (13 / 14-bit, 185 / 565 ns per sample = 0.76 / 2.32 ms window); pe 1 = pulse on RDY
 static void cmd_acqos(const char *arg) {
     unsigned os = 0, pe = 0; int in = 25; char hdr[96];
     if (!arg || sscanf(arg, "%u %d %u", &os, &in, &pe) < 1 || (os != 4 && os != 16) || in < 0 || in > 31) {
         printf("usage: acqos <4|16> [in [pe]]   oversampling: each sample = 4 or 16 x 32 ns conversions (13 / 14-bit), in = input code (25 default, 19 = DAC), pe 1 = fire the pulser\n"
-               "  one pulse, averaging inside each sample. NOT for 3.3 MHz RF: 5.5 / 1.8 Msps alias it (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"); return;
+               "  one pulse, averaging inside each sample. NOT for 3.3 MHz RF: 5.4 / 1.77 Msps alias it (Nyquist 2.7 / 0.88 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"); return;
     }
     pulse_cyc_t pc; bool fired = false;
     link_flush_rx();
@@ -834,7 +834,7 @@ static void cmd_acqos(const char *arg) {
     char note[200];
     snprintf(note, sizeof note, "oversampling %u x 32 ns conversions per sample (%u-bit result, %s), in=%d %s; %s", os, os == 4 ? 13 : 14,
              os == 4 ? "0..8191 = 2 x a 12-bit code" : "0..16383 = 4 x a 12-bit code", in, acq_in_name(in), pe ? "pulse on RDY" : "no pulse");
-    if (pe) printf("# acqos: 3.3 MHz echoes alias at %s Msps and average out over %u ns: for RF use pe, for echo strength env\n", os == 4 ? "5.5" : "1.8", os * 32u);
+    if (pe) printf("# acqos: 3.3 MHz echoes alias at %s Msps and average out over %u ns: for RF use pe, for echo strength env\n", os == 4 ? "5.4" : "1.77", os * 32u);
     acq_receive(hdr, sizeof hdr, note, 0);
     if (pe) { fired = pulser_fired(); pulser_disarm(); printf("# pulse %s, 1 shot(s)\n", fired ? "fired" : "did NOT fire (no RDY edge)"); }
 }
@@ -1021,7 +1021,7 @@ static void help(void) {
            "  link [uart|spi [MHz]]  capture payload path: SPI0 frame from the PIC (default, 12.5 MHz, CRC-checked, UART fallback) or UART only (0.7 s); no args = counters\n"
            "  linktest [count [MHz]]  SPI link self-test: PIC LFSR pattern pulled count times (default 10), every word + CRC checked, then once over the UART\n"
            "  dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]  PIC DAC1 test signal on DACOUT1 (U9 pin 3, read back with acq 4 0 19); codes 205..3890\n"
-           "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 175 / 565 ns per sample, 0.72 / 2.3 ms window); pe 1 = fire the pulser. NOT for 3.3 MHz RF: 5.5 / 1.8 Msps alias it (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"
+           "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 185 / 565 ns per sample, 0.76 / 2.32 ms window); pe 1 = fire the pulser. NOT for 3.3 MHz RF: 5.4 / 1.77 Msps alias it (Nyquist 2.7 / 0.88 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"
            "  tof <thr> [blank_ns [in [ref]]]  pulse-echo time of flight on the PIC: first |x-ref| > thr after blank_ns (ADC comparator armed; ref 0 = capture mean), one line, no A-line transfer\n"
            "  env <dec> [shots [in]]  pulse-echo envelope computed on the PIC (|x-mean| over dec = 4..64 samples), averaged over shots (one pulse each), then pulled: 4095/dec values\n"
            "  fmt [text|b64]  sample output of acq/pe/acqos/env: one decimal per line (default) or '# b64 <bytes>' + base64 lines of u16 LE (2.2x smaller, the Python library uses it)\n"

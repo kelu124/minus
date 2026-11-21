@@ -112,6 +112,7 @@ class Minus:
         # that tail used to leak "ry help" into the next reply (seen 2026-11-22 with the faster b64 output)
         while mk not in buf or b"\n" not in buf[buf.index(mk):]:
             if time.time() > deadline:
+                self._pending = buf               # the late rest of this reply is dropped by the next exchange (stale markers)
                 raise TimeoutError(f"no complete reply to {command!r} within {timeout or self.timeout} s "
                                    f"(got {len(buf)} bytes)")
             buf += self.t.read()
@@ -121,8 +122,11 @@ class Minus:
         text = buf.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
         lines = text[: text.index(marker)].split("\n")
         lines = [ln for ln in lines if ln.strip() != ""]
-        if lines and lines[0].startswith("unknown '#end"):      # leftover marker from a timed-out exchange
-            lines = [ln for ln in lines if not ln.startswith("unknown '#end")]
+        # A timed-out exchange leaves its late reply + its own end marker in front of ours: drop everything up to the last
+        # stale marker, so an old capture can never be parsed as this one (review 2026-11-22).
+        stale = [i for i, ln in enumerate(lines) if ln.startswith("unknown '#end")]
+        if stale:
+            lines = lines[stale[-1] + 1:]
         ex = Exchange(command, lines, time.time() - t0)
         if record:
             self.history.append(ex)
@@ -328,10 +332,10 @@ class Minus:
     # ------------------------------------------------------------------ ADC extras for pulse-echo (proto 13)
     def acqos(self, os: int, in_: Optional[int] = None, pe: Optional[bool] = None) -> P.Capture:
         """Capture with ADC hardware oversampling: each sample = ``os`` (4 or 16) back-to-back 32 ns conversions, 13 / 14-bit
-        (2x / 4x a 12-bit code), 175 / 565 ns per sample = 0.72 / 2.3 ms window. ``pe=True`` fires the pulser on RDY.
+        (2x / 4x a 12-bit code), 185 / 565 ns per sample = 0.76 / 2.32 ms window. ``pe=True`` fires the pulser on RDY.
 
         One pulse: the averaging is inside each sample, not across shots (that is ``env(dec, shots)``).
-        **Not for the 3.3 MHz RF echo:** 5.5 / 1.8 Msps put Nyquist at 2.8 / 0.9 MHz (the echo aliases) and the 128 / 512 ns
+        **Not for the 3.3 MHz RF echo:** 5.4 / 1.77 Msps put Nyquist at 2.8 / 0.9 MHz (the echo aliases) and the 128 / 512 ns
         average cancels most of a 300 ns period. Use it for slow / low-frequency signals and long low-noise windows; for
         echoes use ``pe`` (RF), ``env`` (strength vs depth) or ``tof`` (range)."""
         if os not in (4, 16):

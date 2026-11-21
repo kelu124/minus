@@ -1,0 +1,30 @@
+{
+ "no tgc": {
+  "raw": {
+   "before_median": 11.231774064636028,
+   "after_median": 9.50051514603297
+  },
+  "old": {
+   "before_median": 1.8100190343748754,
+   "after_median": 1.1895298545333028
+  },
+  "new": {
+   "before_median": 1.807745962643644,
+   "after_median": 1.1903474759788706
+  }
+ },
+ "tgc 60 3": {
+  "raw": {
+   "before_median": 11.217041757603898,
+   "after_median": 10.22006169279057
+  },
+  "old": {
+   "before_median": 2.557402844257684,
+   "after_median": 1.3904672944710312
+  },
+  "new": {
+   "before_median": 2.413071439828312,
+   "after_median": 1.504361107664806
+  }
+ }
+}

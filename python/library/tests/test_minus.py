@@ -182,7 +182,9 @@ class TestDevice(unittest.TestCase):
         ok = c.tgc_valid()
         self.assertEqual(int((~ok).sum()), int(((c.t_us >= 60) & (c.t_us < 77)).sum()))
         y = c.samples.astype(float); t = c.t_us
-        self.assertGreater(y[(t > 80) & ok].std(), 1.5 * y[(t > 10) & (t < 55)].std())   # more gain after the step
+        d4 = y[4:] - y[:-4]                      # lag-4 difference: cancels the period-4 pattern whatever its phase (a comb
+        t4, ok4 = t[4:], ok[4:] & ok[:-4]        # slip can leave it uncorrected in one capture)
+        self.assertGreater(d4[(t4 > 80) & ok4].std(), 1.5 * d4[(t4 > 10) & (t4 < 55)].std())   # more gain after the step
         self.assertEqual(self.d.tgc("off").steps, [])
         self.assertEqual(self.d.fmt("text"), "text")
         self.assertEqual(self.d.acq(4, 0, 19).n, 4095)                          # text payload still parses
@@ -199,6 +201,21 @@ class TestDevice(unittest.TestCase):
         for _ in range(3):                                  # 2026-11-22: a split marker line leaked "ry help" into the next reply
             self.assertEqual(d.version().name, "minus-rp2354")
             self.assertEqual(d.pic_ident().part, "PIC32AK1216GC41048")
+
+    def test_stale_reply_after_timeout_is_dropped(self):
+        t = ReplayTransport(REPLIES)
+        d = Minus(transport=t, check_firmware=False)
+        late = "".join(ln + "\r\n" for ln in REPLIES["version"]) + f"unknown '#end{d._seq + 1}' — try help\r\n"
+        real_write = t.write
+
+        def write_but_hold_back(data):            # first command: its reply + marker only arrive with the next one
+            t.write = real_write
+            t.held = late
+        t.write = write_but_hold_back
+        with self.assertRaises(TimeoutError):
+            d.exchange("version", timeout=0.05)
+        t.out += t.held.encode()                 # the late reply shows up before the next command's
+        self.assertEqual(d.pic_ident().part, "PIC32AK1216GC41048")   # not confused by the stale version lines
 
     def test_history_and_framing(self):
         self.d.version()
