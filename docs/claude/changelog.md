@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  fab4b9f  Hardware: R69 0 Ω TX↔RX link (fitted by default, E11) + R70/R71 10 kΩ pull-up GPIO9 / pull-down GPIO8 (E1) in schematic, footprints placed (unrouted, owner routes); TODO_HARDWARE updated
+
 - 2026-11-21  c546417  Datasheet: released firmware rp 1.1.3; jitter campaign now labelled rp 1.1.1 (its real build, was shown as 1.1.2); rev 0.2 history row fixed at rp 1.1.2; PDF rebuilt, rev unchanged
 
 - 2026-11-20  318a043  rp 1.1.3: `version` board line + boot banner print "minus v1.1" (minUS_08112026 dropped), uf2 rebuilt (not flashed, board absent); library 1.1.3 + fwsync; fixture and notebook 01 outputs hand-edited pending re-record; docs bumped to rp 1.1.3 (datasheet left at 1.1.2)
