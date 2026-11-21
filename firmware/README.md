@@ -7,8 +7,8 @@ library [`python/library/minus/`](../python/library/minus/) (kept in sync by `py
 
 | Dir | Chip | Toolchain | Output (committed) | Status |
 |-----|------|-----------|--------------------|--------|
-| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.7**, running on board 3 |
-| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.4, proto 14**, flashed by the RP |
+| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.8**, running on board 3 |
+| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.5, proto 14**, flashed by the RP |
 
 Toolchain install and the build/flash walk-through are in the top-level
 [`README.md`](../README.md#getting-started). The older devkits (boards 1/2, `minUS_10102026`) are in git
@@ -83,7 +83,7 @@ Talk to it: `/dev/ttyACM0` (USB CDC, any baud; since rp 1.1.4 it enumerates as m
 The `make -C firmware/pic32 flash` target (MPLAB IPE + PICkit/Snap) is for boards with an ICSP header only;
 v1.1 has none.
 
-## RP CLI commands (rp 1.1.7)
+## RP CLI commands (rp 1.1.8)
 
 | Command | Does |
 |---------|------|
@@ -125,7 +125,7 @@ The RP drains the link until it is idle 50 ms before every command.
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.4 proto 14` |
+| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.5 proto 14` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
 | `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|slow\|notready>` — header only since proto 11; the payload stays on the PIC until pulled (`SPIX` / `UTX`). Since proto 14, `navg` goes back to 1 unless given. `ticks × tick_ns` = fill time on the PIC (Timer1, 80 ns); `slow` = the PIC saw a non-uniform fill (proto 10) |
 | `SPIX` | proto 12: **no UART reply** (only `SPIX 0` when nothing is pending). The PIC drops RDY, preloads SPI1, raises RDY = "clock now", feeds the frame `A5 5A 'M' '1'`, n u16, seq u16, n × u16 LE, CRC-32/IEEE LE of all before (12 + 2n bytes, CRC computed while feeding), drops RDY. SPI mode 1. The RP clocks it with CS low and checks magic / n (from the ACQ header) / CRC (`link_frame.c`) |

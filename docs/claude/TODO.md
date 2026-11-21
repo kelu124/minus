@@ -5,7 +5,7 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-11-22 night, session 13): rp 1.1.7 / pic 1.1.4, proto 14 on board 3** (no piezo on the bench). Done
+- **RESUME HERE (2026-11-22 night, session 13): rp 1.1.8 / pic 1.1.5, proto 14 on board 3** (reviewed + soaked) (no piezo on the bench). Done
   tonight: SPI payload (5.7 ms), slow-lock self-heal, ADC extras (`acqos`/`tof`/`env`), `fmt b64` (30 ms per capture over USB),
   `tgc` gain steps (~17 µs switch transient), `navg` reset, live viewer (`python3 -m minus.live`, Jupyter `LiveView`,
   notebook 04). Next:
