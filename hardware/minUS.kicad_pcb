@@ -16358,6 +16358,233 @@
 			)
 		)
 	)
+	(footprint "EasyEDA:R0402"
+		(layer "F.Cu")
+		(uuid "7640dc08-a0b8-4135-b18f-20d3de6a1a15")
+		(at 148.5 96)
+		(property "Reference" "R69"
+			(at 0 1.5 0)
+			(layer "F.SilkS")
+			(uuid "0ed25039-24e1-4b4e-87ec-bc888e951327")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "0Ω"
+			(at 0 4 180)
+			(layer "F.Fab")
+			(uuid "b14ab2c5-93dd-4797-a440-b5e6d87dbb43")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C844673.pdf"
+			(at 0 0 180)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b5a005f2-e45c-4fc2-9ae6-42cbf6e81347")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "RES 0Ω 200mW 0402"
+			(at 0 0 180)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "27be8aad-c538-4faa-90e9-e4a709be762f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "VISHAY(威世)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "e89034a6-ca93-482e-aca3-7756ea170401")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MPN" "RCS04020000Z0ED"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "17765aef-d697-4a73-8fe8-50d7f893a2b6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "LCSC Part" "C844673"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3b452863-b05c-4a58-86e4-5d13203dcd5f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(path "/776893c9-685a-4aad-b276-5b257ebafd69/a3f29037-840a-40f9-8b35-709cffd31f67/e583d698-fba8-4475-a532-07623b42a6b2")
+		(sheetname "/RX_FRONT_END/TRANSDUCER/")
+		(sheetfile "TRANSDUCER.kicad_sch")
+		(attr through_hole)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_line
+			(start -0.94 -0.5)
+			(end -0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "5203faef-8a96-4e1b-9090-44d39c154392")
+		)
+		(fp_line
+			(start -0.94 0.5)
+			(end -0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "3a5fae79-82f2-442d-8370-188cf5c170d1")
+		)
+		(fp_line
+			(start -0.23 0.5)
+			(end -0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "4bd01d67-f24f-49f6-80ca-7a0cc7786eac")
+		)
+		(fp_line
+			(start 0.23 0.5)
+			(end 0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "b6226790-7d47-495a-a773-ed1d0da45390")
+		)
+		(fp_line
+			(start 0.94 -0.5)
+			(end 0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "e42fb94d-073b-4368-b407-382b82644c95")
+		)
+		(fp_line
+			(start 0.94 0.5)
+			(end 0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "a2094a52-5d9f-435e-ac1a-50e41b0edfb7")
+		)
+		(fp_circle
+			(center -0.5 0.25)
+			(end -0.47 0.25)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.SilkS")
+			(uuid "f30d85c6-4ba0-4d9f-a62a-5d18cc61d993")
+		)
+		(fp_text user "${REFERENCE}"
+			(at 0 0 180)
+			(layer "F.Fab")
+			(uuid "76f37ea1-814f-4c8f-b5a9-495055cc52a0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(pad "1" smd rect
+			(at -0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "TRANSDUCER")
+			(pinfunction "1_1")
+			(pintype "unspecified")
+			(uuid "986df29c-7b0d-4949-8ce6-a186e3e42bb5")
+		)
+		(pad "2" smd rect
+			(at 0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "Transducer")
+			(pinfunction "2_2")
+			(pintype "unspecified")
+			(uuid "03897615-b488-4be8-b0d3-ecf9ae898053")
+		)
+		(embedded_fonts no)
+		(model "${KIPRJMOD}/3dmodels/EasyEDA/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+	)
 	(footprint "EasyEDA:HDR-TH_1P-P2.54-V-M"
 		(layer "F.Cu")
 		(uuid "76de18de-3c75-4902-824a-f0b1414017cc")
@@ -20758,6 +20985,460 @@
 			(size 0.57 0.54)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "+3V3_DVDD")
+			(pinfunction "2_2")
+			(pintype "input")
+			(uuid "f15d3fec-5de9-49e1-ba58-c920d887f401")
+		)
+		(embedded_fonts no)
+		(model "${KIPRJMOD}/3dmodels/EasyEDA/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+	)
+	(footprint "EasyEDA:R0402"
+		(layer "F.Cu")
+		(uuid "98530467-5978-480c-a8a1-0b6a07cc181a")
+		(at 132.6 88.66)
+		(property "Reference" "R70"
+			(at 2.5 0 0)
+			(layer "F.SilkS")
+			(uuid "add4dde2-e091-425a-b283-1eda7367af2d")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "10KΩ"
+			(at 0 4 0)
+			(layer "F.Fab")
+			(uuid "3756e023-ac4c-4ad2-a83f-22c6e75ebf46")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_10KR-1002-1_C25744.html"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "407281f2-6263-41f5-903d-74a8dd2505ba")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "10KΩ (1002) ±1%"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "be4f76c8-58fc-45e1-830f-acfac3dbb6b7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "UNI-ROYAL(厚声)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "35b883fa-66c3-45a1-8c4e-eaae18e634be")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MPN" "0402WGF1002TCE"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "0699ed9c-ccfd-448a-ba61-a6a361c0dab6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "LCSC Part" "C25744"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a911101a-adc0-4026-915c-64eef5dc1d5c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(path "/393275de-e3f9-4800-99dc-bb7de891e8d2/37244c81-f389-47bd-b2ad-28900ed8a6cb/36ca4372-0431-4679-817b-dec618115928")
+		(sheetname "/PIC32/")
+		(sheetfile "PIC32.kicad_sch")
+		(attr through_hole)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_line
+			(start -0.94 -0.5)
+			(end -0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "3aee94c6-d565-4881-b2f3-062fd4bc5a06")
+		)
+		(fp_line
+			(start -0.94 0.5)
+			(end -0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "6793046e-fe31-4ec2-8a89-d4f7004a627c")
+		)
+		(fp_line
+			(start -0.23 0.5)
+			(end -0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "20f62e1b-5142-4a03-a195-7437951a5c7a")
+		)
+		(fp_line
+			(start 0.23 0.5)
+			(end 0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "5932e79a-baf2-49e5-aa9a-d8834c4a4efd")
+		)
+		(fp_line
+			(start 0.94 -0.5)
+			(end 0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "1fb007ff-a4fc-4a39-b988-7efe6477e874")
+		)
+		(fp_line
+			(start 0.94 0.5)
+			(end 0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "6a19a2a0-b950-4591-8b06-43e5d6eec5e9")
+		)
+		(fp_circle
+			(center -0.5 0.25)
+			(end -0.47 0.25)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.SilkS")
+			(uuid "9ca1e0d0-d082-4430-82b9-3523f9f13282")
+		)
+		(fp_text user "${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(uuid "c7945f8f-c019-4b30-8a98-2f3bf7ce79ea")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(pad "1" smd rect
+			(at -0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "RP2354 PIO-PWM_L")
+			(pinfunction "1_1")
+			(pintype "input")
+			(uuid "bde82eba-dc26-4623-ac76-8f84c88c0efd")
+		)
+		(pad "2" smd rect
+			(at 0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "+3V3_DVDD")
+			(pinfunction "2_2")
+			(pintype "input")
+			(uuid "f15d3fec-5de9-49e1-ba58-c920d887f401")
+		)
+		(embedded_fonts no)
+		(model "${KIPRJMOD}/3dmodels/EasyEDA/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+		(model "D:/Nzoia Systems/My Projects/KICAD Projects/Component_Lib/EasyEDA.3dshapes/R0402_L1.0-W0.5-H0.4.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+	)
+	(footprint "EasyEDA:R0402"
+		(layer "F.Cu")
+		(uuid "98530467-5978-480c-a8a1-0b6a07cc181a")
+		(at 132.6 90.2)
+		(property "Reference" "R71"
+			(at 2.5 0 0)
+			(layer "F.SilkS")
+			(uuid "f6a6820a-b7e7-4b08-ab2f-91ad643a4925")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "10KΩ"
+			(at 0 4 0)
+			(layer "F.Fab")
+			(uuid "f7a4f37f-7f95-405c-97cf-4c7227eacea9")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_10KR-1002-1_C25744.html"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "07791a4c-97dc-4150-bd02-b3dbecf8f860")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "10KΩ (1002) ±1%"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "e4720050-c51f-410a-a9d3-432e512618b2")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "UNI-ROYAL(厚声)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "35b883fa-66c3-45a1-8c4e-eaae18e634be")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MPN" "0402WGF1002TCE"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "0699ed9c-ccfd-448a-ba61-a6a361c0dab6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "LCSC Part" "C25744"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a911101a-adc0-4026-915c-64eef5dc1d5c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(path "/393275de-e3f9-4800-99dc-bb7de891e8d2/37244c81-f389-47bd-b2ad-28900ed8a6cb/422f5eca-5484-4e26-8d90-a77d76194d32")
+		(sheetname "/PIC32/")
+		(sheetfile "PIC32.kicad_sch")
+		(attr through_hole)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_line
+			(start -0.94 -0.5)
+			(end -0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "3aee94c6-d565-4881-b2f3-062fd4bc5a06")
+		)
+		(fp_line
+			(start -0.94 0.5)
+			(end -0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "6793046e-fe31-4ec2-8a89-d4f7004a627c")
+		)
+		(fp_line
+			(start -0.23 0.5)
+			(end -0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "20f62e1b-5142-4a03-a195-7437951a5c7a")
+		)
+		(fp_line
+			(start 0.23 0.5)
+			(end 0.94 0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "5932e79a-baf2-49e5-aa9a-d8834c4a4efd")
+		)
+		(fp_line
+			(start 0.94 -0.5)
+			(end 0.23 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "1fb007ff-a4fc-4a39-b988-7efe6477e874")
+		)
+		(fp_line
+			(start 0.94 0.5)
+			(end 0.94 -0.5)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "6a19a2a0-b950-4591-8b06-43e5d6eec5e9")
+		)
+		(fp_circle
+			(center -0.5 0.25)
+			(end -0.47 0.25)
+			(stroke
+				(width 0.06)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.SilkS")
+			(uuid "9ca1e0d0-d082-4430-82b9-3523f9f13282")
+		)
+		(fp_text user "${REFERENCE}"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(uuid "c7945f8f-c019-4b30-8a98-2f3bf7ce79ea")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(pad "1" smd rect
+			(at -0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "GND")
+			(pinfunction "1_1")
+			(pintype "input")
+			(uuid "bde82eba-dc26-4623-ac76-8f84c88c0efd")
+		)
+		(pad "2" smd rect
+			(at 0.43 0)
+			(size 0.57 0.54)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "RP2354 PIO-PWM_H")
 			(pinfunction "2_2")
 			(pintype "input")
 			(uuid "f15d3fec-5de9-49e1-ba58-c920d887f401")

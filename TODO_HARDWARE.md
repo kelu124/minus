@@ -14,12 +14,17 @@ history (this file before 2026-11-19).
 - **[must] U3 = MIC4427YMM (LCSC C152165)** in the schematic, PCB and `hardware/production/bom.csv`: they still say
   TC4427AEUA713 (C628548, out of stock). Same MSOP-8 and pin order. Check live stock at order time (13 on 2026-10-24);
   fallback TC4427AEOA713 (C20551, SOIC-8, footprint change). Datasheet E9.
-- **[should] TX at +5 V during power-up (E1):** GPIO9 (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) has no pull-up, so the
-  RP2350 pad pull-down turns Q1 on until the firmware idles the pins (a few ms). Add 10 kΩ pull-up on GPIO9 and
-  10 kΩ pull-down on GPIO8.
-- **[should] Single-connector probe (E11, owner):** add a **DNP-able 0 Ω link between TX** (`Transducer`, Q1/Q2 drains,
-  RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works without an external tee.
-  RX is protected by C45 10 nF + D2 BAV99 (±0.6 V); keep it DNP for separate TX/RX probes.
+- **[should] TX at +5 V during power-up (E1) — in schematic + placed, routing pending (2026-11-21):** GPIO9
+  (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) had no pull-up, so the RP2350 pad pull-down turned Q1 on until the firmware
+  idled the pins (a few ms). Added **R70 10 kΩ pull-up GPIO9 → +3V3_DVDD** and **R71 10 kΩ pull-down GPIO8
+  (`RP2354 PIO-PWM_H`) → GND** (0402, LCSC C25744 like R18), sheet PULSER/PUSH_PULL; footprints placed below U3, next to its input pins 2/4.
+  **To do: route** (owner), then re-export JLC outputs.
+- **[should] Single-connector probe (E11) — in schematic + placed, routing pending (2026-11-21):** **R69 0 Ω between TX**
+  (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works
+  without an external tee. 0402, LCSC C844673 like R29, sheet RX_FRONT_END/TRANSDUCER; footprint placed below RF1.
+  **R69 is fitted by default** (owner, 2026-11-21): TX and RX are joined, either connector drives and receives. RX is
+  protected by C45 10 nF + D2 BAV99 (±0.6 V). Remove R69 (or mark it DNP in the BOM) for separate TX/RX probes.
+  **To do: route** (owner), then re-export JLC outputs.
 - **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.
   Delete the dangling stubs on OA2OUT, PIC32_ADC, AVDD; enlarge the C5 reference text.
 
