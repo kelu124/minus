@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  5e7d73f  Live viewer (python -m minus.live window + Jupyter LiveView, notebook 04), library 1.1.7, proto 14 docs, TODO cleanup (older items closed/parked, stale hardware entries fixed)
+
 - 2026-11-22  299a809  Proto 14 (rp 1.1.7 / pic 1.1.4): fmt b64 sample output (30 vs 110 ms per capture), tgc gain-leg steps (switch transient ~17 us), ACQ navg reset, acqos RF warning; library b64 + tgc + framing fix (split end-marker line); bench docs/bench/2026-11-22-tgc-b64
 
 - 2026-11-22  6ae0bf3  Proto 13 (rp 1.1.6 / pic 1.1.3): ADC extras for pulse-echo — acqos 4|16 (hardware oversampling, 13/14-bit), tof (ADC comparator time of flight, 8.9 ms), env (on-PIC envelope, multi-shot average); library + fixture + notebook 02; bench docs/bench/2026-11-22-adc-extras
