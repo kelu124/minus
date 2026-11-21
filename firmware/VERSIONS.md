@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-22 | rp2354 | 1.1.7 | **proto 14**: `fmt [text\|b64]` (base64 sample output: 11.4 KB / 30 ms instead of 24.8 KB / 110 ms; shared `print_samples`, `link_b64_encode` + host test), `tgc [off \| <t_us> <leg> ...]` (4052 gain-leg steps during each capture, run from the RDY window in acq/pe/acqos/tof/env; restored after), `acqos` RF warning; embeds pic 1.1.4 |
+| 2026-11-22 | pic32  | 1.1.4 | **proto 14**: `ACQ` resets navg to 1 unless given (it used to persist) |
 | 2026-11-22 | rp2354 | 1.1.6 | **proto 13**: `acqos <4\|16> [in [pe]]` (ADC oversampling capture), `tof <thr> [blank_ns [in [ref]]]` (pulse + time of flight on the PIC, one line), `env <dec> [shots [in]]` (pulse + on-PIC envelope, multi-shot average); shared slow-retry / RELOCK loop; embeds pic 1.1.3 |
 | 2026-11-22 | pic32  | 1.1.3 | **proto 13**: `ACQOS` (MODE 11 oversampling 4 / 16, 13 / 14-bit, div raised to fit), `TOF` (channel-0 comparator out of [ref±thr] + first-crossing / peak search), `ENV` (|x−mean| integrate-and-dump, running average in the acqil buffer as u32); `pe_ext.c` |
 | 2026-11-22 | rp2354 | 1.1.5 | **proto 12**: `SPIX` without reply — waits for RDY high, then clocks; SPI **mode 1** (the PL022 in mode 0 left a 1-bit gap per byte, +19 %): 5.7 ms per capture at 12.5 MHz, 25 MHz now clean (3000/3000); `link_frame_check` takes n from the ACQ header (no reply CRC); `acq`/`pe` send `RELOCK` after 3 slow captures and restore UGE; link idle window 50 → 2 ms; capture text written in 4 KB blocks (185 → 107 ms per `acq` end to end); embeds pic 1.1.2 |

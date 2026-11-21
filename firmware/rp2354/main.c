@@ -273,6 +273,80 @@ static const uint8_t *link_fetch(unsigned n, char *info, unsigned infolen) {
     return NULL;
 }
 
+// ---------------------------------------------------------------- sample output + time-gain schedule (rp 1.1.7, proto 14)
+// fmt b64: the samples go out as "# b64 <bytes>" + base64 lines (76 chars = 57 bytes, u16 little-endian) instead of one decimal
+// per line: ~11 KB instead of ~24.8 KB per 4095-sample capture, the USB CDC (256-byte sdk buffer, ~270 kB/s) being the limit.
+static bool out_b64 = false;
+static void print_samples(const uint8_t *p, unsigned n) {
+    static char tbuf[4096]; unsigned tl = 0;
+    if (!out_b64) {
+        for (unsigned i = 0; i < n; i++) {
+            tl += (unsigned)snprintf(tbuf + tl, sizeof tbuf - tl, "%u\n", (unsigned)p[2 * i] | (unsigned)p[2 * i + 1] << 8);
+            if (tl > sizeof tbuf - 16) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
+        }
+    } else {
+        unsigned nb = 2 * n;
+        printf("# b64 %u\n", nb);
+        for (unsigned i = 0; i < nb; i += 57) {
+            unsigned k = nb - i < 57 ? nb - i : 57;
+            tl += link_b64_encode(p + i, k, tbuf + tl);
+            tbuf[tl++] = '\n';
+            if (tl > sizeof tbuf - 80) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
+        }
+    }
+    if (tl) fwrite(tbuf, 1, tl, stdout);
+    fflush(stdout);
+}
+static void cmd_fmt(const char *arg) {
+    if (arg && *arg) {
+        if (!strcmp(arg, "text")) out_b64 = false;
+        else if (!strcmp(arg, "b64")) out_b64 = true;
+        else { printf("usage: fmt [text|b64]\n"); return; }
+    }
+    printf("fmt: %s\n", out_b64 ? "b64 (samples as '# b64 <bytes>' + base64 lines of u16 little-endian)" : "text (one decimal sample per line)");
+}
+
+// tgc: switch the 74HC4052 gain leg (both stages, S0 = GPIO25, S1 = GPIO23) at set times after the capture start (= the pulse,
+// RDY rise) — time-gain compensation by steps. Applied by acq/pe/acqos/acqcpu/acqil (acq_receive) and tof/env; the leg set by
+// "gain" is restored at the end of each capture. UGE (x1 per stage) is not touched.
+#define TGC_MAX 4
+static unsigned tgc_n, tgc_t_us[TGC_MAX], tgc_leg[TGC_MAX];
+static void tgc_set_leg(unsigned leg) { gpio_put(MINUS_PIN_GC1, leg & 1u); gpio_put(MINUS_PIN_GC2, (leg >> 1) & 1u); }
+static unsigned gain_leg_cur(void);
+// RDY rose at t0: run the schedule while RDY is high (<= 20 ms), restore the gain leg; returns the RDY-high time in us
+static int64_t rdy_window(absolute_time_t t0) {
+    unsigned k = 0; absolute_time_t t_end = delayed_by_ms(t0, 20);
+    while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_end)) {
+        if (k < tgc_n && absolute_time_diff_us(t0, get_absolute_time()) >= (int64_t)tgc_t_us[k]) { tgc_set_leg(tgc_leg[k]); k++; }
+    }
+    int64_t d = absolute_time_diff_us(t0, get_absolute_time());
+    if (tgc_n) tgc_set_leg(gain_leg_cur());
+    return d;
+}
+static void tgc_desc(char *buf, unsigned len) {
+    unsigned o = 0; buf[0] = 0;
+    if (!tgc_n) return;
+    o += (unsigned)snprintf(buf + o, len - o, " tgc=");
+    for (unsigned k = 0; k < tgc_n && o < len; k++) o += (unsigned)snprintf(buf + o, len - o, "%s%uus:leg%u", k ? "," : "", tgc_t_us[k], tgc_leg[k]);
+}
+// tgc [off | <t_us> <leg> [<t_us> <leg> ...]]: up to 4 steps, times increasing, 0..20000 us, legs 0..3
+static void cmd_tgc(const char *arg) {
+    if (arg && *arg) {
+        if (!strcmp(arg, "off")) tgc_n = 0;
+        else {
+            unsigned t[TGC_MAX], l[TGC_MAX], n = 0; const char *q = arg; int used;
+            while (n < TGC_MAX && sscanf(q, "%u %u%n", &t[n], &l[n], &used) == 2) { q += used; n++; while (*q == ' ') q++; }
+            bool ok = n > 0 && *q == 0;
+            for (unsigned k = 0; k < n && ok; k++) ok = l[k] <= 3 && t[k] <= 20000 && (k == 0 || t[k] > t[k - 1]);
+            if (!ok) { printf("usage: tgc [off | <t_us> <leg> [<t_us> <leg> ...]]  up to 4 steps, times increasing (0..20000 us after the pulse), legs 0..3\n"); return; }
+            for (unsigned k = 0; k < n; k++) { tgc_t_us[k] = t[k]; tgc_leg[k] = l[k]; }
+            tgc_n = n;
+        }
+    }
+    char d[96]; tgc_desc(d, sizeof d);
+    printf("tgc: %s (leg %u from gain before the first step and after the capture)\n", tgc_n ? d + 5 : "off", gain_leg_cur());
+}
+
 // ---------------------------------------------------------------- PIC control taps
 static void pic_taps_init(void) {
     // The RP's own SWCLK/SWDIO pads sit on PGD1/PGC1 (R17/R18 0R + R8/R10 47R to J1.4/J1.5) and
@@ -644,6 +718,7 @@ static void cmd_gain(const char *arg) {
     char d[160]; gain_desc(d, sizeof d); printf("%s\n", d);
 }
 static unsigned gain_u1_cur(void) { return gain_u1; }
+static unsigned gain_leg_cur(void) { return gain_leg; }
 static unsigned gain_u2_cur(void) { return gain_u2; }
 // pc [0|1]: PIC-side period-4 fixed-pattern correction (on at PIC boot) off/on; prints state + the last capture's offsets
 static void cmd_pc(const char *arg) {
@@ -694,11 +769,7 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     absolute_time_t t_arm = make_timeout_time_ms(100); int64_t rp_fill_us = -1;
     while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();     // PIC drops RDY when it parses ACQ
     while (!gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();    // then raises it at trigger start
-    if (gpio_get(MINUS_PIN_RDY)) {
-        absolute_time_t t0 = get_absolute_time(), t_end = make_timeout_time_ms(20);
-        while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_end)) tight_loop_contents();
-        rp_fill_us = absolute_time_diff_us(t0, get_absolute_time());
-    }
+    if (gpio_get(MINUS_PIN_RDY)) rp_fill_us = rdy_window(get_absolute_time());   // + the tgc schedule, if any
     int n = link_readline(hdr, hdrlen, 500000);                      // capture itself takes ~0.1 ms, deadline 5 ms
     if (n < 0) { printf("acq: no reply from PIC\n"); return -1; }
     if (!strncmp(hdr, "ERR", 3)) { printf("acq: PIC replied '%s'\n", hdr); return -1; }
@@ -712,15 +783,9 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     char info[112];
     const uint8_t *payload = link_fetch(h.n, info, sizeof info);   // proto 11: the RP pulls the payload (SPI, UART fallback)
     if (!payload) return -1;
-    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s %s\n", h.n, rate, (long long)rp_fill_us, note, info);
-    // one printf per line runs at ~200 kB/s over USB CDC; 4 KB blocks run several times faster (bench 2026-11-22)
-    static char tbuf[4096]; unsigned tl = 0;
-    for (unsigned i = 0; i < h.n; i++) {
-        tl += (unsigned)snprintf(tbuf + tl, sizeof tbuf - tl, "%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
-        if (tl > sizeof tbuf - 16) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
-    }
-    if (tl) fwrite(tbuf, 1, tl, stdout);
-    fflush(stdout);
+    char tg[96]; tgc_desc(tg, sizeof tg);
+    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s%s %s\n", h.n, rate, (long long)rp_fill_us, note, tg, info);
+    print_samples(payload, h.n);       // text or base64 (fmt); 4 KB blocks (one printf per line ran at ~200 kB/s)
     return 0;
 }
 
@@ -738,6 +803,10 @@ static int pe_ext_shot(const char *tx, bool pulse, char *rx, unsigned rxlen, boo
         link_flush_rx();
         if (pulse && !pulser_arm(PE_HI_NS, PE_LO_NS, PE_DEAD_NS, false, &pc)) { printf("pulser arm failed\n"); return -1; }
         link_puts(tx);
+        absolute_time_t t_arm = make_timeout_time_ms(100);                       // RDY: low when the PIC parses, high = capture
+        while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();
+        while (!gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();
+        if (gpio_get(MINUS_PIN_RDY)) (void)rdy_window(get_absolute_time());       // runs the tgc schedule, if any
         int n = link_readline(rx, rxlen, 500000);
         if (fired) *fired = pulse && pulser_fired();
         if (pulse) pulser_disarm();
@@ -754,7 +823,8 @@ static int pe_ext_shot(const char *tx, bool pulse, char *rx, unsigned rxlen, boo
 static void cmd_acqos(const char *arg) {
     unsigned os = 0, pe = 0; int in = 25; char hdr[96];
     if (!arg || sscanf(arg, "%u %d %u", &os, &in, &pe) < 1 || (os != 4 && os != 16) || in < 0 || in > 31) {
-        printf("usage: acqos <4|16> [in [pe]]   oversampling: each sample = 4 or 16 x 32 ns conversions (13 / 14-bit), in = input code (25 default, 19 = DAC), pe 1 = fire the pulser\n"); return;
+        printf("usage: acqos <4|16> [in [pe]]   oversampling: each sample = 4 or 16 x 32 ns conversions (13 / 14-bit), in = input code (25 default, 19 = DAC), pe 1 = fire the pulser\n"
+               "  one pulse, averaging inside each sample. NOT for 3.3 MHz RF: 5.5 / 1.8 Msps alias it (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"); return;
     }
     pulse_cyc_t pc; bool fired = false;
     link_flush_rx();
@@ -764,6 +834,7 @@ static void cmd_acqos(const char *arg) {
     char note[200];
     snprintf(note, sizeof note, "oversampling %u x 32 ns conversions per sample (%u-bit result, %s), in=%d %s; %s", os, os == 4 ? 13 : 14,
              os == 4 ? "0..8191 = 2 x a 12-bit code" : "0..16383 = 4 x a 12-bit code", in, acq_in_name(in), pe ? "pulse on RDY" : "no pulse");
+    if (pe) printf("# acqos: 3.3 MHz echoes alias at %s Msps and average out over %u ns: for RF use pe, for echo strength env\n", os == 4 ? "5.5" : "1.8", os * 32u);
     acq_receive(hdr, sizeof hdr, note, 0);
     if (pe) { fired = pulser_fired(); pulser_disarm(); printf("# pulse %s, 1 shot(s)\n", fired ? "fired" : "did NOT fire (no RDY edge)"); }
 }
@@ -804,15 +875,10 @@ static void cmd_env(const char *arg) {
     const uint8_t *p = link_fetch(n, info, sizeof info);
     if (!p) return;
     double dt = ticks * (double)tick_ns / 4095.0 * dec;
-    printf("# env n=%u dec=%u shots=%u dt=%.2fns fill=%.1fus in=%d values=mean |x-mean| x16 (1/16 LSB) per %u samples; pulses fired %u/%u %s\n",
-           n, d, sh, dt, ticks * (double)tick_ns / 1000.0, in, dec, fired_n, shots, info);
-    static char tbuf[4096]; unsigned tl = 0;
-    for (unsigned i = 0; i < n; i++) {
-        tl += (unsigned)snprintf(tbuf + tl, sizeof tbuf - tl, "%u\n", (unsigned)p[2 * i] | (unsigned)p[2 * i + 1] << 8);
-        if (tl > sizeof tbuf - 16) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
-    }
-    if (tl) fwrite(tbuf, 1, tl, stdout);
-    fflush(stdout);
+    char tg[96]; tgc_desc(tg, sizeof tg);
+    printf("# env n=%u dec=%u shots=%u dt=%.2fns fill=%.1fus in=%d values=mean |x-mean| x16 (1/16 LSB) per %u samples; pulses fired %u/%u%s %s\n",
+           n, d, sh, dt, ticks * (double)tick_ns / 1000.0, in, dec, fired_n, shots, tg, info);
+    print_samples(p, n);
 }
 
 // ---------------------------------------------------------------- link / linktest / dac (proto 11)
@@ -955,9 +1021,11 @@ static void help(void) {
            "  link [uart|spi [MHz]]  capture payload path: SPI0 frame from the PIC (default, 12.5 MHz, CRC-checked, UART fallback) or UART only (0.7 s); no args = counters\n"
            "  linktest [count [MHz]]  SPI link self-test: PIC LFSR pattern pulled count times (default 10), every word + CRC checked, then once over the UART\n"
            "  dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]  PIC DAC1 test signal on DACOUT1 (U9 pin 3, read back with acq 4 0 19); codes 205..3890\n"
-           "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 175 / 565 ns per sample, 0.72 / 2.3 ms window); pe 1 = fire the pulser\n"
+           "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 175 / 565 ns per sample, 0.72 / 2.3 ms window); pe 1 = fire the pulser. NOT for 3.3 MHz RF: 5.5 / 1.8 Msps alias it (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"
            "  tof <thr> [blank_ns [in [ref]]]  pulse-echo time of flight on the PIC: first |x-ref| > thr after blank_ns (ADC comparator armed; ref 0 = capture mean), one line, no A-line transfer\n"
-           "  env <dec> [shots [in]]  pulse-echo envelope computed on the PIC (|x-mean| over dec = 4..64 samples), averaged over shots (one pulse each), then pulled: 4095/dec values\n");
+           "  env <dec> [shots [in]]  pulse-echo envelope computed on the PIC (|x-mean| over dec = 4..64 samples), averaged over shots (one pulse each), then pulled: 4095/dec values\n"
+           "  fmt [text|b64]  sample output of acq/pe/acqos/env: one decimal per line (default) or '# b64 <bytes>' + base64 lines of u16 LE (2.2x smaller, the Python library uses it)\n"
+           "  tgc [off | <t_us> <leg> ...]  time-gain steps: switch the 4052 gain leg (0..3) at up to 4 times after the pulse during each capture; the gain leg is restored after\n");
 }
 
 int main(void) {
@@ -1016,6 +1084,8 @@ int main(void) {
         else if (!strncmp(line, "acqos", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqos(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "tof", 3) && (line[3] == 0 || line[3] == ' ')) cmd_tof(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "env", 3) && (line[3] == 0 || line[3] == ' ')) cmd_env(line[3] == ' ' ? line + 4 : "");
+        else if (!strncmp(line, "fmt", 3) && (line[3] == 0 || line[3] == ' ')) cmd_fmt(line[3] == ' ' ? line + 4 : "");
+        else if (!strncmp(line, "tgc", 3) && (line[3] == 0 || line[3] == ' ')) cmd_tgc(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "pe", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pe(line[2] == ' ' ? line + 3 : "");

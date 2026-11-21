@@ -6,6 +6,8 @@ the matching parser here must change too (``python -m minus.fwsync`` flags firmw
 """
 from __future__ import annotations
 
+import base64
+import binascii
 import re
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
@@ -239,7 +241,19 @@ class Capture:
     shots: Optional[int] = None          # pe only: how many shots it took to get a uniform 40 ns capture
     link: Optional[str] = None           # proto 11: how the payload came, e.g. "spi@12.50MHz", "uart", "uart(spi failed: frame crc)"
     xfer_us: Optional[int] = None        # proto 11: payload transfer time (request + frame), RP clock
+    tgc: List[Tuple[float, int]] = field(default_factory=list)   # proto 14: (time us, gain leg) steps applied in this capture
     raw: str = field(default="", repr=False)
+
+    TGC_SETTLE_US = 17.0                 # bench 2026-11-22: ~2 us saturation + ~15 us settling after each 4052 switch
+
+    def tgc_valid(self, settle_us: Optional[float] = None) -> np.ndarray:
+        """Boolean mask: False for the samples within ``settle_us`` after each tgc step (the 4052 switch saturates the
+        op amps for ~2 us and the chain settles in ~15 us; docs/bench/2026-11-22-tgc-b64/)."""
+        s = self.TGC_SETTLE_US if settle_us is None else settle_us
+        ok = np.ones(self.n, dtype=bool); t = self.t_us
+        for t0, _ in self.tgc:
+            ok &= ~((t >= t0) & (t < t0 + s))
+        return ok
 
     @property
     def dt_ns(self) -> float:
@@ -260,6 +274,28 @@ _ACQ_HDR = re.compile(r"^# acq n=(\d+) fill=([\d.]+)us fs=([\d.]+|\?)(?:Msps)? r
                       r"\(RDY window timed by the RP crystal\) ?(.*)$")
 
 
+def _samples(lines: List[str], start: int, n: int, cmd: str) -> Tuple[np.ndarray, int]:
+    """Samples after a header: n decimal lines (fmt text) or '# b64 <bytes>' + base64 lines of u16 LE (fmt b64, rp >= 1.1.7).
+    Returns (uint16 array, index of the first line after them)."""
+    if start < len(lines) and lines[start].startswith("# b64 "):
+        nb = int(lines[start].split()[2])
+        k = (nb + 2) // 3 * 4                                  # base64 characters expected
+        got, i = [], start + 1
+        while i < len(lines) and sum(len(x) for x in got) < k:
+            got.append(lines[i].strip()); i += 1
+        try:
+            raw = base64.b64decode("".join(got), validate=True)
+        except (ValueError, binascii.Error) as e:
+            raise MinusError(f"{cmd}: bad base64 payload ({e})")
+        if len(raw) != nb or nb != 2 * n:
+            raise MinusError(f"{cmd}: base64 payload {len(raw)} B, header says {nb}, expected {2 * n}")
+        return np.frombuffer(raw, dtype="<u2").astype(np.uint16), i
+    body = lines[start: start + n]
+    if len(body) != n or not all(s.strip().isdigit() for s in body):
+        raise MinusError(f"{cmd}: expected {n} samples, got {len(body)} lines")
+    return np.array([int(s) for s in body], dtype=np.uint16), start + n
+
+
 def parse_capture(lines: List[str], cmd: str = "acq") -> Capture:
     hdr_i = next((i for i, ln in enumerate(lines) if ln.startswith("# acq ")), None)
     if hdr_i is None:
@@ -269,11 +305,9 @@ def parse_capture(lines: List[str], cmd: str = "acq") -> Capture:
     if not m:
         raise MinusError(f"cannot parse capture header: {lines[hdr_i]!r}")
     n = int(m[1])
-    body = lines[hdr_i + 1: hdr_i + 1 + n]
-    if len(body) != n or not all(s.strip().isdigit() for s in body):
-        raise MinusError(f"{cmd}: expected {n} samples, got {len(body)} lines")
+    samples, after = _samples(lines, hdr_i + 1, n, cmd)
     fired = shots = None
-    for ln in lines[hdr_i + 1 + n:]:
+    for ln in lines[after:]:
         p = re.match(r"^# pulse (fired|did NOT fire.*), (\d+) shot\(s\)$", ln)
         if p:
             fired, shots = p[1] == "fired", int(p[2])
@@ -281,8 +315,14 @@ def parse_capture(lines: List[str], cmd: str = "acq") -> Capture:
     lk = _LINK_TAIL.search(note)
     if lk:
         note, link, xfer = note[:lk.start()], lk[1], int(lk[2])
-    return Capture(np.array([int(s) for s in body], dtype=np.uint16), n, float(m[2]),
-                   None if m[3] == "?" else float(m[3]), int(m[4]), note, fired, shots, link, xfer)
+    tgc = _parse_tgc(note)
+    return Capture(samples, n, float(m[2]),
+                   None if m[3] == "?" else float(m[3]), int(m[4]), note, fired, shots, link, xfer, tgc)
+
+
+def _parse_tgc(note: str) -> List[Tuple[float, int]]:
+    m = re.search(r" tgc=([\dus:leg,]+)", note)
+    return [(float(t), int(l)) for t, l in re.findall(r"(\d+)us:leg(\d)", m[1])] if m else []
 
 
 _LINK_TAIL = re.compile(r" link=(spi@[\d.]+MHz|uart(?:\(.*\))?) xfer=(\d+)us$")
@@ -348,11 +388,10 @@ def parse_env(lines: List[str]) -> Envelope:
     if h is None:
         raise MinusError(f"env -> {next((l for l in lines if l.strip()), 'no output')}")
     m = _match(r"^# env n=(\d+) dec=(\d+) shots=(\d+) dt=([\d.]+)ns .*pulses fired (\d+)/\d+", lines[h], "env")
-    n = int(m[1]); body = lines[h + 1:h + 1 + n]
-    if len(body) != n or not all(s.strip().isdigit() for s in body):
-        raise MinusError(f"env: expected {n} values, got {len(body)}")
+    n = int(m[1])
+    vals, _ = _samples(lines, h + 1, n, "env")
     lk = _LINK_TAIL.search(lines[h])
-    return Envelope(np.array([int(s) for s in body], dtype=float) / 16.0, n, int(m[2]), int(m[3]), float(m[4]), int(m[5]),
+    return Envelope(vals.astype(float) / 16.0, n, int(m[2]), int(m[3]), float(m[4]), int(m[5]),
                     lk[1] if lk else None, int(lk[2]) if lk else None)
 
 
@@ -372,6 +411,29 @@ def parse_pic_lock(reply: Optional[str]) -> PicLock:
     if not m:
         raise MinusError(f"LOCK? -> {reply!r}")
     return PicLock(int(m[1]), int(m[2]))
+
+
+@dataclass
+class Tgc:
+    """``tgc``: the time-gain schedule (list of (time after the pulse in us, 4052 gain leg)); empty = off."""
+    steps: List[Tuple[int, int]]
+    raw: str = field(default="", repr=False)
+
+
+def parse_tgc(lines: List[str]) -> Tgc:
+    _fail_on_usage(lines, "tgc")
+    ln = next((l for l in lines if l.startswith("tgc: ")), None)
+    if ln is None:
+        raise MinusError(f"tgc -> {lines[0] if lines else 'no output'}")
+    return Tgc([(int(t), int(l)) for t, l in re.findall(r"(\d+)us:leg(\d)", ln)])
+
+
+def parse_fmt(lines: List[str]) -> str:
+    _fail_on_usage(lines, "fmt")
+    ln = next((l for l in lines if l.startswith("fmt: ")), "")
+    if not ln:
+        raise MinusError(f"fmt -> {lines[0] if lines else 'no output'}")
+    return ln.split()[1]
 
 
 # ------------------------------------------------------------------------------------------------ SPI link + DAC (proto 11)

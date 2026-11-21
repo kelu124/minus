@@ -183,12 +183,15 @@ int main(void) {
                     uart1_puts(out);
                 } else if (!strncmp(line, "ACQ", 3) && (line[3] == 0 || line[3] == ' ')) {
                     // ACQ [div [samc [in [navg]]]]: one capture; reply = header line, then ACQ_N little-endian u16 only on "ok"
+                    // navg goes back to 1 unless given (pic 1.1.4): it used to persist and silently change the next capture
+                    unsigned navg = 1;
                     if (line[3] == ' ') {
                         char *e; acq_set_div((unsigned)strtoul(line + 4, &e, 10));
                         if (*e == ' ') { acq_set_samc((int)strtol(e + 1, &e, 10));
                             if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10));
-                                if (*e == ' ') acq_set_navg((unsigned)strtoul(e + 1, NULL, 10)); } }
+                                if (*e == ' ') navg = (unsigned)strtoul(e + 1, NULL, 10); } }
                     }
+                    acq_set_navg(navg);
                     RDY_LAT = 0;                        // PONG may have left RDY high; the RP times the RDY pulse of this capture
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";

@@ -61,7 +61,19 @@ static void test_frame_check_ok_and_errors(void) {
     assert(link_frame_check(f, 4, 4095, LINK_ANY_SEQ, &fr) == LINK_ELEN);
 }
 
+static void test_base64(void) {
+    char out[64];
+    assert(link_b64_encode((const uint8_t *)"", 0, out) == 0 && out[0] == 0);
+    assert(link_b64_encode((const uint8_t *)"f", 1, out) == 4 && !strcmp(out, "Zg=="));
+    assert(link_b64_encode((const uint8_t *)"fo", 2, out) == 4 && !strcmp(out, "Zm8="));
+    assert(link_b64_encode((const uint8_t *)"foo", 3, out) == 4 && !strcmp(out, "Zm9v"));
+    assert(link_b64_encode((const uint8_t *)"foobar", 6, out) == 8 && !strcmp(out, "Zm9vYmFy"));
+    const uint8_t bin[4] = { 0x00, 0xFF, 0x10, 0x0F };
+    assert(link_b64_encode(bin, 4, out) == 8 && !strcmp(out, "AP8QDw=="));
+}
+
 int main(void) {
+    test_base64();
     test_crc32_check_value();
     test_lfsr_sequence();
     test_frame_check_ok_and_errors();

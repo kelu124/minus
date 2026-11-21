@@ -43,3 +43,18 @@ const char *link_err_name(link_err_t e) {
     case LINK_ECRC: return "crc"; case LINK_ELEN: return "length"; default: return "?";
     }
 }
+
+unsigned link_b64_encode(const uint8_t *in, unsigned n, char *out) {
+    static const char a[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    unsigned o = 0;
+    for (unsigned i = 0; i < n; i += 3) {
+        uint32_t v = (uint32_t)in[i] << 16;
+        if (i + 1 < n) v |= (uint32_t)in[i + 1] << 8;
+        if (i + 2 < n) v |= in[i + 2];
+        out[o++] = a[(v >> 18) & 63]; out[o++] = a[(v >> 12) & 63];
+        out[o++] = i + 1 < n ? a[(v >> 6) & 63] : '=';
+        out[o++] = i + 2 < n ? a[v & 63] : '=';
+    }
+    out[o] = 0;
+    return o;
+}

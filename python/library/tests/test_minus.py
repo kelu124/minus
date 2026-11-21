@@ -5,6 +5,7 @@ Re-record the fixture after a firmware change (board connected):   python3 tests
 """
 import json
 import sys
+import numpy as np
 import unittest
 from pathlib import Path
 
@@ -41,6 +42,14 @@ class ReplayTransport:
 
     def close(self):
         pass
+
+
+class TrickleTransport(ReplayTransport):
+    """Same replies, delivered one byte per read: every possible split of the end-marker line."""
+
+    def read(self) -> bytes:
+        out, self.out = self.out[:1], self.out[1:]
+        return out
 
 
 def device() -> Minus:
@@ -164,11 +173,32 @@ class TestDevice(unittest.TestCase):
         self.assertAlmostEqual(e1.dt_ns, 321.7, delta=2)
         self.d.dac("off")
 
+    def test_b64_and_tgc(self):
+        self.assertEqual(self.d.fmt_active, "b64")                              # set on connect
+        self.d.gain(0, 0, 0)
+        self.assertEqual(self.d.tgc((60, 3)).steps, [(60, 3)])
+        c = self.d.acq(4, 0, 25)                                                # b64 payload, tgc applied
+        self.assertEqual((c.n, c.tgc), (4095, [(60.0, 3)]))
+        ok = c.tgc_valid()
+        self.assertEqual(int((~ok).sum()), int(((c.t_us >= 60) & (c.t_us < 77)).sum()))
+        y = c.samples.astype(float); t = c.t_us
+        self.assertGreater(y[(t > 80) & ok].std(), 1.5 * y[(t > 10) & (t < 55)].std())   # more gain after the step
+        self.assertEqual(self.d.tgc("off").steps, [])
+        self.assertEqual(self.d.fmt("text"), "text")
+        self.assertEqual(self.d.acq(4, 0, 19).n, 4095)                          # text payload still parses
+        self.assertIn(self.d.fmt(), ("text",))
+
     def test_pic_programmer(self):
         self.assertEqual(self.d.pic_id().part, "PIC32AK1216GC41048")
         img = self.d.pic_image()
         self.assertEqual(img.name, "minus_pic.hex")
         self.assertEqual(sum(s[1] for s in img.segments), img.nbytes)
+
+    def test_framing_survives_any_read_split(self):
+        d = Minus(transport=TrickleTransport(REPLIES), check_firmware=False)
+        for _ in range(3):                                  # 2026-11-22: a split marker line leaked "ry help" into the next reply
+            self.assertEqual(d.version().name, "minus-rp2354")
+            self.assertEqual(d.pic_ident().part, "PIC32AK1216GC41048")
 
     def test_history_and_framing(self):
         self.d.version()
@@ -199,6 +229,16 @@ class TestParsers(unittest.TestCase):
         with self.assertRaises(MinusError):
             P.parse_capture(["pe: 8 shots, every capture had a non-uniform (slow) sample clock — nothing printed",
                              "# pulse fired, 8 shot(s)"], "pe")
+
+    def test_b64_parser(self):
+        import base64
+        raw = np.array([1, 2, 4095, 0x1234], dtype="<u2").tobytes()
+        lines = ["# acq n=4 fill=0.2us fs=20.00Msps rp_fill=0us (RDY window timed by the RP crystal) x link=spi@12.50MHz xfer=5us",
+                 f"# b64 {len(raw)}", base64.b64encode(raw).decode()]
+        c = P.parse_capture(lines)
+        self.assertEqual(list(c.samples), [1, 2, 4095, 0x1234])
+        with self.assertRaises(MinusError):
+            P.parse_capture(lines[:2] + ["AAAA"])
 
     def test_link_parsers(self):
         c = P.parse_capture(["# acq n=2 fill=0.1us fs=20.00Msps rp_fill=0us (RDY window timed by the RP crystal) trigger div 4; "

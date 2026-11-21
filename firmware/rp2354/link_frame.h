@@ -22,3 +22,5 @@ uint16_t   link_lfsr_next(uint16_t x);                                // Galois 
 link_err_t link_frame_check(const uint8_t *f, unsigned len, unsigned n, long seq, link_frame_t *out);
 unsigned   link_count_lfsr_errors(const uint8_t *payload, unsigned n, uint16_t seed);   // words != LFSR sequence
 const char *link_err_name(link_err_t e);
+// standard base64 (RFC 4648, '=' padding) of n bytes into out (4*ceil(n/3) chars + NUL); returns the length written
+unsigned   link_b64_encode(const uint8_t *in, unsigned n, char *out);

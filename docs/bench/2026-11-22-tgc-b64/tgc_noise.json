@@ -1,0 +1,17 @@
+{
+ "leg 0": {
+  "rms_10_55us": 4.774489007538767,
+  "rms_70_160us": 5.007372724657817,
+  "note_tail": "e R67/C86/R68/C87 filter, board 3); navg=1 (12-bit unsigned)"
+ },
+ "leg 3": {
+  "rms_10_55us": 14.459559118162412,
+  "rms_70_160us": 13.758198153331865,
+  "note_tail": "e R67/C86/R68/C87 filter, board 3); navg=1 (12-bit unsigned)"
+ },
+ "leg 0 + tgc 60 3": {
+  "rms_10_55us": 6.649952650647316,
+  "rms_70_160us": 18.77422490663896,
+  "note_tail": "C87 filter, board 3); navg=1 (12-bit unsigned) tgc=60us:leg3"
+ }
+}

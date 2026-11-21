@@ -16,7 +16,9 @@ function is checked with the PIC DAC on AD2AN3 (input 19).
    back-to-back 32 ns conversions, 13/14-bit, trigger period raised automatically to fit (div 35 = 175 ns / 5.7 Msps,
    div 113 = 565 ns / 1.77 Msps). Lower noise and a 4× / 14× longer window (0.72 / 2.3 ms = 0.55 / 1.8 m of water).
    64/256 left out: their fill (8.6 / 34 ms) exceeds Timer1's 5.2 ms range. RP: `acqos <4|16> [in [pe]]` (pe 1 = fire the
-   pulser on RDY as `pe`), printed like `acq`.
+   pulser on RDY as `pe`), printed like `acq`. **Caveat (owner question, 2026-11-22):** one pulse, averaging inside each
+   sample; at 5.5 / 1.8 Msps a 3.3 MHz echo aliases (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels most of
+   it — not an RF mode; for echoes use `pe`, `env` or `tof`.
 2. **`TOF <thr> [blank] [in] [ref]`** — pulse-echo time of flight without sending the A-line: one uniform 25 Msps capture
    with the channel comparator armed out of [ref−thr, ref+thr] (hardware flag = "something crossed"), then the PIC finds
    the first sample at or after `blank` with |x−ref| > thr and the largest |x−ref| in the next 64 samples. ref 0 = the

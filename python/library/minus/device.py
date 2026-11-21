@@ -64,15 +64,20 @@ class Minus:
     """
 
     def __init__(self, port: Optional[str] = None, transport=None, check_firmware: bool = True,
-                 timeout: float = 10.0, echo: bool = False):
+                 timeout: float = 10.0, echo: bool = False, fmt: Optional[str] = "b64"):
         self.t = transport if transport is not None else SerialTransport(port)
         self.timeout = timeout
         self.echo = echo
         self.history: List[Exchange] = []
         self._seq = 0
+        self._pending = b""
+        self.fmt_active = "text"
         self._sync()
         if check_firmware:
             self.check_firmware()
+        if fmt:                                  # rp >= 1.1.7: base64 sample output, 2.2x less USB text (30 vs 110 ms per capture)
+            ex = self.exchange(f"fmt {fmt}", record=False)
+            self.fmt_active = ex.lines[0].split()[1] if ex.lines and ex.lines[0].startswith("fmt: ") else "text"
 
     # ------------------------------------------------------------------ plumbing
     def close(self) -> None:
@@ -100,13 +105,19 @@ class Minus:
         marker = f"unknown '#end{self._seq}'"
         t0 = time.time()
         self.t.write(f"{command}\n#end{self._seq}\n".encode() if command else f"#end{self._seq}\n".encode())
-        buf = b""
+        buf, self._pending = self._pending, b""
         deadline = t0 + (timeout or self.timeout)
-        while marker.encode() not in buf:
+        mk = marker.encode()
+        # read until the whole marker line has arrived (marker + its "' — try help" tail + newline): a read boundary inside
+        # that tail used to leak "ry help" into the next reply (seen 2026-11-22 with the faster b64 output)
+        while mk not in buf or b"\n" not in buf[buf.index(mk):]:
             if time.time() > deadline:
                 raise TimeoutError(f"no complete reply to {command!r} within {timeout or self.timeout} s "
                                    f"(got {len(buf)} bytes)")
             buf += self.t.read()
+        end = buf.index(b"\n", buf.index(mk)) + 1
+        self._pending = buf[end:]                     # anything after the marker line belongs to the next exchange
+        buf = buf[:end]
         text = buf.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
         lines = text[: text.index(marker)].split("\n")
         lines = [ln for ln in lines if ln.strip() != ""]
@@ -317,7 +328,12 @@ class Minus:
     # ------------------------------------------------------------------ ADC extras for pulse-echo (proto 13)
     def acqos(self, os: int, in_: Optional[int] = None, pe: Optional[bool] = None) -> P.Capture:
         """Capture with ADC hardware oversampling: each sample = ``os`` (4 or 16) back-to-back 32 ns conversions, 13 / 14-bit
-        (2x / 4x a 12-bit code), 175 / 565 ns per sample = 0.72 / 2.3 ms window. ``pe=True`` fires the pulser on RDY."""
+        (2x / 4x a 12-bit code), 175 / 565 ns per sample = 0.72 / 2.3 ms window. ``pe=True`` fires the pulser on RDY.
+
+        One pulse: the averaging is inside each sample, not across shots (that is ``env(dec, shots)``).
+        **Not for the 3.3 MHz RF echo:** 5.5 / 1.8 Msps put Nyquist at 2.8 / 0.9 MHz (the echo aliases) and the 128 / 512 ns
+        average cancels most of a 300 ns period. Use it for slow / low-frequency signals and long low-noise windows; for
+        echoes use ``pe`` (RF), ``env`` (strength vs depth) or ``tof`` (range)."""
         if os not in (4, 16):
             raise ValueError("acqos: os is 4 or 16")
         if pe is not None and in_ is None:
@@ -336,6 +352,27 @@ class Minus:
         ``shots`` pulses (default 1), 4095/dec values."""
         cmd = "env" + _args(dec, shots, in_)
         return self._run(cmd, P.parse_env, timeout=60)
+
+    def fmt(self, mode: Optional[str] = None) -> str:
+        """Sample output format: 'text' (one decimal per line) or 'b64' (base64 u16 LE, the default the library sets on
+        connect). Both are parsed transparently."""
+        if mode not in (None, "text", "b64"):
+            raise ValueError("fmt: 'text' or 'b64'")
+        r = self._run("fmt" if mode is None else f"fmt {mode}", P.parse_fmt)
+        self.fmt_active = r
+        return r
+
+    def tgc(self, *steps) -> P.Tgc:
+        """Time-gain steps: ``tgc((20, 1), (60, 3))`` switches the 4052 gain leg to 1 at 20 us and to 3 at 60 us after the
+        pulse during every capture (acq/pe/acqos/tof/env); ``tgc("off")`` clears it, ``tgc()`` reads it. Up to 4 steps.
+        Each switch costs ~2 us of saturation + ~15 us of settling (``Capture.tgc_valid()`` masks it)."""
+        if not steps:
+            cmd = "tgc"
+        elif steps == ("off",):
+            cmd = "tgc off"
+        else:
+            cmd = "tgc " + " ".join(f"{int(t)} {int(l)}" for t, l in steps)
+        return self._run(cmd, P.parse_tgc)
 
     # ------------------------------------------------------------------ front end
     def pulse(self, hi: Optional[int] = None, lo: Optional[int] = None, dead: Optional[int] = None) -> P.Pulse:

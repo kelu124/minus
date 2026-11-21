@@ -11,9 +11,9 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.6"},
-    "pic": {"name": "minus-pic32", "version": "1.1.3"},
-    "proto": 13,
+    "rp": {"name": "minus-rp2354", "version": "1.1.7"},
+    "pic": {"name": "minus-pic32", "version": "1.1.4"},
+    "proto": 14,
 }
 
 
@@ -57,6 +57,8 @@ RP_COMMANDS: Dict[str, Cmd] = {
     "acqos":   Cmd("acqos <4|16> [in [pe]]", "acqos", "capture with ADC hardware oversampling (13 / 14-bit)"),
     "tof":     Cmd("tof <thr> [blank_ns [in [ref]]]", "tof", "pulse-echo time of flight on the PIC (ADC comparator), one line"),
     "env":     Cmd("env <dec> [shots [in]]", "env", "pulse-echo envelope computed on the PIC, averaged over shots"),
+    "fmt":     Cmd("fmt [text|b64]", "fmt", "sample output format (the library switches to b64 on connect)"),
+    "tgc":     Cmd("tgc [off | <t_us> <leg> ...]", "tgc", "time-gain steps: 4052 gain leg switched at set times after the pulse"),
 }
 
 # `raw <PIC command>` lines that `help` documents: usage -> Minus method
