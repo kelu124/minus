@@ -52,7 +52,7 @@
 
 \newcommand{\product}{minus}
 \newcommand{\repo}{\href{https://github.com/kelu124/minus}{github.com/kelu124/minus}}
-\newcommand{\rpfwrel}{1.1.2}\newcommand{\picfwrel}{1.1.0}
+\newcommand{\rpfwrel}{1.1.3}\newcommand{\picfwrel}{1.1.0}
 \newcommand{\board}{v1.1}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
 \newcommand{\us}{\,\textmu s}
@@ -396,14 +396,14 @@ SCCP1 produces a 20\,ns trigger comb (CLKGEN12 / 4); the 32\,ns ADC2 conversion 
 40\,ns sample period (24.86\,Msps measured against the PIC's own timer). DMA0 moves each 16-bit result to RAM (40\,ns per transfer at
 200\,MHz is the DMA ceiling). At some start phases the ADC locks to a 40/60/60\,ns pattern (fill 226\us{} instead of 164.7\us);
 since pic~0.1.25 the PIC flags it (status \cmd{slow}, no payload) and \cmd{pe}/\cmd{acq} re-fire within milliseconds. How often it happens depends
-on the code timing of the build (0 of 12 captures with rp~\vrpfw/pic~\vpicfw, 0 of \vEshots{} with rp~\rpfwrel/pic~\picfwrel, up to \vretryrate\,\% with earlier builds).
+on the code timing of the build (0 of 12 captures with rp~\vrpfw/pic~\vpicfw, 0 of \vEshots{} with rp~1.1.1/pic~1.1.0, up to \vretryrate\,\% with earlier builds).
 The phase of the sample comb relative to the pulse varies from shot to shot over one full sample period: see
 \S\ref{sec:combphase}. Align shots (cross-correlation on a strong echo, sub-sample shift) before averaging.
 After the capture the PIC removes the period-4 fixed pattern (below) and sends a header line plus 8190 bytes (little-endian u16)
 to the RP, which prints decimal samples on the USB console.
 
 \subsection{Sample-comb phase and slips (E3)}\label{sec:combphase}
-A campaign of \vEshots{} \cmd{pe} shots (\texttt{docs/bench/2026-11-19-jitter/}, rp~\rpfwrel{}/pic~\picfwrel, gain 2\,0\,0)
+A campaign of \vEshots{} \cmd{pe} shots (\texttt{docs/bench/2026-11-19-jitter/}, rp~1.1.1/pic~1.1.0, gain 2\,0\,0)
 measured the pulse time $\varphi$ against the sample comb in each shot. The main bang is purely electrical, so it was used for this:
 the \vEshots{} shots sample it at different phases, which gives a 1\,ns equivalent-time template, and each shot's $\varphi$ is a
 least-squares fit to it (a fit one sample away is $\sim10^4\times$ worse, so there is no wrap ambiguity).
@@ -608,7 +608,7 @@ Certification & OSHWA open source hardware, UID \textbf{FR000032}; mark + UID on
 \begin{tabular}{@{}lll@{}}\toprule
 \textbf{Rev} & \textbf{Date} & \textbf{Change}\\\midrule
 0.1 & 2026-11-19 & First release: board 3 bring-up, firmware rp \vrpfw{} / pic \vpicfw, measurements of session 11.\\
-0.2 & 2026-11-19 & Board named v1.1; firmware rp \rpfwrel{} / pic \picfwrel{} (LP5562 \cmd{rgb} with brightness, E7 fixed); Python library + notebooks;\\
+0.2 & 2026-11-19 & Board named v1.1; firmware rp 1.1.2 / pic 1.1.0 (LP5562 \cmd{rgb} with brightness, E7 fixed); Python library + notebooks;\\
     &            & E3 sample-comb phase study (400 shots); licenses and repository links; Annex A test transducer.\\\bottomrule
 \end{tabular}
 
