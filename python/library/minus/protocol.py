@@ -17,6 +17,14 @@ class MinusError(RuntimeError):
     """The board answered with an error / usage message instead of the expected reply."""
 
 
+def _fail_on_usage(lines: List[str], cmd: str) -> None:
+    """For commands whose normal output lines start with ``<cmd>:`` (link, linktest, dac)."""
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith(("usage:", "unknown '")):
+            raise MinusError(f"{cmd!r} -> {s}")
+
+
 def _fail_if_error(lines: List[str], cmd: str) -> None:
     for ln in lines:
         s = ln.strip()
@@ -229,6 +237,8 @@ class Capture:
     note: str              # the firmware's description of the settings
     pulse_fired: Optional[bool] = None   # pe only
     shots: Optional[int] = None          # pe only: how many shots it took to get a uniform 40 ns capture
+    link: Optional[str] = None           # proto 11: how the payload came, e.g. "spi@12.50MHz", "uart", "uart(spi failed: frame crc)"
+    xfer_us: Optional[int] = None        # proto 11: payload transfer time (request + frame), RP clock
     raw: str = field(default="", repr=False)
 
     @property
@@ -267,8 +277,125 @@ def parse_capture(lines: List[str], cmd: str = "acq") -> Capture:
         p = re.match(r"^# pulse (fired|did NOT fire.*), (\d+) shot\(s\)$", ln)
         if p:
             fired, shots = p[1] == "fired", int(p[2])
+    note, link, xfer = m[5], None, None
+    lk = _LINK_TAIL.search(note)
+    if lk:
+        note, link, xfer = note[:lk.start()], lk[1], int(lk[2])
     return Capture(np.array([int(s) for s in body], dtype=np.uint16), n, float(m[2]),
-                   None if m[3] == "?" else float(m[3]), int(m[4]), m[5], fired, shots)
+                   None if m[3] == "?" else float(m[3]), int(m[4]), note, fired, shots, link, xfer)
+
+
+_LINK_TAIL = re.compile(r" link=(spi@[\d.]+MHz|uart(?:\(.*\))?) xfer=(\d+)us$")
+
+
+# ------------------------------------------------------------------------------------------------ SPI link + DAC (proto 11)
+@dataclass
+class LinkStatus:
+    """``link``: payload path and counters since the RP booted."""
+    spi: bool                  # True = SPI frame (UART fallback), False = UART only
+    mhz: float                 # SPI0 clock actually set
+    frames: int
+    frame_errors: int
+    fallbacks: int
+    no_reply: int
+    last_bytes: Optional[int] = None
+    last_us: Optional[int] = None
+    raw: str = field(default="", repr=False)
+
+
+def parse_link(lines: List[str]) -> LinkStatus:
+    _fail_on_usage(lines, "link")
+    ln = next((l for l in lines if l.startswith("link: payload over")), None)
+    if ln is None:
+        raise MinusError(f"link -> {lines[0] if lines else 'no output'}")
+    m = _match(r"^link: payload over (SPI|UART)[^;]*; SPI0 ([\d.]+) MHz .*frames ok=(\d+) frame errors=(\d+) "
+               r"uart fallbacks=(\d+) no-reply=(\d+)", ln, "link")
+    last = re.search(r"last frame (\d+) B in (\d+) us", ln)
+    return LinkStatus(m[1] == "SPI", float(m[2]), int(m[3]), int(m[4]), int(m[5]), int(m[6]),
+                      int(last[1]) if last else None, int(last[2]) if last else None)
+
+
+@dataclass
+class LinkTest:
+    """``linktest``: PIC LFSR pattern pulled over SPI ``count`` times, then once over the UART."""
+    count: int
+    frame_bytes: int
+    mhz: float
+    ok: int
+    frame_errors: int
+    pattern_error_frames: int
+    pattern_error_words: int
+    no_reply: int
+    mean_us: Optional[float] = None
+    min_us: Optional[int] = None
+    max_us: Optional[int] = None
+    kbytes_per_s: Optional[float] = None
+    uart_identical: Optional[bool] = None
+    errors: List[str] = field(default_factory=list)   # per-frame failure lines
+    raw: str = field(default="", repr=False)
+
+    @property
+    def passed(self) -> bool:
+        return self.ok == self.count and self.uart_identical is True
+
+
+def parse_linktest(lines: List[str]) -> LinkTest:
+    _fail_on_usage(lines, "linktest")
+    head = next((l for l in lines if re.match(r"^linktest: \d+ frames of", l)), None)
+    if head is None:
+        raise MinusError(f"linktest -> {lines[0] if lines else 'no output'}")
+    m = _match(r"^linktest: (\d+) frames of (\d+) B at ([\d.]+) MHz: ok=(\d+) frame errors=(\d+) pattern errors=(\d+) "
+               r"frames / (\d+) words, no reply=(\d+)$", head, "linktest")
+    r = LinkTest(int(m[1]), int(m[2]), float(m[3]), int(m[4]), int(m[5]), int(m[6]), int(m[7]), int(m[8]))
+    for ln in lines:
+        t = re.match(r"^linktest: SPIX request\+frame (\d+) us mean \(min (\d+), max (\d+)\) = (\d+) kB/s", ln)
+        if t:
+            r.mean_us, r.min_us, r.max_us, r.kbytes_per_s = float(t[1]), int(t[2]), int(t[3]), float(t[4])
+        u = re.match(r"^linktest: same buffer over the UART: (identical|DIFFERS)", ln)
+        if u:
+            r.uart_identical = u[1] == "identical"
+        if ln.startswith("linktest: UART cross-check failed"):
+            r.uart_identical = False
+        if re.match(r"^linktest \d+: ", ln):
+            r.errors.append(ln)
+    return r
+
+
+@dataclass
+class Dac:
+    """``dac``: state of the PIC DAC1 test signal on DACOUT1 (codes 205..3890 = 5..95 % of 3.3 V)."""
+    mode: str                          # "off" | "dc" | "tri" | "sine"
+    code: Optional[int] = None         # dc
+    lo: Optional[int] = None           # tri
+    hi: Optional[int] = None
+    slope: Optional[int] = None
+    period_us: Optional[float] = None  # tri: nominal period
+    hz: Optional[float] = None         # sine: actual frequency
+    points: Optional[int] = None
+    update_us: Optional[float] = None
+    amp: Optional[int] = None
+    mid: Optional[int] = None
+    raw: str = field(default="", repr=False)
+
+
+def parse_dac(lines: List[str]) -> Dac:
+    _fail_on_usage(lines, "dac")
+    for ln in lines:
+        if ln.startswith("dac: PIC refused") or ln.startswith("dac: no reply") \
+                or ln.startswith("dac: unexpected"):
+            raise MinusError(ln)
+        if ln == "dac: off":
+            return Dac("off")
+        m = re.match(r"^dac: dc (\d+) = ", ln)
+        if m:
+            return Dac("dc", code=int(m[1]))
+        m = re.match(r"^dac: triangle (\d+)\.\.(\d+) .*, slope (\d+) .*period ~([\d.]+) us", ln)
+        if m:
+            return Dac("tri", lo=int(m[1]), hi=int(m[2]), slope=int(m[3]), period_us=float(m[4]))
+        m = re.match(r"^dac: sine ([\d.]+) Hz, (\d+) points, update every ([\d.]+) us, .*\(codes (\d+) \+- (\d+)\)", ln)
+        if m:
+            return Dac("sine", hz=float(m[1]), points=int(m[2]), update_us=float(m[3]), mid=int(m[4]), amp=int(m[5]))
+    raise MinusError(f"dac -> {lines[0] if lines else 'no output'}")
 
 
 # ------------------------------------------------------------------------------------------------ PIC programmer

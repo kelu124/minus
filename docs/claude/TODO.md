@@ -5,8 +5,13 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **Flash rp 1.1.3 on board 3** (built 2026-11-20, not flashed: board absent) → `version` shows `board: minus v1.1`; then
-  re-record `python/library/tests/record_fixture.py` (fixture + notebook 01 outputs were hand-edited) and re-run the notebooks.
+- **RESUME HERE (2026-11-21, session 13): rp 1.1.4 / pic 1.1.1, proto 11 on board 3** — capture payload over **SPI** (12.5 MHz,
+  10.6 ms instead of 0.71 s, CRC-checked, UART fallback; `link`, `linktest`), PIC **DAC test signal** on DACOUT1 (`dac tri` read
+  back with `acq 4 0 19`), USB strings kelu124 / "minUS badge" (`docs/bench/2026-11-21-spi-dac/`, memory 0021). Next:
+  (a) cut the ~5 ms `SPIX` UART round trip (faster UART baud, or announce n/seq/crc inside the frame only); (b) host binary
+  mode for the USB side if text becomes the limit; (c) RP ADC0 read of the DAC once v1.2 has the DACOUT1 → GPIO26 trace;
+  (d) a cleaner sine source for the ADC ENOB test (the PIC DAC gives 42 dB SINAD at best, and its DMA sine cannot run during a
+  capture); (e) PTG multi-shot averaging loop (no hardware change), then the older items below.
 - **RESUME HERE (2026-11-19, session 12): minus v1.1** — rp 1.1.1 / pic 1.1.0 (proto 10) flashed on board 3; `rgb` drives the
   LP5562; Python library `python/library/minus` + notebooks; fwsync hooks; E3 jitter study (`docs/bench/2026-11-19-jitter/`):
   φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of

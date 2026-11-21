@@ -263,6 +263,48 @@ class Minus:
         """Experiment: two-channel interleaved capture. **Changes the PIC's div** — run ``acq(4, 0, 25, 1)`` after."""
         return self._run("acqil" + _args(div, off, navg), lambda ls: P.parse_capture(ls, "acqil"))
 
+    # ------------------------------------------------------------------ payload link + DAC test signal (proto 11)
+    def link(self, mode: Optional[str] = None, mhz: Optional[float] = None) -> P.LinkStatus:
+        """Payload path for every capture: ``link("spi", 12.5)`` (default; CRC-checked SPI frame with UART fallback),
+        ``link("uart")`` (0.7 s per capture), ``link()`` = counters only. SPI0 runs at 150 MHz / even divisors:
+        12.5 (default) and 18.75 are clean on board 3, 25 MHz fails (PIC client limit, bench 2026-11-21)."""
+        if mode is None:
+            cmd = "link"
+        elif mode == "uart":
+            cmd = "link uart"
+        elif mode == "spi":
+            cmd = "link spi" + (f" {float(mhz):g}" if mhz is not None else "")
+        else:
+            raise ValueError("link: mode is 'spi' or 'uart'")
+        return self._run(cmd, P.parse_link)
+
+    def linktest(self, count: Optional[int] = None, mhz: Optional[float] = None) -> P.LinkTest:
+        """SPI link self-test: the PIC fills its buffer with an LFSR pattern, the RP pulls it ``count`` times (default
+        10) and checks every word + CRC, then once over the UART. ``mhz`` also changes the link clock."""
+        if mhz is not None and count is None:
+            raise ValueError("linktest: mhz needs count (positional CLI arguments)")
+        cmd = "linktest" + ("" if count is None else f" {int(count)}") + ("" if mhz is None else f" {float(mhz):g}")
+        return self._run(cmd, P.parse_linktest, timeout=60)
+
+    def dac(self, mode: Optional[str] = None, *values: float) -> P.Dac:
+        """PIC DAC1 test signal on DACOUT1 (U9 pin 3, = acq input 19). ``dac()`` reads the state;
+        ``dac("off")``, ``dac("dc", code)``, ``dac("tri", lo, hi, slope)`` (hardware triangle, safe during captures),
+        ``dac("sine", hz[, amp[, mid]])`` (DMA-fed: captures at 20-25 Msps come back 'slow' while it runs).
+        Codes 205..3890 = 5..95 % of 3.3 V."""
+        if mode is None:
+            cmd = "dac"
+        elif mode == "off":
+            cmd = "dac off"
+        elif mode in ("dc", "tri", "sine"):
+            n = {"dc": (1, 1), "tri": (3, 3), "sine": (1, 3)}[mode]
+            if not n[0] <= len(values) <= n[1]:
+                raise ValueError(f"dac {mode}: {n[0]}..{n[1]} values")
+            vals = [f"{float(values[0]):g}"] + [str(int(v)) for v in values[1:]] if mode == "sine" else [str(int(v)) for v in values]
+            cmd = f"dac {mode} " + " ".join(vals)
+        else:
+            raise ValueError("dac: mode is off | dc | tri | sine")
+        return self._run(cmd, P.parse_dac)
+
     # ------------------------------------------------------------------ front end
     def pulse(self, hi: Optional[int] = None, lo: Optional[int] = None, dead: Optional[int] = None) -> P.Pulse:
         """One pulser shot now, no capture (scope check)."""

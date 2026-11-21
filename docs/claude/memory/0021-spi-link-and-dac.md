@@ -1,0 +1,34 @@
+# 0021 — SPI capture payload link + PIC DAC test signal (2026-11-21, session 13)
+
+**Status:** current · rp 1.1.4 / pic 1.1.1, **proto 11** · design `docs/claude/specs/2026-11-21-dac-spi-link-design.md` ·
+bench `docs/bench/2026-11-21-spi-dac/`
+
+## SPI payload link
+- The PIC no longer pushes the 8190-byte payload after `ACQ`/`ACQCPU`/`ACQIL`: the RP pulls it with `SPIX` (SPI frame) or
+  `UTX` (old UART stream). Frame: `A5 5A 'M' '1'`, n u16, seq u16, n × u16 LE, CRC-32/IEEE LE (12 + 2n B). The PIC replies
+  `SPIX n seq crc` on the UART after preloading its FIFO, then feeds SPI1 from a CPU loop (16 KB RAM: no frame copy).
+- Wiring (board 3, no change): RP SPI0 master GPIO2 SCK / GPIO4 MISO / GPIO3 MOSI (unused) / GPIO5 CS (SIO) ↔ PIC SPI1 client
+  RD1 SCK1 (RPINR10 SCK1R 50) / RC2 SDO1 (RPOR8 RP35R = 13) / RD2 SDI1 (DISSDI) / RD0 SS1 (SS1R 49); mode 0 (CKP 0, CKE 1).
+- Bench: 12.5 MHz (default, owner) and 18.75 MHz clean (500/500 frames), **25 MHz fails every frame** (PIC client limit SP10).
+  10.6 ms per capture at 12.5 MHz; ~5 ms of that is the `SPIX` UART round trip, not SPI. RP clock steps: 150 MHz / even
+  divisor → 25, 18.75, 15, 12.5 MHz.
+- `linktest [n [MHz]]` = `XTEST seed` (16-bit Galois LFSR 0xB400 in acq_buf) + SPIX + per-word check + one UART comparison.
+
+## DAC1 test signal (DACOUT1 = U9 pin 3 = RA1 = AD2AN3 → `acq … 19`; AD1AN7 → 7; board 3 H6.16; v1.2 + RP GPIO26/ADC0)
+- PDM DAC + RC filter, codes 0x0CD..0xF32 (5–95 % AVDD), settling 0.75 µs typ / 2 µs max. Clock CLKGEN7 = **PLL2 VCO-div
+  500 MHz** (FRC × 125 = 1000 MHz VCO, VCO2DIV 1, NOSC 8), so PLL1 (CPU 200 / ADC 250) is untouched; started lazily on the
+  first `DAC` command. Factory trims FPDMDAC @ 0x7F20B0 → DACCTRL1 (POSINLADJ 21:16, NEGINLADJ 14:8, DNLADJ 4:0). Register
+  names in the header are `DAC1SLPCON` / `DAC1SLPDAT` (the datasheet examples say SLP1CON).
+- `tri lo hi slp`: hardware Triangle Wave mode; half period = (hi−lo)·16/slp × 4 ns. Bench: 512..3584 slope 16 → 24.70 µs
+  (nominal 24.58), read 548..3543. **No bus traffic: the reference to use during captures.**
+- `sine hz [amp [mid]]`: DMA2 (repeated one-shot, 32-bit) table ≤ 128 points → DAC1DAT, triggered by **SCCP3 in dual 16-bit
+  timer mode** (the secondary timer's match raises CCP3IF = DMA trigger 0x1A; DMA cannot trigger on CCTx); the secondary
+  period is **PRH + 2** counts. **Each update costs the capture DMA ~1 sample → 20/25 Msps captures come back `slow`** while
+  it runs. Best quality 42 dB SINAD (amp 800): a shape reference, not an ADC ENOB source.
+
+## Also
+- USB descriptors: manufacturer `kelu124`, product `minUS badge` (CMake `USBD_MANUFACTURER`/`USBD_PRODUCT`), serial = RP unique
+  id, VID:PID 2E8A:0009 (the library finds the port by VID only).
+- `acq` now prints a line when all 8 tries were `slow` (it used to print nothing).
+- Library: `Minus.link()`, `linktest()`, `dac()`; `Capture.link` / `.xfer_us` from the `# acq` line tail; parsers use
+  `_fail_on_usage` because their normal lines start with `<cmd>:`.

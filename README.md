@@ -12,7 +12,7 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 > ⚠️ **Status: working prototype (minus v1.1, board 3).** Pulse-echo, the
 > switchable RX gain, the fixed-pattern correction and the RGB LED work on the bench, and the
 > [datasheet rev 0.2](datasheet/minus-datasheet.pdf) gives measured figures, errata and the
-> test transducer (Annex A). Firmware RP2354A **1.1.3**, PIC32AK **1.1.0**, link protocol **10**.
+> test transducer (Annex A). Firmware RP2354A **1.1.4**, PIC32AK **1.1.1**, link protocol **11** (capture payload over SPI).
 > Source: <https://github.com/kelu124/minus>.
 > **OSHWA-certified open source hardware, UID [FR000032](https://certification.oshwa.org/fr000032.html)**
 > (2026-11-20); the mark and UID are on the front silkscreen.

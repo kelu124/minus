@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-21 | rp2354 | 1.1.4 | **proto 11**: capture payload pulled as an SPI0 frame (12.5 MHz default, `link [uart\|spi [MHz]]`, CRC-32, UART fallback; `link_frame.c` + host test), `linktest [count [MHz]]`, `dac …` (PIC DAC1 test signal); `acq` reports when all 8 captures were `slow`; USB strings manufacturer `kelu124` / product `minUS badge` (serial = unique id); embeds pic 1.1.1 |
+| 2026-11-21 | pic32  | 1.1.1 | **proto 11**: `ACQ`/`ACQCPU`/`ACQIL` reply header only; `SPIX` (SPI1 client frame), `UTX` (UART payload), `XTEST [seed]` (LFSR), `DAC 0..3` (dc / hardware triangle / DMA sine on DACOUT1, clock PLL2 → CLKGEN7 500 MHz, factory trims from FPDMDAC) |
 | 2026-11-20 | rp2354 | 1.1.3 | `version` "board:" line and boot banner print `minus v1.1` (the `minUS_08112026` name is dropped); no functional change; proto 10; embeds pic 1.1.0 |
 | 2026-11-19 | rp2354 | 1.1.2 | `rgb R G B [pct]`: LP5562 brightness in % (0–100, **default 25** = dim), scales the PWM; reply `rgb R G B pct% (LP5562 0x30: ok\|not found)`; WS2812 line unscaled; proto 10; embeds pic 1.1.0 |
 | 2026-11-19 | rp2354 | 1.1.1 | `rgb R G B` also drives the **LP5562 U5** (I²C 0x30, internal clock, I²C PWM control) → reply `rgb R G B (LP5562 0x30: ok\|not found)`; `i2c` names 0x30; proto 10; embeds pic 1.1.0 |

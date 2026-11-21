@@ -17,9 +17,10 @@
 // Register/bitfield names and #pragma config names are checked against the PIC32AK-GC_DFP
 // 1.1.53 device header p32AK1216GC41048.h; the source compiles with XC-DSC 3.31.01.
 //
-// Bus ownership (decision 2026-10-26): the RP2354 is the only master of the digipots
-// (MCP4131 x2 on SPI, MCP4531 x2 + MCP4728 on I2C). The PIC's SPI pins (RD0/RD1/RD2/RC2) and
-// I2C pins (RD7/RD8) stay Hi-Z (inputs, reset default) in this step — do not enable SPI1/I2C2.
+// Bus ownership: the RP2354 is the only I2C master; the PIC's I2C pins (RD7/RD8) stay Hi-Z. Since proto 11 (pic 1.1.1)
+// SPI1 is a client of the RP's SPI0 (RD0 SS1, RD1 SCK1, RD2 SDI1 unused, RC2 SDO1): capture payloads go out as framed
+// SPI transfers ("SPIX"), the UART keeps the commands and the fallback payload path ("UTX"). The ACQ commands no longer
+// push their payload: the RP pulls it (docs/claude/specs/2026-11-21-dac-spi-link-design.md).
 #include <xc.h>
 #include <stdint.h>
 #include <string.h>
@@ -27,6 +28,8 @@
 #include <stdio.h>
 #include "version.h"
 #include "acq.h"
+#include "dac.h"
+#include "xfer.h"
 
 // ---------------------------------------------------------------- configuration bits
 // JTAG must be OFF: TCK/TDO/TDI/TMS sit on RD1 (SPI_CLK), RD2 (SPI_MOSI), RD3, RB1 (digipot).
@@ -91,6 +94,10 @@ static void pps_init(void) {
     RPCONbits.IOLOCK = 0;
     RPINR9bits.U1RXR = 39;          // U1RX <- RP39 (RC6, pin 25, net UART_TX)
     RPOR9bits.RP40R  = 9;           // RP40 (RC7, pin 26, net UART_RX) -> U1TX (output function 9, Table 14-13)
+    RPINR10bits.SCK1R = 50;         // SCK1 <- RP50 (RD1, pin 38, net SPI_CLK  <- RP GPIO2)
+    RPINR10bits.SDI1R = 51;         // SDI1 <- RP51 (RD2, pin 39, net SPI_MOSI <- RP GPIO3; DISSDI, unused)
+    RPINR10bits.SS1R  = 49;         // SS1  <- RP49 (RD0, pin 37, net SPI_CS   <- RP GPIO5)
+    RPOR8bits.RP35R   = 13;         // RP35 (RC2, pin 31, net SPI_MISO -> RP GPIO4) <- SDO1 (output function 13)
     RPCONbits.IOLOCK = 1;
 }
 
@@ -115,6 +122,7 @@ int main(void) {
     pps_init();
     uart1_init();
     acq_init();
+    xfer_spi_init();
 
     char line[64]; int len = 0;
     uint32_t beat = 0; int last_trig = TRIG_PORT;
@@ -147,9 +155,8 @@ int main(void) {
                     uint32_t t = 0; acq_status_t st = acq_run(&t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
+                    xfer_set_n(st == ACQ_OK ? ACQ_N : 0);   // payload pulled by SPIX / UTX (proto 11)
                     uart1_puts(out);
-                    if (st == ACQ_OK)
-                        for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
                 } else if (!strncmp(line, "AMP1 ", 5)) {
                     // AMP1 0|1: op amp 1 off/on (high-power mode, external gain). On at boot (acq_init).
                     AMP1CON1bits.AMPEN = line[5] == '1';
@@ -187,9 +194,8 @@ int main(void) {
                     RDY_LAT = 0;
                     uint32_t t = 0; acq_status_t st = acq_cpu_run(trg, r, gap, phase, &t);
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, st == ACQ_OK ? "ok" : "notready");
+                    xfer_set_n(st == ACQ_OK ? ACQ_N : 0);
                     uart1_puts(out);
-                    if (st == ACQ_OK)
-                        for (unsigned i = 0; i < ACQ_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
                 } else if (!strncmp(line, "ACQIL", 5) && (line[5] == 0 || line[5] == ' ')) {
                     // ACQIL [div [off [navg]]]: two-channel interleaved integration capture (CH0 SCCP1, CH1 SCCP2
                     // offset by off counts, navg-sums each); same reply format as ACQ with n = ACQ_IL_N
@@ -200,9 +206,49 @@ int main(void) {
                     uint32_t t = 0; acq_status_t st = acq_il_run(off, navg, &t);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_IL_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
+                    xfer_set_n(st == ACQ_OK ? ACQ_IL_N : 0);
                     uart1_puts(out);
-                    if (st == ACQ_OK)
-                        for (unsigned i = 0; i < ACQ_IL_N; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strcmp(line, "SPIX")) {
+                    // SPIX: send the last capture (or XTEST pattern) as one SPI frame; the UART reply
+                    // "SPIX <n> <seq> <crc32 hex>" goes out once the TX FIFO is preloaded, then the RP clocks the frame.
+                    // "SPIX 0" = nothing to send. A timeout (RP never clocked) only resets SPI1; the RP falls back to UTX.
+                    if (xfer_get_n() == 0) uart1_puts("SPIX 0\n");
+                    else (void)xfer_spix(uart1_puts, NULL);
+                } else if (!strcmp(line, "UTX")) {
+                    // UTX: the same payload over the UART (fallback / reference): "UTX <n>" then 2n bytes, u16 little-endian
+                    unsigned n = xfer_get_n();
+                    char out[24]; snprintf(out, sizeof out, "UTX %u\n", n);
+                    uart1_puts(out);
+                    for (unsigned i = 0; i < n; i++) { uart1_putc((char)(acq_buf[i] & 0xFF)); uart1_putc((char)(acq_buf[i] >> 8)); }
+                } else if (!strncmp(line, "XTEST", 5) && (line[5] == 0 || line[5] == ' ')) {
+                    // XTEST [seed]: fill acq_buf with the 16-bit Galois LFSR (0xB400) from seed (default 1) — link self-test
+                    unsigned seed = line[5] == ' ' ? (unsigned)strtoul(line + 6, NULL, 0) & 0xFFFFu : 1u;
+                    if (!seed) seed = 1;
+                    xfer_xtest(seed);
+                    char out[32]; snprintf(out, sizeof out, "XTEST %u %u\n", (unsigned)ACQ_N, seed);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "DAC", 3) && (line[3] == 0 || line[3] == ' ' || line[3] == '?')) {
+                    // DAC 0 | DAC 1 <code> | DAC 2 <lo> <hi> <slp> | DAC 3 <hz> [amp [mid]] | DAC?  (DACOUT1 = RA1 pin 3 = AD2AN3)
+                    // reply: the state line (dac_describe) or "DAC ERR <why>"
+                    int r = 0;
+                    if (line[3] == ' ') {
+                        char *e; unsigned m = (unsigned)strtoul(line + 4, &e, 10);
+                        if (m == 0) r = dac_off();
+                        else if (m == 1) r = *e == ' ' ? dac_dc((unsigned)strtoul(e + 1, NULL, 0)) : -1;
+                        else if (m == 2) {
+                            unsigned lo = 0, hi = 0, slp = 0;
+                            if (*e == ' ') { lo = (unsigned)strtoul(e + 1, &e, 0); if (*e == ' ') { hi = (unsigned)strtoul(e + 1, &e, 0); if (*e == ' ') slp = (unsigned)strtoul(e + 1, NULL, 0); } }
+                            r = dac_tri(lo, hi, slp);
+                        } else if (m == 3) {
+                            float hz = 0; unsigned amp = 1500, mid = 2048;
+                            if (*e == ' ') { hz = strtof(e + 1, &e); if (*e == ' ') { amp = (unsigned)strtoul(e + 1, &e, 0); if (*e == ' ') mid = (unsigned)strtoul(e + 1, NULL, 0); } }
+                            r = dac_sine(hz, amp, mid, NULL, NULL, NULL);
+                        } else r = -1;
+                    }
+                    char out[64];
+                    if (r == -1) uart1_puts("DAC ERR args\n");
+                    else if (r == -2) uart1_puts("DAC ERR noclk\n");
+                    else { dac_describe(out, sizeof out); uart1_puts(out); }
                 } else if (!strncmp(line, "ADCBB ", 6)) {
                     // ADCBB <n> [ovs]: time n back-to-back conversions (no DMA); reply "ADCBB n ovs ticks tick_ns data"
                     char *e; unsigned n = (unsigned)strtoul(line + 6, &e, 10); unsigned ovs = *e == ' ' ? (unsigned)strtoul(e + 1, NULL, 10) : 0;

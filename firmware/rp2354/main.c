@@ -11,6 +11,7 @@
 // Commands (type on the USB console):
 //   help | version | rgb R G B [pct] | reboot [dfu] | ping | auto | stop | reset | rdy | trig | raw <text> | stat
 //   pic id | pic image | pic flash | pic verify | pic erase     (ICSP programmer on GPIO21/22/24)
+//   link [uart|spi [MHz]] | linktest [count [MHz]] | dac ...    (proto 11: capture payload over SPI0, UART fallback)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,6 +34,8 @@
 #include "pic_icsp.h"
 #include "pic_image.h"
 #include "acq_parse.h"
+#include "link_frame.h"
+#include "hardware/spi.h"
 
 #define LINK_UART      uart0
 #define LINK_BAUD      115200
@@ -172,6 +175,89 @@ static int link_readline(char *buf, int max, uint32_t timeout_us) {
     }
     buf[n] = 0;
     return -1;
+}
+
+// ---------------------------------------------------------------- SPI data link (proto 11)
+// The PIC no longer pushes capture payloads after the ACQ header: the RP pulls them, by default as one SPI frame
+// ("SPIX": PIC = SPI1 client, RP = SPI0 master on GPIO2 SCK / GPIO4 MISO / GPIO3 MOSI unused, GPIO5 = CS), with the
+// old UART byte stream ("UTX") as fallback and reference. Frame + checks: link_frame.h. PIC client max SCK = 25 MHz.
+// Design: docs/claude/specs/2026-11-21-dac-spi-link-design.md
+#define LINK_SPI        spi0
+#define LINK_SPI_HZ_DEF 12500000u    // 150 MHz / 12 exactly; linktest decides how far up it can go (<= 25 MHz)
+#define LINK_UTX_US     2000000u     // UART fallback: 8190 B at 115200 baud ~ 0.71 s
+static bool     link_use_spi = true;
+static unsigned link_spi_hz;
+static uint32_t lk_frames, lk_frame_err, lk_fallback, lk_noreply;
+static int64_t  lk_last_us = -1;
+static unsigned lk_last_bytes;
+static uint8_t  link_buf[LINK_FRAME_LEN(LINK_MAX_N)];
+
+static void link_spi_init(void) {
+    link_spi_hz = spi_init(LINK_SPI, LINK_SPI_HZ_DEF);
+    spi_set_format(LINK_SPI, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    gpio_set_function(MINUS_PIN_SPI_SCK, GPIO_FUNC_SPI);
+    gpio_set_function(MINUS_PIN_SPI_MOSI, GPIO_FUNC_SPI);
+    gpio_set_function(MINUS_PIN_SPI_MISO, GPIO_FUNC_SPI);
+    gpio_init(MINUS_PIN_SPI_CS); gpio_put(MINUS_PIN_SPI_CS, 1); gpio_set_dir(MINUS_PIN_SPI_CS, GPIO_OUT);
+}
+
+// Ask for the pending payload as an SPI frame. 0 = ok (*payload points into link_buf), -1 = failed (why filled in).
+static int link_spi_fetch(unsigned want_n, const uint8_t **payload, int64_t *us, char *why, unsigned whylen) {
+    char rx[64];
+    absolute_time_t t0 = get_absolute_time();
+    link_puts("SPIX\n");
+    if (link_readline(rx, sizeof rx, LINK_TIMEOUT_US) < 0) { lk_noreply++; snprintf(why, whylen, "no SPIX reply"); return -1; }
+    unsigned n, seq; uint32_t crc;
+    if (!link_parse_spix(rx, &n, &seq, &crc)) { lk_frame_err++; snprintf(why, whylen, "bad reply '%.40s'", rx); return -1; }
+    if (want_n && n != want_n) { lk_frame_err++; snprintf(why, whylen, "n=%u, expected %u", n, want_n); return -1; }
+    unsigned len = LINK_FRAME_LEN(n);
+    gpio_put(MINUS_PIN_SPI_CS, 0);
+    busy_wait_us(1);                                     // SS1 set-up on the PIC side
+    spi_read_blocking(LINK_SPI, 0x00, link_buf, len);
+    gpio_put(MINUS_PIN_SPI_CS, 1);
+    link_frame_t fr;
+    link_err_t e = link_frame_check(link_buf, len, n, seq, crc, &fr);
+    *us = absolute_time_diff_us(t0, get_absolute_time());
+    if (e != LINK_OK) { lk_frame_err++; snprintf(why, whylen, "frame %s", link_err_name(e)); return -1; }
+    lk_frames++; lk_last_us = *us; lk_last_bytes = len;
+    *payload = fr.payload;
+    return 0;
+}
+
+// The same payload over the UART into dst (2n bytes). 0 = ok, -1 = failed.
+static int link_uart_fetch(unsigned want_n, uint8_t *dst, int64_t *us, char *why, unsigned whylen) {
+    char rx[48]; unsigned n;
+    absolute_time_t t0 = get_absolute_time();
+    link_puts("UTX\n");
+    if (link_readline(rx, sizeof rx, 500000) < 0) { snprintf(why, whylen, "no UTX reply"); return -1; }
+    if (sscanf(rx, "UTX %u", &n) != 1 || n != want_n) { snprintf(why, whylen, "UTX reply '%.30s'", rx); return -1; }
+    unsigned want = 2 * n, got = 0;
+    absolute_time_t deadline = make_timeout_time_us(LINK_UTX_US);
+    while (got < want && !time_reached(deadline))
+        if (uart_is_readable(LINK_UART)) dst[got++] = (uint8_t)uart_getc(LINK_UART);
+    *us = absolute_time_diff_us(t0, get_absolute_time());
+    if (got < want) { snprintf(why, whylen, "short UART payload %u of %u B", got, want); return -1; }
+    return 0;
+}
+
+// Pending payload of n samples: SPI (if enabled), else / on failure UART. NULL = nothing received.
+static const uint8_t *link_fetch(unsigned n, char *info, unsigned infolen) {
+    char why[80] = "", why2[80] = ""; int64_t us = -1; const uint8_t *p = NULL;
+    if (link_use_spi) {
+        if (link_spi_fetch(n, &p, &us, why, sizeof why) == 0) {
+            snprintf(info, infolen, "link=spi@%.2fMHz xfer=%lldus", link_spi_hz / 1e6, (long long)us);
+            return p;
+        }
+        lk_fallback++;
+        link_flush_rx();                                 // the PIC may still be finishing its frame
+    }
+    if (link_uart_fetch(n, link_buf + 8, &us, why2, sizeof why2) == 0) {
+        if (link_use_spi) snprintf(info, infolen, "link=uart(spi failed: %s) xfer=%lldus", why, (long long)us);
+        else snprintf(info, infolen, "link=uart xfer=%lldus", (long long)us);
+        return link_buf + 8;
+    }
+    printf("acq: payload not received (%s%s%s)\n", why, *why ? "; " : "", why2);
+    return NULL;
 }
 
 // ---------------------------------------------------------------- PIC control taps
@@ -480,7 +566,9 @@ static void cmd_acq(const char *arg) {
              navg, navg > 1 ? "each value = sum of navg back-to-back 32 ns conversions, 12+log2(navg) bits" : navg == 1 ? "12-bit unsigned" : "unchanged from the last acq");
     // the PIC answers "slow" (no payload) when the ADC locked to the 40/60/60 ns pattern: capture again, up to 8 times
     char cmdline[96]; memcpy(cmdline, hdr, sizeof cmdline);
-    for (int tries = 1; acq_receive(hdr, sizeof hdr, note, 0xFFFFFFFFul) == 1 && tries < 8; tries++) { link_flush_rx(); memcpy(hdr, cmdline, sizeof cmdline); link_puts(hdr); }
+    int tries = 1, r;
+    while ((r = acq_receive(hdr, sizeof hdr, note, 0xFFFFFFFFul)) == 1 && tries < 8) { tries++; link_flush_rx(); memcpy(hdr, cmdline, sizeof cmdline); link_puts(hdr); }
+    if (r == 1) printf("acq: %d captures, every one had a non-uniform (slow) sample clock — nothing printed (DMA busy elsewhere, e.g. 'dac sine'? try div 10)\n", tries);
 }
 // pe [hi_ns [lo_ns [in [dead_ns]]]]: pulse-echo. Arms the pulser on the PIC's RDY rising edge (the PIC raises RDY
 // one instruction before it starts the SCCP1 ADC trigger), then runs "ACQ 4 0 <in> 1" = 4095 samples at 25 Msps
@@ -570,7 +658,6 @@ static void cmd_acqil(const char *arg) {
 // Returns 0 = printed, 1 = fill longer than max_fill_ns (payload drained, NOT printed; caller retries), -1 = error.
 // max_fill_ns 0 = no check.
 static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned long max_fill_ns) {
-    static uint8_t payload[2 * ACQ_MAX_N];
     // RP-side timing of the capture window: the PIC holds RDY high from trigger start to DMA done.
     absolute_time_t t_arm = make_timeout_time_ms(100); int64_t rp_fill_us = -1;
     while (gpio_get(MINUS_PIN_RDY) && !time_reached(t_arm)) tight_loop_contents();     // PIC drops RDY when it parses ACQ
@@ -589,16 +676,121 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     if (!strcmp(h.status, "slow") && max_fill_ns) return 1;     // PIC flagged the 40/60/60 ns lock: caller re-shoots (no payload)
     if (strcmp(h.status, "ok") != 0) { printf("acq: status=%s (%s) — no payload\n", h.status, rate); return -1; }
     if (h.n == 0 || h.n > ACQ_MAX_N) { printf("acq: n=%u out of range\n", h.n); return -1; }   // parser already bounds it
-    unsigned want = 2 * h.n;
-    absolute_time_t deadline = make_timeout_time_us(1500000);         // 8190 B at 115200 baud ~ 0.71 s
-    unsigned got = 0;
-    while (got < want && !time_reached(deadline))
-        if (uart_is_readable(LINK_UART)) payload[got++] = (uint8_t)uart_getc(LINK_UART);
-    if (got < want) { printf("acq: short payload, got %u of %u bytes\n", got, want); return -1; }
-    if (max_fill_ns && (unsigned long long)h.ticks * h.tick_ns > max_fill_ns) return 1;
-    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s\n", h.n, rate, (long long)rp_fill_us, note);
+    if (max_fill_ns && (unsigned long long)h.ticks * h.tick_ns > max_fill_ns) return 1;   // non-uniform: re-shoot, no fetch
+    char info[112];
+    const uint8_t *payload = link_fetch(h.n, info, sizeof info);   // proto 11: the RP pulls the payload (SPI, UART fallback)
+    if (!payload) return -1;
+    printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s %s\n", h.n, rate, (long long)rp_fill_us, note, info);
     for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
     return 0;
+}
+
+// ---------------------------------------------------------------- link / linktest / dac (proto 11)
+static void link_status(void) {
+    double kbps = lk_last_us > 0 ? lk_last_bytes * 1e3 / (double)lk_last_us : 0;
+    printf("link: payload over %s; SPI0 %.3f MHz (PIC client max 25 MHz); frames ok=%lu frame errors=%lu uart fallbacks=%lu no-reply=%lu",
+           link_use_spi ? "SPI (UART fallback)" : "UART", link_spi_hz / 1e6, (unsigned long)lk_frames, (unsigned long)lk_frame_err,
+           (unsigned long)lk_fallback, (unsigned long)lk_noreply);
+    if (lk_last_us >= 0) printf("; last frame %u B in %lld us (%.0f kB/s, incl. the SPIX request)", lk_last_bytes, (long long)lk_last_us, kbps);
+    printf("\n");
+}
+static bool link_set_mhz(const char *s) {
+    double mhz = atof(s);
+    if (mhz < 0.1 || mhz > 25.0) { printf("link: MHz must be 0.1..25 (PIC SPI client limit)\n"); return false; }
+    link_spi_hz = spi_set_baudrate(LINK_SPI, (unsigned)(mhz * 1e6 + 0.5));
+    return true;
+}
+// link [uart | spi [MHz]]: payload path for acq/pe/acqcpu/acqil; no argument = show counters
+static void cmd_link(const char *arg) {
+    if (arg && *arg) {
+        if (!strcmp(arg, "uart")) link_use_spi = false;
+        else if (!strncmp(arg, "spi", 3) && (arg[3] == 0 || arg[3] == ' ')) {
+            if (arg[3] == ' ' && !link_set_mhz(arg + 4)) return;
+            link_use_spi = true;
+        } else { printf("usage: link [uart | spi [MHz]]\n"); return; }
+    }
+    link_status();
+}
+// linktest [count [MHz]]: PIC fills its capture buffer with an LFSR pattern (XTEST), the RP pulls it over SPI count times
+// and checks every word + CRC, then pulls the last one over the UART too and compares. No capture, no piezo needed.
+static void cmd_linktest(const char *arg) {
+    unsigned count = 10; char *e = NULL;
+    if (arg && *arg) {
+        count = (unsigned)strtoul(arg, &e, 10);
+        if (*e == ' ' && !link_set_mhz(e + 1)) return;
+    }
+    if (count < 1 || count > 10000) { printf("usage: linktest [count 1..10000 [MHz 0.1..25]]\n"); return; }
+    link_flush_rx();
+    unsigned ok = 0, ferr = 0, werr_frames = 0, noreply = 0; unsigned long werr_words = 0;
+    int64_t tsum = 0, tmin = INT64_MAX, tmax = 0; uint16_t seed = 1; char rx[64], why[80];
+    absolute_time_t t_all = get_absolute_time();
+    for (unsigned i = 0; i < count; i++) {
+        seed = (uint16_t)((i * 7919u + 1u) & 0xFFFFu); if (!seed) seed = 1;
+        char tx[24]; snprintf(tx, sizeof tx, "XTEST %u\n", (unsigned)seed);
+        link_puts(tx);
+        unsigned n = 0, sd = 0;
+        if (link_readline(rx, sizeof rx, LINK_TIMEOUT_US) < 0 || sscanf(rx, "XTEST %u %u", &n, &sd) != 2 || n != LINK_MAX_N || sd != seed) {
+            noreply++; printf("linktest %u: XTEST reply '%s'\n", i, rx); link_flush_rx(); continue;
+        }
+        const uint8_t *p; int64_t us;
+        if (link_spi_fetch(n, &p, &us, why, sizeof why) != 0) { ferr++; printf("linktest %u: %s\n", i, why); link_flush_rx(); continue; }
+        unsigned bad = link_count_lfsr_errors(p, n, seed);
+        if (bad) { werr_frames++; werr_words += bad; }
+        else ok++;
+        tsum += us; if (us < tmin) tmin = us; if (us > tmax) tmax = us;
+    }
+    int64_t t_total = absolute_time_diff_us(t_all, get_absolute_time());
+    unsigned bytes = LINK_FRAME_LEN(LINK_MAX_N);
+    printf("linktest: %u frames of %u B at %.3f MHz: ok=%u frame errors=%u pattern errors=%u frames / %lu words, no reply=%u\n",
+           count, bytes, link_spi_hz / 1e6, ok, ferr, werr_frames, werr_words, noreply);
+    if (ok + werr_frames) {
+        double mean = (double)tsum / (ok + werr_frames);
+        printf("linktest: SPIX request+frame %.0f us mean (min %lld, max %lld) = %.0f kB/s; wire time alone %.0f us; %u frames in %.2f s\n",
+               mean, (long long)tmin, (long long)tmax, bytes * 1e3 / mean, bytes * 8e6 / link_spi_hz, count, t_total / 1e6);
+    }
+    // the last pattern over the UART: must be identical
+    int64_t us; why[0] = 0;
+    if (link_uart_fetch(LINK_MAX_N, link_buf + 8, &us, why, sizeof why) == 0) {
+        unsigned bad = link_count_lfsr_errors(link_buf + 8, LINK_MAX_N, seed);
+        printf("linktest: same buffer over the UART: %s (%u word errors) in %.2f s\n", bad ? "DIFFERS" : "identical", bad, us / 1e6);
+    } else printf("linktest: UART cross-check failed: %s\n", why);
+}
+// dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]: PIC DAC1 test signal on DACOUT1 (U9 pin 3 = AD2AN3:
+// read it back with "acq 4 0 19"; board 3: H6.16, v1.2: also RP GPIO26/ADC0). Codes 205..3890 = 5..95 % of AVDD (3.3 V).
+#define DAC_V(c) ((c) * 3.3 / 4095.0)
+static void cmd_dac(const char *arg) {
+    char tx[64], rx[96];
+    const char *usage = "usage: dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]   codes 205..3890 (5..95 % of 3.3 V)\n";
+    if (!arg || !*arg) snprintf(tx, sizeof tx, "DAC?\n");
+    else if (!strcmp(arg, "off")) snprintf(tx, sizeof tx, "DAC 0\n");
+    else if (!strncmp(arg, "dc ", 3)) snprintf(tx, sizeof tx, "DAC 1 %lu\n", strtoul(arg + 3, NULL, 0));
+    else if (!strncmp(arg, "tri ", 4)) {
+        unsigned lo, hi, slp;
+        if (sscanf(arg + 4, "%u %u %u", &lo, &hi, &slp) != 3) { printf("%s", usage); return; }
+        snprintf(tx, sizeof tx, "DAC 2 %u %u %u\n", lo, hi, slp);
+    } else if (!strncmp(arg, "sine ", 5)) {
+        double hz = 0; unsigned amp = 1500, mid = 2048;
+        if (sscanf(arg + 5, "%lf %u %u", &hz, &amp, &mid) < 1) { printf("%s", usage); return; }
+        snprintf(tx, sizeof tx, "DAC 3 %.3f %u %u\n", hz, amp, mid);
+    } else { printf("%s", usage); return; }
+    link_flush_rx(); link_puts(tx);
+    if (link_readline(rx, sizeof rx, 500000) < 0) { printf("dac: no reply from the PIC\n"); return; }
+    unsigned a, b, c, d; double hz;
+    if (!strncmp(rx, "DAC ERR", 7)) { printf("dac: PIC refused (%s)%s", rx + 8, !strcmp(rx + 8, "args") ? "\n" : " — PLL2 / CLKGEN7 did not lock\n"); if (!strcmp(rx + 8, "args")) printf("%s", usage); return; }
+    if (!strncmp(rx, "DAC 0", 5)) printf("dac: off\n");
+    else if (sscanf(rx, "DAC 1 %u", &a) == 1) printf("dac: dc %u = %.3f V\n", a, DAC_V(a));
+    else if (sscanf(rx, "DAC 2 %u %u %u", &a, &b, &c) == 3) {
+        double half_us = (b - a) * 16.0 / c * 0.004;   // (hi-lo)*16/SLPDAT steps of T_DAC = 2/500 MHz = 4 ns
+        printf("dac: triangle %u..%u (%.3f..%.3f V), slope %u (12.4 counts per 4 ns step) -> period ~%.2f us (%.2f kHz, nominal)\n",
+               a, b, DAC_V(a), DAC_V(b), c, 2 * half_us, 1e3 / (2 * half_us));
+    } else if (sscanf(rx, "DAC 3 %lf %u %u %u %u", &hz, &a, &b, &c, &d) == 5)
+    {
+        printf("dac: sine %.1f Hz, %u points, update every %.2f us, %.3f V +- %.3f V (codes %u +- %u)\n", hz, a, b * 0.005, DAC_V(d), DAC_V(c), d, c);
+        printf("  note: each sine update is a DMA transfer that costs the capture DMA ~1 sample: acq/pe at 20-25 Msps come back 'slow'\n"
+               "  (bench 2026-11-21). Use 'dac tri' (hardware, no bus traffic) as the reference during captures.\n");
+    }
+    else { printf("dac: unexpected reply '%s'\n", rx); return; }
+    if (strncmp(rx, "DAC 0", 5)) printf("  read it back: acq 4 0 19   (AD2AN3 = DACOUT1, U9 pin 3; board 3: H6.16)\n");
 }
 
 static void help(void) {
@@ -626,7 +818,10 @@ static void help(void) {
            "  i2c         scan the I2C0 bus (MCP4531 x2, MCP4728, OLED)\n"
            "  pot <0|1> [n]  MCP4531 wiper read / set 0..128: 0 = U11 (OA2 feedback: gain x1..x11, power-on 64 = ~x6), 1 = U18 (AD8338)\n"
            "  raw ADCBB n [ovs]  experiment: time n back-to-back ADC conversions (no DMA); reply ADCBB n ovs ticks tick_ns sum\n"
-           "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n");
+           "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n"
+           "  link [uart|spi [MHz]]  capture payload path: SPI0 frame from the PIC (default, 12.5 MHz, CRC-checked, UART fallback) or UART only (0.7 s); no args = counters\n"
+           "  linktest [count [MHz]]  SPI link self-test: PIC LFSR pattern pulled count times (default 10), every word + CRC checked, then once over the UART\n"
+           "  dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]  PIC DAC1 test signal on DACOUT1 (U9 pin 3, read back with acq 4 0 19); codes 205..3890\n");
 }
 
 int main(void) {
@@ -636,6 +831,7 @@ int main(void) {
     led_init(); led_rgb(0, 0, 40);
     pic_taps_init();
     link_init();
+    link_spi_init();
 
     char line[96]; int len = 0;
     absolute_time_t next_auto = get_absolute_time();
@@ -687,6 +883,9 @@ int main(void) {
         else if (!strncmp(line, "pc", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pc(line[2] == ' ' ? line + 3 : "");
         else if (!strncmp(line, "gain", 4) && (line[4] == 0 || line[4] == ' ')) cmd_gain(line[4] == ' ' ? line + 5 : "");
         else if (!strncmp(line, "pulse", 5) && (line[5] == 0 || line[5] == ' ')) cmd_pulse(line[5] == ' ' ? line + 6 : "");
+        else if (!strncmp(line, "linktest", 8) && (line[8] == 0 || line[8] == ' ')) cmd_linktest(line[8] == ' ' ? line + 9 : "");
+        else if (!strncmp(line, "link", 4) && (line[4] == 0 || line[4] == ' ')) cmd_link(line[4] == ' ' ? line + 5 : "");
+        else if (!strncmp(line, "dac", 3) && (line[3] == 0 || line[3] == ' ')) cmd_dac(line[3] == ' ' ? line + 4 : "");
         else if (!strcmp(line, "stat")) printf("sent=%lu ok=%lu bad=%lu timeout=%lu\n",
                         (unsigned long)stat_sent, (unsigned long)stat_ok, (unsigned long)stat_bad, (unsigned long)stat_timeout);
                 else if (len == 0 && line[0]) printf("unknown '%s' — try help\n", line);

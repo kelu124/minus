@@ -41,6 +41,13 @@ One line in, text out, `help` lists everything. Existing: `version`, `rgb R G B`
 so **rebuild the RP after every PIC build** to refresh the image). New commands: add to the dispatch
 chain in `main.c`, to `help()`, to the table in `firmware/README.md`, bump PATCH.
 
+## Capture payload over SPI (proto 11, 2026-11-21)
+`ACQ`/`ACQCPU`/`ACQIL` send the header line only; the RP pulls the samples with `SPIX` (SPI0 master GPIO2/4, CS GPIO5 →
+PIC SPI1 client RD1/RC2/RD0, frame + CRC-32 checked in `rp2354/link_frame.c`, host test `rp2354/tests`) or `UTX` (UART
+fallback). `link [uart|spi [MHz]]` (12.5 MHz default; 18.75 clean, 25 fails), `linktest [n [MHz]]` checks it with no capture.
+`dac off|dc|tri|sine` drives DACOUT1 (U9 pin 3, `acq … 19` = AD2AN3): use `tri` during captures; the DMA `sine` makes
+20–25 Msps captures `slow`. USB: manufacturer `kelu124`, product `minUS badge`. Design: `docs/claude/specs/2026-11-21-dac-spi-link-design.md`.
+
 ## Link protocol (RP ↔ PIC, UART0 ↔ UART1, 115200 8N1, ASCII lines)
 `PING n`→`PONG n`, `ID?`→`<chip> <fw name> <version> proto <n>`, `TRIG?`→`TRIG <count>`,
 else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
@@ -48,12 +55,11 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 ## Hardware rules baked into firmware
 - RP GPIO21/22/24 (PGC1/PGD1/MCLR taps) stay **Hi-Z** unless programming; `reset` = drive
   low then release, never drive high.
-- RP is the **only master** of digipots/I²C; PIC SPI/I²C pins stay Hi-Z until the SPI-client
-  step is designed.
+- RP is the **only master** of I²C (PIC I²C pins Hi-Z); since proto 11 the PIC's SPI1 is a client of the RP's SPI0.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-19, rp 1.1.3 / pic 1.1.0, proto 10)
+## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.4 / pic 1.1.1, proto 11)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.

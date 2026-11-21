@@ -11,9 +11,9 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.3"},
-    "pic": {"name": "minus-pic32", "version": "1.1.0"},
-    "proto": 10,
+    "rp": {"name": "minus-rp2354", "version": "1.1.4"},
+    "pic": {"name": "minus-pic32", "version": "1.1.1"},
+    "proto": 11,
 }
 
 
@@ -50,6 +50,10 @@ RP_COMMANDS: Dict[str, Cmd] = {
     "i2c":     Cmd("i2c", "i2c_scan", "scan the I2C bus"),
     "pot":     Cmd("pot <0|1> [n]", "pot", "MCP4531 digipot wiper read / set"),
     "pic":     Cmd("pic ...", "pic_id", "ICSP programmer (see PIC_SUBCOMMANDS)"),
+    "link":    Cmd("link [uart|spi [MHz]]", "link", "capture payload path (SPI frame, UART fallback) + counters"),
+    "linktest": Cmd("linktest [count [MHz]]", "linktest", "SPI link self-test with a PIC LFSR pattern"),
+    "dac":     Cmd("dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]", "dac",
+                   "PIC DAC1 test signal on DACOUT1 (read back with acq input 19)"),
 }
 
 # `raw <PIC command>` lines that `help` documents: usage -> Minus method
@@ -86,6 +90,10 @@ PIC_LINK: Dict[str, Optional[str]] = {
     "UGE": "gain",
     "ADCBB": "adcbb",
     "ID?": "pic_ident",
+    "SPIX": "acq",           # proto 11: payload pulled as an SPI frame after every capture (acq, pe, acqcpu, acqil)
+    "UTX": "acq",            # proto 11: same payload over the UART (link uart / SPI fallback / linktest cross-check)
+    "XTEST": "linktest",
+    "DAC": "dac",
     "CLK12": None,           # clock-source diagnostic: raw("CLK12 n")
 }
 
@@ -95,4 +103,6 @@ INPUTS = {
     17: "AD2AN1: OA2 output before the filter",
     0: "AD1AN0: OA1 output",
     1: "AD1AN1: OA1 input = LNA output",
+    19: "AD2AN3: DACOUT1 (PIC DAC test signal, U9 pin 3)",
+    7: "AD1AN7: DACOUT1 on ADC1",
 }

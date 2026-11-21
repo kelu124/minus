@@ -59,10 +59,10 @@ class TestDevice(unittest.TestCase):
 
     def test_version_and_ident(self):
         v = self.d.version()
-        self.assertEqual((v.name, v.version, v.proto), ("minus-rp2354", FIRMWARE["rp"]["version"], 10))
+        self.assertEqual((v.name, v.version, v.proto), ("minus-rp2354", FIRMWARE["rp"]["version"], FIRMWARE["proto"]))
         self.assertIn("minus v1.1", v.board)
         p = self.d.pic_ident()
-        self.assertEqual((p.part, p.name, p.proto), ("PIC32AK1216GC41048", "minus-pic32", 10))
+        self.assertEqual((p.part, p.name, p.proto), ("PIC32AK1216GC41048", "minus-pic32", FIRMWARE["proto"]))
         self.d.check_firmware(strict=True)
 
     def test_link(self):
@@ -116,6 +116,30 @@ class TestDevice(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.d.acq(in_=25)
 
+    def test_spi_link_and_dac(self):
+        s = self.d.link("spi", 12.5)
+        self.assertTrue(s.spi)
+        self.assertAlmostEqual(s.mhz, 12.5)
+        t = self.d.linktest(3)
+        self.assertTrue(t.passed, t.raw)
+        self.assertEqual((t.count, t.frame_bytes, t.ok), (3, 8202, 3))
+        self.assertLess(t.mean_us, 50000)                   # vs ~710 000 us over the UART
+        tri = self.d.dac("tri", 512, 3584, 16)
+        self.assertEqual((tri.mode, tri.lo, tri.hi, tri.slope), ("tri", 512, 3584, 16))
+        self.assertAlmostEqual(tri.period_us, 24.58, places=1)
+        c = self.d.acq(4, 0, 19, 1)                          # the triangle on AD2AN3, over SPI
+        self.assertTrue(c.link.startswith("spi@"))
+        self.assertLess(c.xfer_us, 50000)
+        self.assertGreater(int(c.samples.max()) - int(c.samples.min()), 2500)
+        self.assertNotIn("link=", c.note)
+        self.assertEqual(self.d.dac("dc", 2048).code, 2048)
+        sn = self.d.dac("sine", 20000, 800, 2048)
+        self.assertEqual((sn.mode, sn.points, sn.amp, sn.mid), ("sine", 50, 800, 2048))
+        self.assertEqual(self.d.dac("off").mode, "off")
+        self.assertEqual(self.d.dac().mode, "off")
+        with self.assertRaises(ValueError):
+            self.d.dac("tri", 1, 2)
+
     def test_pic_programmer(self):
         self.assertEqual(self.d.pic_id().part, "PIC32AK1216GC41048")
         img = self.d.pic_image()
@@ -151,6 +175,19 @@ class TestParsers(unittest.TestCase):
         with self.assertRaises(MinusError):
             P.parse_capture(["pe: 8 shots, every capture had a non-uniform (slow) sample clock — nothing printed",
                              "# pulse fired, 8 shot(s)"], "pe")
+
+    def test_link_parsers(self):
+        c = P.parse_capture(["# acq n=2 fill=0.1us fs=20.00Msps rp_fill=0us (RDY window timed by the RP crystal) trigger div 4; "
+                             "in=19 x link=uart(spi failed: frame crc) xfer=709000us", "1", "2"])
+        self.assertEqual((c.link, c.xfer_us), ("uart(spi failed: frame crc)", 709000))
+        self.assertTrue(c.note.endswith("in=19 x"))
+        with self.assertRaises(MinusError):
+            P.parse_dac(["dac: PIC refused (args)", "usage: dac ..."])
+        t = P.parse_linktest(["linktest 0: frame crc",
+                              "linktest: 2 frames of 8202 B at 25.000 MHz: ok=1 frame errors=1 pattern errors=0 frames / 0 words, no reply=0",
+                              "linktest: same buffer over the UART: identical (0 word errors) in 0.71 s"])
+        self.assertFalse(t.passed)
+        self.assertEqual(t.errors, ["linktest 0: frame crc"])
 
     def test_pic_flash_lines(self):
         r = P.parse_pic_prog(["ICSP pair 1 fast, 276 PGC clocks. DEVID 0x9da2 DEVREV 2 -> PIC32AK1216GC41048",

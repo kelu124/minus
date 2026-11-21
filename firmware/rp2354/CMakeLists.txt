@@ -26,12 +26,14 @@ add_custom_command(
   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/tools/hex2c.py ${PIC_HEX_DEP}
   COMMENT "Embedding PIC32 image from ${PIC_HEX_ARG}")
 
-add_executable(minus_rp main.c pic_icsp.c acq_parse.c ${CMAKE_CURRENT_BINARY_DIR}/pic_image.c)
+add_executable(minus_rp main.c pic_icsp.c acq_parse.c link_frame.c ${CMAKE_CURRENT_BINARY_DIR}/pic_image.c)
 target_include_directories(minus_rp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 pico_generate_pio_header(minus_rp ${CMAKE_CURRENT_LIST_DIR}/pulser.pio)
-target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_pio hardware_gpio hardware_i2c pico_unique_id pico_bootrom)
+target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_spi hardware_pio hardware_gpio hardware_i2c pico_unique_id pico_bootrom)
 
 pico_enable_stdio_usb(minus_rp 1)    # CLI over USB-C CDC
+# USB descriptor strings (owner, 2026-11-21); VID/PID stay 2E8A:0009 (pico-sdk CDC), serial = the RP unique board id (sdk default)
+target_compile_definitions(minus_rp PRIVATE USBD_MANUFACTURER="kelu124" USBD_PRODUCT="minUS badge")
 pico_enable_stdio_uart(minus_rp 0)   # UART0 is the PIC link, not a console
 pico_add_extra_outputs(minus_rp)     # .uf2 / .bin / .hex

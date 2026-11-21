@@ -1,0 +1,2 @@
+> acq 10 0 19 1
+acq: 8 captures, every one had a non-uniform (slow) sample clock — nothing printed (DMA busy elsewhere, e.g. 'dac sine'? try div 10)

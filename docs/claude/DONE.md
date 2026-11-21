@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-21: **SPI capture payload link** (proto 11, rp 1.1.4 / pic 1.1.1): PIC SPI1 client frame + CRC-32, RP pulls it at
+  12.5 MHz (10.6 ms vs 0.71 s), UART fallback, `link` / `linktest`; **PIC DAC test signal** `dac off|dc|tri|sine` on DACOUT1
+  (PLL2 → CLKGEN7 500 MHz); USB strings kelu124 / "minUS badge"; library + fixture + notebooks (03 §5) re-synced;
+  bench `docs/bench/2026-11-21-spi-dac/`. Also flashed rp 1.1.3's board-name change (now in 1.1.4) and re-recorded the fixture.
 - 2026-11-20: OSHWA certification **FR000032** — mark (Stacked 12×10 mm) + UID on F.SilkS of `hardware/minUS.kicad_pcb`, mark kit in
   `hardware/certification-mark/` (KiCad only), renders redone, README + datasheet (Mechanical, License, `oshw_facts` licence box)
   updated; no firmware or datasheet revision bump (documentation only).

@@ -1,21 +1,28 @@
 {
  "comment": "written by `python -m minus.fwsync --update` after the library was checked against these firmware sources",
  "files": {
-  "firmware/rp2354/CMakeLists.txt": "22f89c46d4a9b46febeca879ca0b9ce9456b3d159e4996306e871ede7180d91f",
+  "firmware/rp2354/CMakeLists.txt": "a0f249af3a44c540abf09b8d33ed1892d578e444519c8077497bb4e650088688",
   "firmware/rp2354/acq_parse.c": "dfd53ff650da3d57705dd0fe788cf4058044e6e825e3827a3d25e231e6bd927b",
   "firmware/rp2354/acq_parse.h": "21665592c1024709ef35b4aa3126ff5eec343b62484bc0358a690d43e6a13cf5",
   "firmware/rp2354/board/minus_devkit.h": "93b71b628060589f2d04836126c26809864ae6396a77de1a00f0f48552ca7986",
-  "firmware/rp2354/main.c": "8ca1e29b25d11c9e2413f09776a26d8b78017881519bb32fcbd34b1c4ecf63f2",
+  "firmware/rp2354/link_frame.c": "a87a4b5ad50b45c8f2875c16db1446dff9e61728075aad35772159b0f46c0f40",
+  "firmware/rp2354/link_frame.h": "6bfa4ac21785bb3de688dbbfa8a071268e82b777e5d2efb187c65aff4f61b0d0",
+  "firmware/rp2354/main.c": "23b881146564ae0e9ef4aa0f9628108d1fc31818f1b07391d84079de3da372cb",
   "firmware/rp2354/pic_icsp.c": "1e572c13e53276f4ce4939c9915cab51d3e9372428f4482d57a5183dcda2e1f2",
   "firmware/rp2354/pic_icsp.h": "055b05efb45703cab3e5f6b69b827bb7acce9e5a80a1e7f849c043a756e06846",
   "firmware/rp2354/pic_image.h": "972278a14b050e12fee8d51f96126090c97c31357a3391db82cb5ca504b686e2",
   "firmware/rp2354/pulser.pio": "62261637955bfb5a63e325b4db71035583bb7fdd17ea2b705aaf493e867d914c",
   "firmware/rp2354/tests/test_acq_parse.c": "5f1d0d4092b48a66ed79d36f414ee4cb55be85db9e4b3a9295d5b63f43e8f6cb",
-  "firmware/rp2354/version.h": "80da1ebeb6b3386ae083033cfab4ac4ab970c865dda4b45bcb278cfaaa61f010",
+  "firmware/rp2354/tests/test_link_frame.c": "516791d63a46e6c4797931916a8b5da1e396b93053c4f7b596e831caf0f83b79",
+  "firmware/rp2354/version.h": "96162de6ee118bbd359fd7d6bc142f80cb263f6a4f766d87b121fc0601ed3414",
   "firmware/rp2354/ws2812.pio": "86512842a17bdb74cc7d3b51a2a98ede9808c0b04a132a175488b8477e754369",
   "firmware/pic32/acq.c": "696b570c7a7b13ba13b42d6f39661dbfa7fbea8a144ee4a65fd06694029cf7bd",
   "firmware/pic32/acq.h": "1e23b116aaaecd5745294e4c33088ffae1c7977dce302767c9844169d22da8aa",
-  "firmware/pic32/main.c": "3084f2bdf18d392f47b4c3b1c0c2c54a175373d79404f34b5ca643c1ed952d7c",
-  "firmware/pic32/version.h": "fa19bc61703a83d9233f884755564a8be3813156f91335b832cdde6df1618f57"
+  "firmware/pic32/dac.c": "92a469a2d57bf70bdf17605fde4d055fc845efd06640e68989c5c7e273bc66d7",
+  "firmware/pic32/dac.h": "50195f2452cf9430a88baf0efb63dd74b08bced0e087c05d2b771cf697cd0c0e",
+  "firmware/pic32/main.c": "49a2070428cb0deec7313f62b7978ce4b0046b6eff6fb5640312dfffb2d6d825",
+  "firmware/pic32/version.h": "2a3f4903c25097b7a559b985dc8ee4b06e3aa575e62647d1147edbccaf1294ca",
+  "firmware/pic32/xfer.c": "93b0cf9bb714a50df07776327783ea6dfcacefff68f9824e6277114b781dc864",
+  "firmware/pic32/xfer.h": "76d2958a4aadd13632a151899e7091e7c2acdb6adddac716619dbe7205e74bcb"
  }
 }
