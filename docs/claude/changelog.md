@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  18ef70b  TODO_HARDWARE: DACOUT1 (U9 pin 3) → RP ADC0 (U8 pin 40, GPIO26) trace planned for v1.2
+
 - 2026-11-21  47d633e  Hardware v1.2: owner-routed R69–R73, silkscreen "minUS v1.2" + TX/RX label, renders regenerated; DRC 0 unconnected / parity clean; review notes (In1 slots) in TODO_HARDWARE; datasheet figures unchanged
 
 - 2026-11-21  add2f00  Hardware: R72/R73 10 kΩ (C25744) pull-downs on 74HC4052 S0/S1 (GPIO25/GPIO23) in schematic, footprints placed near U1 (unrouted, owner routes); TODO_HARDWARE item
