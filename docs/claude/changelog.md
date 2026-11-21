@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  e1a2f67  Library: close() restores fmt text so a human at the CLI sees decimals (test added, 24 tests)
+
 - 2026-11-22  55d0df1  Morning report (docs/claude/log/2026-11-22-morning-report.md) + version mentions rp 1.1.8 / pic 1.1.5
 
 - 2026-11-22  1552ba1  Review fixes (rp 1.1.8 / pic 1.1.5): tof/env/RELOCK standard settings, acqos margin + slow check, RDY settle after PING, SPIX 0 / ENV error paths, stale-reply drop in the library, viewer self-join; PC estimator A/B (no change); soaks 2700/2700 + 2000/2000
