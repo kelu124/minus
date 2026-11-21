@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  c546417  Datasheet: released firmware rp 1.1.3; jitter campaign now labelled rp 1.1.1 (its real build, was shown as 1.1.2); rev 0.2 history row fixed at rp 1.1.2; PDF rebuilt, rev unchanged
+
 - 2026-11-20  318a043  rp 1.1.3: `version` board line + boot banner print "minus v1.1" (minUS_08112026 dropped), uf2 rebuilt (not flashed, board absent); library 1.1.3 + fwsync; fixture and notebook 01 outputs hand-edited pending re-record; docs bumped to rp 1.1.3 (datasheet left at 1.1.2)
 
 - 2026-11-20  cd4ab8c  Drop the minUS_08112026 name: board = minus v1.1 (board 3) in datasheet (PDF rebuilt), README, CLAUDE.md, TODOs, firmware README + source comments (no binary change, fwsync refreshed), python comments, notebook intro, skill, memory, bench READMEs; history files untouched; no version bump
