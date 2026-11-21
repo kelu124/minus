@@ -15,18 +15,18 @@ history (this file before 2026-11-19).
   PCB footprint fields and `hardware/production/bom.csv` now say MIC4427YMM / C152165 (was TC4427AEUA713 / C628548, out
   of stock). Same MSOP-8 footprint and pin order. Still to do: check live stock at order time (13 on 2026-10-24);
   fallback TC4427AEOA713 (C20551, SOIC-8, footprint change). Datasheet E9.
-- **[should] TX at +5 V during power-up (E1) — in schematic + placed, routing pending (2026-11-21):** GPIO9
+- **[should] TX at +5 V during power-up (E1) — in schematic, placed and routed (owner, 2026-11-21):** GPIO9
   (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) had no pull-up, so the RP2350 pad pull-down turned Q1 on until the firmware
   idled the pins (a few ms). Added **R70 10 kΩ pull-up GPIO9 → +3V3_DVDD** and **R71 10 kΩ pull-down GPIO8
   (`RP2354 PIO-PWM_H`) → GND** (0402, LCSC C25744 like R18), sheet PULSER/PUSH_PULL; footprints placed below U3, next to its input pins 2/4.
   Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
-- **[should] Single-connector probe (E11) — in schematic + placed, routing pending (2026-11-21):** **R69 0 Ω between TX**
+- **[should] Single-connector probe (E11) — in schematic, placed and routed (owner, 2026-11-21):** **R69 0 Ω between TX**
   (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works
   without an external tee. 0402, LCSC C844673 like R29, sheet RX_FRONT_END/TRANSDUCER; footprint placed below RF1.
   **R69 is fitted by default** (owner, 2026-11-21): TX and RX are joined, either connector drives and receives. RX is
   protected by C45 10 nF + D2 BAV99 (±0.6 V). Remove R69 (or mark it DNP in the BOM) for separate TX/RX probes.
   Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
-- **[should] Gain-mux select pull-downs — in schematic + placed, routing pending (2026-11-21, owner):** **R72 10 kΩ
+- **[should] Gain-mux select pull-downs — in schematic, placed and routed (owner, 2026-11-21):** **R72 10 kΩ
   `RP_GC1` (GPIO25 → U1 S0, pin 10) → GND** and **R73 10 kΩ `RP_GC2` (GPIO23 → U1 S1, pin 9) → GND** (0402, C25744 like
   R33), sheet RX_FRONT_END/FE_A. Defined 74HC4052 selects (leg 0, Rf 2.2 k) while the RP is in reset/boot; 10 kΩ rather
   than 100 kΩ so it also stays below the ~8.2 kΩ-class external pull-down suggested for the RP2350 GPIO erratum E9 (to
@@ -65,9 +65,9 @@ history (this file before 2026-11-19).
   one 40 ns sample, and 14–31 % of captures slip by a whole sample (`docs/bench/2026-11-19-jitter/`). A shared
   clock (e.g. RP clock output → PIC clock input, or a PIC REFO → RP GPIN) would make the pulse-to-comb phase
   deterministic and give an absolute sample rate; route the pins even if the firmware does not use them yet.
-- **[should] Faster RP↔PIC data path:** the 115 200 Bd UART makes one 4095-sample shot take ~0.9 s, which is too slow
-  for live M-mode. Route the PIC SPI (or a faster UART / parallel lines into the RP PIO) between the MCUs, without
-  sharing the PIC JTAG pins (TCK/TDO/TMS default on in a blank PIC).
+- ~~**[should] Faster RP↔PIC data path**~~ — **solved in firmware on v1.1** (2026-11-21/22, proto 11–12): the existing SPI wiring
+  carries the payload, 5.7 ms per capture at 12.5 MHz (25 MHz clean), JTAG off in firmware. No hardware change needed;
+  keep the four SPI nets (and keep JTAG disabled) in v1.2.
 - **[nice] Net names by direction:** `UART_TX`/`UART_RX` are RP-side names (`RP_TX_PIC_RX`, `PIC_TX_RP_RX` would be
   clearer), and `PWM_H`/`PWM_L` are swapped vs function (PWM_H drives the low-side N-FET).
 

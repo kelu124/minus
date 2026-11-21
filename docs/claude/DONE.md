@@ -2,6 +2,11 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-22: proto 14 (rp 1.1.7 / pic 1.1.4): `fmt b64` sample output (30 vs 110 ms per capture), `tgc` time-gain steps
+  (switch transient ~2 µs saturation + ~15 µs settling, masked by `Capture.tgc_valid()`), `ACQ` resets navg, `acqos` RF
+  warning; library framing fix (split end-marker line leaked into the next reply); **live viewer** `minus.live` (desktop
+  window ~22 frames/s pe / 43 env; Jupyter `LiveView` widget, notebook 04); library 1.1.7, 22 tests; bench
+  `docs/bench/2026-11-22-tgc-b64/`, `docs/bench/2026-11-22-viewer/`.
 - 2026-11-22: **ADC extras for pulse-echo** (proto 13, rp 1.1.6 / pic 1.1.3): `acqos 4|16` (hardware oversampling, 13/14-bit,
   noise ÷2.1/÷3.1, 0.74/2.3 ms window), `tof` (ADC comparator + on-PIC first crossing, one line, 8.9 ms), `env` (on-PIC envelope,
   multi-shot average, 20.7 ms single shot); library `acqos()/tof()/env()`, fixture (54 replies), notebook 02 section; bench

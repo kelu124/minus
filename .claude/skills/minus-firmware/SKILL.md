@@ -56,6 +56,12 @@ comparator + first-crossing search, one line, 8.9 ms), `env` (|x−mean| integra
 the acqil buffer). Test them with the DAC on input 19 (`docs/bench/2026-11-22-adc-extras/`). The fixture is keyed by command
 text: two identical commands with different replies need distinct arguments.
 
+## Output format, TGC, viewer (proto 14)
+`fmt b64` (base64 u16 LE samples; the library sets it on connect) — keep `print_samples()` the only sample printer.
+`tgc <t_us> <leg> …` switches the 4052 leg from `rdy_window()` during each capture: ~17 µs switch transient. Live viewer:
+`python3 -m minus.live` / `minus.live.LiveView`. When recording the fixture, never leave an op amp off (`raw AMP2 1` follows
+`raw AMP2 0`), and give repeated commands distinct text (the fixture is keyed by it).
+
 ## Link protocol (RP ↔ PIC, UART0 ↔ UART1, 115200 8N1, ASCII lines)
 `PING n`→`PONG n`, `ID?`→`<chip> <fw name> <version> proto <n>`, `TRIG?`→`TRIG <count>`,
 else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
@@ -67,7 +73,7 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.6 / pic 1.1.3, proto 13)
+## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.7 / pic 1.1.4, proto 14)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.

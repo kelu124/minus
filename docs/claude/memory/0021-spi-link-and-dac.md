@@ -58,3 +58,18 @@ bench `docs/bench/2026-11-21-spi-dac/`
 - `env`: |x − mean| integrate-and-dump over dec 4..64, running u32 sum in acq_buf1 (1023 words = dec ≥ 4), average (1/16 LSB)
   written back into acq_buf for SPIX. Envelopes can be averaged across shots despite the random comb phase (E3).
 - Without a piezo all three are checked with the DAC on input 19 (`docs/bench/2026-11-22-adc-extras/`).
+
+## Proto 14 + viewer (2026-11-22 night, rp 1.1.7 / pic 1.1.4)
+- `fmt b64`: '# b64 <bytes>' + base64 lines (57 bytes → 76 chars) of u16 LE; 11.4 KB / 30 ms vs 24.8 KB / 110 ms per capture.
+  The library sends `fmt b64` on connect (`Minus(fmt=...)`), `protocol._samples()` reads either format.
+- Library framing bug fixed: `exchange()` stopped reading right after the `unknown '#endN'` marker, so a USB read boundary
+  inside the rest of that line leaked "ry help" into the next reply; now it reads through the newline and keeps any extra
+  bytes (`_pending`). Regression test: `TrickleTransport` (1 byte per read).
+- `tgc`: 4052 leg switched from the RP's RDY-window loop (`rdy_window()`), restored after. **Each switch: ~2 µs saturation
+  + ~15 µs settling** (break-before-make opens the op-amp feedback) → `Capture.tgc_valid()` masks 17 µs. Hardware fix idea:
+  make-before-break / parallel Rf.
+- Fixture gotcha: `raw AMP2 0` (tested early in `record_fixture.py`) left op amp 2 off for every later capture → baseline
+  drifting from ~1500; the recorder now sends `raw AMP2 1` right after.
+- `minus.live`: `LiveSource` (pe/acq/env/tof) → `LiveFigure` (A-line, envelope dB via FFT Hilbert, M-mode with automatic
+  contrast) → `run_window()` / `python -m minus.live` (Tk window tested on the owner's desktop) and `LiveView` (ipywidgets
+  Image updated from a thread; ~5 frames/s because of PNG rendering). While running it owns the serial port.

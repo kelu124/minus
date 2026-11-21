@@ -5,15 +5,21 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-11-22, session 13): rp 1.1.5 / pic 1.1.2, proto 12 on board 3** — payload over SPI (mode 1, frame on RDY,
-  5.7 ms at 12.5 MHz, 25 MHz clean), PIC DAC test signal, **slow lock found to be a per-PLL-lock state and self-healed** (boot
-  re-lock + RP `RELOCK`; `docs/bench/2026-11-22-slowlock/`, memory 0021). End-to-end `acq` 185 → 107 ms. Next:
-  (a) ~~PIC ADC extras~~ done 2026-11-22 (rp 1.1.6 / pic 1.1.3: `acqos`, `tof`, `env`; DONE.md) — next with a piezo: run
-  `tof` / `env` on real echoes (choose thr / blank from a `pe`), and try `acqos 4` + pulse for deep, low-noise A-lines;
-  (b) compact host output (base64 lines ~11 KB vs 24.8 KB text: the USB CDC 256-byte buffer caps text at ~270 kB/s);
-  (c) RP ADC0 read of the DAC once v1.2 has the DACOUT1 → GPIO26 trace; (d) a cleaner sine source for the ADC ENOB test
-  (external generator; the PIC DAC gives 42 dB SINAD and its DMA sine cannot run during a capture); (e) re-measure the E3
-  comb slips on a good lock (they may share the slow-lock cause); datasheet E2 text (per-lock state, self-heal) at the next rev.
+- **RESUME HERE (2026-11-22 night, session 13): rp 1.1.7 / pic 1.1.4, proto 14 on board 3** (no piezo on the bench). Done
+  tonight: SPI payload (5.7 ms), slow-lock self-heal, ADC extras (`acqos`/`tof`/`env`), `fmt b64` (30 ms per capture over USB),
+  `tgc` gain steps (~17 µs switch transient), `navg` reset, live viewer (`python3 -m minus.live`, Jupyter `LiveView`,
+  notebook 04). Next:
+  (a) **with a piezo**: run `tof` / `env` / the live viewer on real echoes (thr / blank from a `pe`), try `tgc` on a deep
+  target and judge the 17 µs switch transient; (b) TGC without the transient = hardware (make-before-break or a parallel Rf
+  switched in; TODO_HARDWARE); (c) RP ADC0 read of the DAC once v1.2 has the DACOUT1 → GPIO26 trace; (d) an external sine
+  generator for the ADC ENOB test; (e) re-measure the E3 comb slips on a good lock; datasheet E2 (per-lock state, self-heal)
+  and the new commands at the next datasheet rev.
+- **Closed / parked 2026-11-22** (from the older resume points below): faster link (SPI, proto 11–12); LP5562 `rgb` (rp 1.1.1);
+  GPIO9 pull-up (R70, v1.2); `acq` retry on slow + slow-lock root cause (per-PLL-lock state, boot re-lock + RELOCK);
+  "`acq` should reset navg" (pic 1.1.4); TGC (`tgc`, rp 1.1.7); averaging over shots (`env … shots`); PC viewer
+  (`minus.live`); `reboot dfu` returning to the app — **not reproduced** in ~15 reflashes on 2026-11-21/22, parked (ask the
+  owner for SW2 BOOTSEL if it comes back); PLL2 → 320 MHz ADC clock (40 Msps) and the +425 LSB offset of the CPU-loop reader
+  → **Someday** (see there).
 - **RESUME HERE (2026-11-19, session 12): minus v1.1** — rp 1.1.1 / pic 1.1.0 (proto 10) flashed on board 3; `rgb` drives the
   LP5562; Python library `python/library/minus` + notebooks; fwsync hooks; E3 jitter study (`docs/bench/2026-11-19-jitter/`):
   φ uniform-ish over one sample (11.3 ns rms, independent shots) **plus whole-sample comb slips in 14 % (37 µs) / 31 % (76 µs) of
@@ -151,5 +157,11 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - Decide compute/host (MCU, FPGA, PC) and display path.
 
 ## Someday / maybe
+
+- **40 Msps raw** (PLL2 → 320 MHz ADC clock, `acqil` un-parked, 5-cycle CPU loop) and the **+425 LSB offset** of the
+  un-duplicated CPU-loop reads: parked 2026-11-22. Any capture into RAM is capped by the DMA at 40 ns/sample (25 Msps)
+  whatever the ADC clock; the only 40 Msps routes are the CPU-loop reader (duplicates + the offset) and the two-channel
+  interleave (no bus margin). 25 Msps = 7.5 samples per 3.3 MHz period is enough for this probe, and re-clocking the ADC now
+  risks the slow-lock behaviour that was just tamed. Revisit only for a ≥ 7 MHz transducer.
 
 - Review prior work in sibling repos (e.g. `we_gate`) for reusable pieces.

@@ -262,6 +262,32 @@ class TestParsers(unittest.TestCase):
         self.assertEqual((r.bad_words, r.total_words), (0, 4260))
 
 
+class TestLive(unittest.TestCase):
+    def test_hilbert_envelope_of_a_tone_burst(self):
+        from minus.live import hilbert_envelope
+        t = np.arange(4096) * 40e-9
+        a = np.exp(-((t - 80e-6) / 5e-6) ** 2)
+        y = 2000 + 500 * a * np.sin(2 * np.pi * 3.3e6 * t)
+        e = hilbert_envelope(y)
+        self.assertAlmostEqual(float(e.max()), 500, delta=15)
+        self.assertLess(abs(int(e.argmax()) - 2000), 10)                    # peak at 80 us
+
+    def test_figure_updates_offline(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        from minus.live import Frame, LiveFigure
+        fig = LiveFigure(history=5)
+        x = np.linspace(0, 126, 4095)
+        for k in range(7):
+            fig.update(Frame(x, np.sin(x + k), np.abs(np.sin(x)) * 100 + 1, 1000.0 + k * 0.05, "test", 42.0 if k else None))
+        self.assertEqual(len(fig.cols), 5)
+        self.assertEqual(fig.img.get_array().shape, (512, 5))
+        self.assertIn("frames/s", fig.title.get_text())
+        self.assertTrue(fig.png().startswith(b"\x89PNG"))
+        fig.update(Frame(x[:511], None, np.ones(511), 1001.0, "env"))     # env frame: no RF, note shown
+        self.assertIsNotNone(fig._rf_note)
+
+
 class TestFirmwareSync(unittest.TestCase):
     def test_library_matches_firmware_sources(self):
         problems = fwsync.check()

@@ -9,7 +9,7 @@ through them with the real bytes on the wire.
 | [`library/tests/`](library/tests/) | offline tests replaying replies recorded from a real board (`fixtures/board3_transcript.json`) |
 | [`notebooks/`](notebooks/) | step-by-step worked examples, executed on a board (outputs kept) |
 
-Written for firmware **rp 1.1.6 / pic 1.1.3, link protocol 13** (`minus.FIRMWARE`). On connect the library reads
+Written for firmware **rp 1.1.7 / pic 1.1.4, link protocol 14** (`minus.FIRMWARE`). On connect the library reads
 both versions and warns if the board runs something else.
 
 ## Install
@@ -50,8 +50,28 @@ reply. Long captures (`pe`, ~0.9 s, 4097 lines) frame the same way as one-liners
 | `i2c`, `pot <0\|1> [n]` | `i2c_scan()`, `pot(i, n)` | `I2CScan`, `Pot` |
 | `raw AMP1/AMP2 0\|1`, `raw ADCBB n [ovs]` | `amp1(on)`, `amp2(on)`, `adcbb(n, ovs)` | |
 | `pic id/image/flash/verify/erase/pins/mclr/slow/fast/help` | `pic_id()`, `pic_image()`, `pic_flash()`, … | `PicProg`, `PicImage` |
+| `link`, `linktest`, `dac …` | `link(mode, mhz)`, `linktest(n, mhz)`, `dac(mode, *values)` | `LinkStatus`, `LinkTest`, `Dac` |
+| `acqos <4\|16> [in [pe]]` | `acqos(os, in_, pe)` (oversampling; **not for 3.3 MHz RF**) | `Capture` |
+| `tof …`, `env …` | `tof(thr, blank_ns, in_, ref)`, `env(dec, shots, in_)` | `Tof`, `Envelope` |
+| `tgc …`, `fmt …` | `tgc((t_us, leg), …)`, `fmt("b64"\|"text")` (b64 is set on connect) | `Tgc`; `Capture.tgc_valid()` masks the switch transients |
+| `raw LOCK?` / `RELOCK` | `pic_lock(relock)` | `PicLock` |
 | `reboot [dfu]` | `reboot(dfu)` | closes the port |
 | anything else | `raw_cli(line)` / `exchange(line)` | reply lines / `Exchange` |
+
+## Live viewer
+
+`minus.live` shows each shot as three panels — the A-line, its envelope (dB) and a scrolling M-mode image — in `pe`
+(pulse + RF), `acq`, `env` (envelope computed on the PIC) or `tof` mode:
+
+```bash
+python3 -m minus.live                                # desktop window, pe on input 25, until closed (~22 frames/s)
+python3 -m minus.live --mode env --dec 8 --shots 4   # PIC envelope, 4 shots averaged per frame
+python3 -m minus.live --frames 20 --save live.png --backend Agg   # headless
+```
+
+In Jupyter, `LiveView(dev)` is a live object (ipywidgets, no ipympl needed): run / mode / input / gain controls over an
+image that updates in place from a background thread (`start()` / `stop()`, or `run(frames=n)` synchronously; ~5 frames/s
+because every frame is rendered to PNG). While it runs it owns the serial port. Example: `notebooks/04_live_viewer.ipynb`.
 
 ## Keeping the library in sync with the firmware
 
@@ -76,7 +96,11 @@ The check runs automatically:
 
 1. [`01_getting_started.ipynb`](notebooks/01_getting_started.ipynb): connect, versions, the wire framing, link tests, LED, errors.
 2. [`02_acquisition.ipynb`](notebooks/02_acquisition.ipynb): `acq` and `pe` captures, time/depth axes, gain, pattern correction, averaging.
-3. [`03_frontend_and_pic.ipynb`](notebooks/03_frontend_and_pic.ipynb): pulser, I²C, op amps, ADC timing, PIC programmer, reboot.
+3. [`03_frontend_and_pic.ipynb`](notebooks/03_frontend_and_pic.ipynb): pulser, I²C, op amps, ADC timing, PIC programmer, reboot;
+   SPI payload link and the PIC DAC test signal.
+4. [`04_live_viewer.ipynb`](notebooks/04_live_viewer.ipynb): the live A-line / envelope / M-mode view (`LiveView`).
+
+Notebook 02 also covers the ADC extras (`acqos`, `tof`, `env`).
 
 Re-execute them on a board with
 `jupyter nbconvert --to notebook --execute --inplace python/notebooks/*.ipynb` (kernel with numpy, pyserial and matplotlib).

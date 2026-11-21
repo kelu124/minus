@@ -7,8 +7,8 @@ library [`python/library/minus/`](../python/library/minus/) (kept in sync by `py
 
 | Dir | Chip | Toolchain | Output (committed) | Status |
 |-----|------|-----------|--------------------|--------|
-| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.6**, running on board 3 |
-| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.3, proto 13**, flashed by the RP |
+| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.7**, running on board 3 |
+| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.4, proto 14**, flashed by the RP |
 
 Toolchain install and the build/flash walk-through are in the top-level
 [`README.md`](../README.md#getting-started). The older devkits (boards 1/2, `minUS_10102026`) are in git
@@ -83,7 +83,7 @@ Talk to it: `/dev/ttyACM0` (USB CDC, any baud; since rp 1.1.4 it enumerates as m
 The `make -C firmware/pic32 flash` target (MPLAB IPE + PICkit/Snap) is for boards with an ICSP header only;
 v1.1 has none.
 
-## RP CLI commands (rp 1.1.6)
+## RP CLI commands (rp 1.1.7)
 
 | Command | Does |
 |---------|------|
@@ -104,6 +104,8 @@ v1.1 has none.
 | `acqos <4\|16> [in [pe]]` | capture with **ADC hardware oversampling**: each sample = 4 / 16 back-to-back 32 ns conversions → 13 / 14-bit (2× / 4× a 12-bit code), 175 / 565 ns per sample, 0.74 / 2.3 ms window, noise ÷2.1 / ÷3.1; one pulse (`pe 1`), averaging inside each sample. **Not for the 3.3 MHz RF echo**: 5.5 / 1.8 Msps alias it (Nyquist 2.8 / 0.9 MHz) and the 128 / 512 ns average cancels it — use `pe` (RF), `env` (strength) or `tof` (range). Printed like `acq` |
 | `tof <thr> [blank_ns [in [ref]]]` | pulse + **time of flight on the PIC**: first sample after `blank_ns` with \|x−ref\| > thr (ADC channel comparator armed on ref±thr; ref 0 = capture mean, comparator then on 2048±thr), plus the peak in the next 64 samples; one line (index, ns, mm), 8.9 ms end to end |
 | `env <dec> [shots [in]]` | pulse + **envelope computed on the PIC** (\|x−mean\| over `dec` = 4..64 samples), averaged over `shots` pulses, then pulled: 4095/dec values in 1/16 LSB (`# env n=… dec=… shots=… dt=…ns`) |
+| `fmt [text\|b64]` | sample output of acq/pe/acqos/env: one decimal per line (default) or `# b64 <bytes>` + base64 lines of u16 LE: 11.4 KB / 30 ms instead of 24.8 KB / 110 ms per capture (USB CDC is the limit); the Python library switches to b64 on connect |
+| `tgc [off \| <t_us> <leg> ...]` | time-gain steps: the 4052 gain leg (both stages) switched at up to 4 times after the pulse during every capture (acq/pe/acqos/tof/env), restored after; each switch costs ~2 µs of saturation + ~15 µs of settling (break-before-make; `docs/bench/2026-11-22-tgc-b64/`) |
 | `gain [leg [u1 [u2]]]` | RX gain: `leg` 0..3 = 74HC4052 Rf 2.2k/4.7k/6.8k/10k on both stages (Rg 1 k → ×3.2/×5.7/×7.8/×11 each), `u1`/`u2` = 1 → OA1/OA2 at ×1 via the PIC's `UGE`. No args = show. Data: `docs/bench/2026-11-19-gain/` |
 | `pc [0\|1]` | PIC-side removal of the period-4 fixed pattern (≈ 10.5 LSB rms) from `acq`/`pe` captures, on at boot; shows the last per-phase offsets |
 | `i2c` | scan I2C0. Board 3: 0x30 LP5562 only (the other names are devkit parts) |
@@ -115,7 +117,7 @@ v1.1 has none.
 The firmware `help()` text still mentions some devkit parts (R53, U11/MCP4531, OLED); the table above is the
 board 3 truth.
 
-## Link protocol (proto 13)
+## Link protocol (proto 14)
 
 ASCII lines, `\n`-terminated, 115 200 8N1 (PIC: FUART = FPB = 100 MHz, `U1BRG` = FPB/115200 = 868, fractional).
 The RP drains the link until it is idle 50 ms before every command.
@@ -123,9 +125,9 @@ The RP drains the link until it is idle 50 ms before every command.
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.3 proto 13` |
+| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.4 proto 14` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
-| `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|slow\|notready>` — header only since proto 11; the payload stays on the PIC until pulled (`SPIX` / `UTX`). `ticks × tick_ns` = fill time on the PIC (Timer1, 80 ns); `slow` = the PIC saw a non-uniform fill (proto 10) |
+| `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|slow\|notready>` — header only since proto 11; the payload stays on the PIC until pulled (`SPIX` / `UTX`). Since proto 14, `navg` goes back to 1 unless given. `ticks × tick_ns` = fill time on the PIC (Timer1, 80 ns); `slow` = the PIC saw a non-uniform fill (proto 10) |
 | `SPIX` | proto 12: **no UART reply** (only `SPIX 0` when nothing is pending). The PIC drops RDY, preloads SPI1, raises RDY = "clock now", feeds the frame `A5 5A 'M' '1'`, n u16, seq u16, n × u16 LE, CRC-32/IEEE LE of all before (12 + 2n bytes, CRC computed while feeding), drops RDY. SPI mode 1. The RP clocks it with CS low and checks magic / n (from the ACQ header) / CRC (`link_frame.c`) |
 | `ACQOS <4\|16> [in]` | as `ACQ` (header only), oversampled capture (proto 13) |
 | `TOF <thr> [blank [in [ref]]]` | `TOF <idx\|-1> <peak_idx> <peak> <ref> <hw> <ticks> <tick_ns> <status>`; blank in samples; the A-line stays pullable (proto 13) |
