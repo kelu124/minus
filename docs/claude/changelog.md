@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  3114543  Proto 12 (rp 1.1.5 / pic 1.1.2): SPIX announced on RDY, SPI mode 1 (5.7 ms per capture, 25 MHz clean), slow lock shown to be a per-PLL-lock state + boot re-lock / RELOCK (100/100 acq over 20 boots), host output 185 -> 107 ms; bench docs/bench/2026-11-22-slowlock
+
 - 2026-11-21  1b02fb3  Memory 0022: lessons of session 13 (datasheet in the owner Trash, header names, 16 KB RAM, DMA contention, SCCP dual-16 DMA trigger PRH+2, FFT bins, KiCad-by-script checks)
 
 - 2026-11-21  1a74291  Firmware proto 11 (rp 1.1.4 / pic 1.1.1): capture payload over SPI (frame + CRC-32, 12.5 MHz default, 10.6 ms vs 0.71 s, UART fallback, link/linktest), PIC DAC test signal on DACOUT1 (dac off|dc|tri|sine), USB strings kelu124 / minUS badge; library + fixture + notebooks re-synced; bench docs/bench/2026-11-21-spi-dac
