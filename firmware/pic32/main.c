@@ -70,9 +70,45 @@ static void clocks_init(void) {
     CLK12CONbits.ON = 1; CLK12CONbits.NOSC = 5; CLK12CONbits.OSWEN = 1; while (CLK12CONbits.OSWEN) ; while (CLK12CONbits.CLKRDY == 0) ;
 }
 
+#define RDY_LAT    LATAbits.LATA7
+
+// ---------------------------------------------------------------- slow-lock self-heal (pic 1.1.2)
+// Bench 2026-11-22 (docs/bench/2026-11-22-slowlock/): the "slow" ADC lock (40/60/60 ns sample pattern, datasheet E2) is a
+// per-boot state — after a PLL1 lock either ~all captures are ok or 85-100 % are slow, 6 of 12 boots each; re-sourcing
+// CLKGEN12 does not change it. So the phase between PLL1's dividers (CPU/SCCP = VCO/5, ADC = VCO/4) decides it, and a
+// fresh lock re-rolls it. At boot (and on RELOCK) the PIC test-captures and re-locks PLL1 until the captures are uniform.
+#define LOCK_TEST_N   8u        // test captures per lock; 0 slow required (a mixed state runs ~35 % slow: 0.65^8 = 3 % escape)
+#define LOCK_MAX      12u       // locks tried (p(not good) ~ 0.6 each -> 0.2 % to end not good)
+static unsigned lock_tries, lock_slow;
+static void uart1_init(void);
+static void clocks_relock(void) {
+    AD1CONbits.ON = 0; AD2CONbits.ON = 0;
+    uint32_t g;
+    CLK1CONbits.NOSC = 1;  CLK1CONbits.OSWEN = 1;  g = 2000000; while (CLK1CONbits.OSWEN && --g) ;   // CPU on FRC
+    CLK6CONbits.NOSC = 1;  CLK6CONbits.OSWEN = 1;  g = 2000000; while (CLK6CONbits.OSWEN && --g) ;
+    CLK12CONbits.NOSC = 1; CLK12CONbits.OSWEN = 1; g = 2000000; while (CLK12CONbits.OSWEN && --g) ;
+    PLL1CONbits.ON = 0; OSCCTRLbits.PLL1EN = 0;
+    g = 2000000; while (OSCCTRLbits.PLL1RDY && --g) ;
+    clocks_init();
+    uart1_init();
+    acq_init();
+}
+static unsigned lock_check(void) {           // slow captures out of LOCK_TEST_N (default settings: div 4, last input)
+    unsigned slow = 0; uint32_t t;
+    for (unsigned i = 0; i < LOCK_TEST_N; i++) if (acq_run(&t) == ACQ_SLOW) slow++;
+    RDY_LAT = 0;
+    return slow;
+}
+static void lock_until_uniform(void) {
+    for (lock_tries = 1; ; lock_tries++) {
+        lock_slow = lock_check();
+        if (lock_slow == 0 || lock_tries >= LOCK_MAX) break;
+        clocks_relock();
+    }
+}
+
 // ---------------------------------------------------------------- pins
 #define LED2_LAT   LATCbits.LATC5
-#define RDY_LAT    LATAbits.LATA7
 #define TRIG_PORT  PORTAbits.RA0
 
 static volatile uint32_t trig_edges;
@@ -123,6 +159,7 @@ int main(void) {
     uart1_init();
     acq_init();
     xfer_spi_init();
+    lock_until_uniform();
 
     char line[64]; int len = 0;
     uint32_t beat = 0; int last_trig = TRIG_PORT;
@@ -209,11 +246,9 @@ int main(void) {
                     xfer_set_n(st == ACQ_OK ? ACQ_IL_N : 0);
                     uart1_puts(out);
                 } else if (!strcmp(line, "SPIX")) {
-                    // SPIX: send the last capture (or XTEST pattern) as one SPI frame; the UART reply
-                    // "SPIX <n> <seq> <crc32 hex>" goes out once the TX FIFO is preloaded, then the RP clocks the frame.
-                    // "SPIX 0" = nothing to send. A timeout (RP never clocked) only resets SPI1; the RP falls back to UTX.
-                    if (xfer_get_n() == 0) uart1_puts("SPIX 0\n");
-                    else (void)xfer_spix(uart1_puts, NULL);
+                    // SPIX (proto 12): send the last capture (or XTEST pattern) as one SPI frame, announced on RDY (high = clock
+                    // now, low = done); no UART reply except "SPIX 0" when nothing is pending. The RP falls back to UTX on failure.
+                    (void)xfer_spix(uart1_puts, NULL);
                 } else if (!strcmp(line, "UTX")) {
                     // UTX: the same payload over the UART (fallback / reference): "UTX <n>" then 2n bytes, u16 little-endian
                     unsigned n = xfer_get_n();
@@ -262,6 +297,12 @@ int main(void) {
                     uint32_t guard = 2000000; while (CLK12CONbits.OSWEN && --guard) ;
                     guard = 2000000; while (CLK12CONbits.CLKRDY == 0 && --guard) ;
                     char out[40]; snprintf(out, sizeof out, "CLK12 cosc=%u rdy=%u\n", (unsigned)CLK12CONbits.COSC, (unsigned)CLK12CONbits.CLKRDY);
+                    uart1_puts(out);
+                } else if (!strcmp(line, "LOCK?") || !strcmp(line, "RELOCK")) {
+                    // LOCK? = how the boot-time lock went; RELOCK = redo it now (re-runs acq_init: op amps / UGE back to boot state)
+                    // reply "LOCK <locks tried> <slow captures of 8 in the last test>"
+                    if (line[0] == 'R') lock_until_uniform();
+                    char out[32]; snprintf(out, sizeof out, "LOCK %u %u\n", lock_tries, lock_slow);
                     uart1_puts(out);
                 } else if (!strcmp(line, "ID?")) {
                     uart1_puts("PIC32AK1216GC41048 " FW_NAME " " FW_VERSION " proto " FW_STR(PROTO_VERSION) "\n");

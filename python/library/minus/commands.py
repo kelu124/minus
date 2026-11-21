@@ -11,9 +11,9 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.4"},
-    "pic": {"name": "minus-pic32", "version": "1.1.1"},
-    "proto": 11,
+    "rp": {"name": "minus-rp2354", "version": "1.1.5"},
+    "pic": {"name": "minus-pic32", "version": "1.1.2"},
+    "proto": 12,
 }
 
 
@@ -94,6 +94,8 @@ PIC_LINK: Dict[str, Optional[str]] = {
     "UTX": "acq",            # proto 11: same payload over the UART (link uart / SPI fallback / linktest cross-check)
     "XTEST": "linktest",
     "DAC": "dac",
+    "LOCK?": "pic_lock",     # pic >= 1.1.2: how the boot-time PLL lock went ("LOCK <tries> <slow of 8>")
+    "RELOCK": "pic_lock",    # re-lock now (the RP also sends it after 3 slow captures in a row)
     "CLK12": None,           # clock-source diagnostic: raw("CLK12 n")
 }
 

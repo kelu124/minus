@@ -7,8 +7,8 @@ library [`python/library/minus/`](../python/library/minus/) (kept in sync by `py
 
 | Dir | Chip | Toolchain | Output (committed) | Status |
 |-----|------|-----------|--------------------|--------|
-| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.4**, running on board 3 |
-| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.1, proto 11**, flashed by the RP |
+| `rp2354/` | **RP2354A** (U8, QFN-60, 2 MB in-package flash) | pico-sdk 2.1.0 + arm-none-eabi-gcc + CMake/Ninja | `build/minus_rp.uf2` (embeds the PIC hex) | **rp 1.1.5**, running on board 3 |
+| `pic32/`  | **PIC32AK1216GC41048** (U9, TQFP-48, LCSC C46545915) | Microchip **XC-DSC 3.31.01** + PIC32AK-GC_DFP 1.1.53 | `build/minus_pic.hex` | **pic 1.1.2, proto 12**, flashed by the RP |
 
 Toolchain install and the build/flash walk-through are in the top-level
 [`README.md`](../README.md#getting-started). The older devkits (boards 1/2, `minUS_10102026`) are in git
@@ -83,7 +83,7 @@ Talk to it: `/dev/ttyACM0` (USB CDC, any baud; since rp 1.1.4 it enumerates as m
 The `make -C firmware/pic32 flash` target (MPLAB IPE + PICkit/Snap) is for boards with an ICSP header only;
 v1.1 has none.
 
-## RP CLI commands (rp 1.1.4)
+## RP CLI commands (rp 1.1.5)
 
 | Command | Does |
 |---------|------|
@@ -98,7 +98,7 @@ v1.1 has none.
 | `pulse [hi [lo [dead]]]` | one pulser shot now: +5 V for `hi` ns (200), both FETs off `dead` ns (27, min 4 PIO cycles), GND `lo` ns (500), then released. PIO at 150 MHz = 6.67 ns steps. GPIO8 HIGH = Q2 (N) to GND, GPIO9 LOW = Q1 (P) to +5 V |
 | `pe [hi [lo [in [dead]]]]` | pulse-echo: the pulser fires on the PIC's RDY rise (= ADC start), then `ACQ 4 0 <in> 1` = 4095 samples at ≈ 25 Msps; retried (≤ 8 shots) while the PIC flags the capture `slow`. `in` 25 = AD2AN9 ADC node (default), 17 OA2OUT, 0 OA1OUT, 1 LNA out / OA1IN+. Data: `docs/bench/2026-11-19-pe/` |
 | `acq [div [samc [in [navg]]]]` | PIC captures **4095 samples via DMA**; RP prints `# acq n=4095 fill=…us fs=…Msps rp_fill=…` then one value per line. `div` = SCCP1 trigger period in 5 ns counts (**4 = 25 Msps**, default; 10 = 20 Msps; 5..9 irregular), `samc` 0..7 (0.5 + 2n TAD) or -1 auto, `in` = input code 0..15 ADC1 / 16..31 ADC2 (25 default, as `pe`), `navg` 1 or 2..16 conversions summed per trigger. Arguments persist on the PIC. `rpcli.py … acq --wait=3 --out=capture.csv` saves it |
-| `link [uart\|spi [MHz]]` | payload path for `acq`/`pe`/`acqcpu`/`acqil`: **SPI frame** (default, 12.5 MHz; 18.75 also clean, 25 fails on board 3; CRC-32 checked, UART fallback counted) or UART only (0.71 s). No args = counters. The `# acq` line ends with `link=spi@12.50MHz xfer=…us` (≈ 10.6 ms per capture) |
+| `link [uart\|spi [MHz]]` | payload path for `acq`/`pe`/`acqcpu`/`acqil`: **SPI frame** (default 12.5 MHz = 5.7 ms per capture; 18.75 and 25 MHz also clean in mode 1; CRC-32 checked, UART fallback counted) or UART only (0.71 s). No args = counters. The `# acq` line ends with `link=spi@12.50MHz xfer=…us`. `acq`/`pe` send `RELOCK` to the PIC after 3 slow captures in a row |
 | `linktest [count [MHz]]` | SPI link self-test without a capture: the PIC fills its buffer with an LFSR pattern (`XTEST`), the RP pulls it `count` times (default 10), checks every word + CRC, then once over the UART and compares. Data: `docs/bench/2026-11-21-spi-dac/` |
 | `dac [off \| dc <code> \| tri <lo> <hi> <slope> \| sine <hz> [amp [mid]]]` | PIC DAC1 test signal on DACOUT1 (U9 pin 3 = H6.16 on board 3, = `acq` input **19** = AD2AN3). Codes 205..3890 = 5..95 % of 3.3 V. `tri` = hardware triangle (half period (hi−lo)·16/slope × 4 ns; no bus traffic, use it during captures); `sine` = DMA-fed table, ≤ 128 points, ≥ 1 µs per update — **makes 20–25 Msps captures come back `slow`** (bench 2026-11-21). DAC clock = PLL2 → CLKGEN7 500 MHz |
 | `gain [leg [u1 [u2]]]` | RX gain: `leg` 0..3 = 74HC4052 Rf 2.2k/4.7k/6.8k/10k on both stages (Rg 1 k → ×3.2/×5.7/×7.8/×11 each), `u1`/`u2` = 1 → OA1/OA2 at ×1 via the PIC's `UGE`. No args = show. Data: `docs/bench/2026-11-19-gain/` |
@@ -112,7 +112,7 @@ v1.1 has none.
 The firmware `help()` text still mentions some devkit parts (R53, U11/MCP4531, OLED); the table above is the
 board 3 truth.
 
-## Link protocol (proto 11)
+## Link protocol (proto 12)
 
 ASCII lines, `\n`-terminated, 115 200 8N1 (PIC: FUART = FPB = 100 MHz, `U1BRG` = FPB/115200 = 868, fractional).
 The RP drains the link until it is idle 50 ms before every command.
@@ -120,10 +120,11 @@ The RP drains the link until it is idle 50 ms before every command.
 | RP → PIC | PIC → RP |
 |----------|----------|
 | `PING <n>` | `PONG <n>` (and RDY toggles) |
-| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.1 proto 11` |
+| `ID?` | `PIC32AK1216GC41048 minus-pic32 1.1.2 proto 12` |
 | `TRIG?` | `TRIG <edges counted on RA0>` |
 | `ACQ [div [samc [in [navg]]]]` | `ACQ <n> <ticks> <tick_ns> <ok\|timeout\|dmaerr\|overrun\|slow\|notready>` — header only since proto 11; the payload stays on the PIC until pulled (`SPIX` / `UTX`). `ticks × tick_ns` = fill time on the PIC (Timer1, 80 ns); `slow` = the PIC saw a non-uniform fill (proto 10) |
-| `SPIX` | `SPIX <n> <seq> <crc32 hex>` (or `SPIX 0` = nothing pending), then the PIC feeds SPI1: frame `A5 5A 'M' '1'`, n u16, seq u16, n × u16 LE, CRC-32/IEEE LE of all before = 12 + 2n bytes. The RP clocks it with CS low and checks magic / n / seq / CRC (`link_frame.c`) |
+| `SPIX` | proto 12: **no UART reply** (only `SPIX 0` when nothing is pending). The PIC drops RDY, preloads SPI1, raises RDY = "clock now", feeds the frame `A5 5A 'M' '1'`, n u16, seq u16, n × u16 LE, CRC-32/IEEE LE of all before (12 + 2n bytes, CRC computed while feeding), drops RDY. SPI mode 1. The RP clocks it with CS low and checks magic / n (from the ACQ header) / CRC (`link_frame.c`) |
+| `LOCK?` / `RELOCK` | `LOCK <locks tried> <slow test captures of 8>` — the boot-time PLL1 lock check (re-lock until no test capture is slow); `RELOCK` redoes it now (re-runs acq_init: op amps / UGE back to boot state) |
 | `UTX` | `UTX <n>` then n × u16 little-endian over the UART (fallback, `link uart`, reference) |
 | `XTEST [seed]` | `XTEST 4095 <seed>` — buffer = 16-bit Galois LFSR (0xB400) from seed; for `linktest` |
 | `DAC 0` / `DAC 1 <code>` / `DAC 2 <lo> <hi> <slp>` / `DAC 3 <hz> [amp [mid]]` / `DAC?` | `DAC 0`, `DAC 1 <code>`, `DAC 2 <lo> <hi> <slp>`, `DAC 3 <hz> <points> <update counts> <amp> <mid>`, or `DAC ERR args\|noclk` |

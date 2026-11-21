@@ -209,9 +209,18 @@ class Minus:
         """``raw ID?`` -> PIC part, firmware name, version, protocol. Retries once: the first link line after an RP
         reboot can go unanswered."""
         reply = self.raw("ID?")
-        if reply is None:
+        for _ in range(3):                  # no reply, or the boot banner of a PIC that was just reset (its boot now
+            if reply and reply.startswith("PIC32AK"):   # includes the PLL lock check, pic >= 1.1.2): ask again
+                break
+            time.sleep(0.05)
             reply = self.raw("ID?")
         return P.parse_pic_ident(reply)
+
+    def pic_lock(self, relock: bool = False) -> P.PicLock:
+        """PIC PLL lock state (pic >= 1.1.2). At boot the PIC test-captures and re-locks PLL1 until its captures are uniform
+        (the 'slow' 40/60/60 ns ADC pattern is a per-lock state, bench 2026-11-22). ``relock=True`` redoes it now; that
+        re-runs the PIC's acq_init (op amps back to boot state: call ``gain(...)`` again)."""
+        return P.parse_pic_lock(self.raw("RELOCK" if relock else "LOCK?"))
 
     def trig_count(self) -> int:
         """``raw TRIG?`` -> number of TRIG rising edges the PIC has counted."""

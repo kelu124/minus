@@ -137,6 +137,8 @@ class TestDevice(unittest.TestCase):
         self.assertEqual((sn.mode, sn.points, sn.amp, sn.mid), ("sine", 50, 800, 2048))
         self.assertEqual(self.d.dac("off").mode, "off")
         self.assertEqual(self.d.dac().mode, "off")
+        lk = self.d.pic_lock()
+        self.assertTrue(lk.good and lk.tries >= 1)
         with self.assertRaises(ValueError):
             self.d.dac("tri", 1, 2)
 

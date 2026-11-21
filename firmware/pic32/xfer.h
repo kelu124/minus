@@ -15,8 +15,9 @@ uint32_t crc32_update(uint32_t crc, const uint8_t *p, unsigned n);   // CRC-32/I
 void     xfer_spi_init(void);           // SPI1 client, mode 0, 8-bit, SS enabled (PPS set in main.c pps_init)
 void     xfer_set_n(unsigned n);        // samples available in acq_buf for SPIX/UTX (0 = none)
 unsigned xfer_get_n(void);
-// SPIX: computes the frame CRC, preloads the TX FIFO, calls reply(line) (the UART answer), then feeds the FIFO until the
-// RP has clocked every byte out or the budget runs out. Returns 0 ok, -1 nothing to send, -2 timeout (SPI reset).
+// SPIX (proto 12): drops RDY, preloads the TX FIFO, raises RDY ("clock now"), feeds header + payload + CRC (computed on the
+// fly) until the RP clocked everything or the budget ran out, drops RDY. No UART reply, except "SPIX 0" when nothing is
+// pending (reply). Returns 0 ok, -1 nothing to send, -2 timeout (SPI reset).
 int      xfer_spix(void (*reply)(const char *), uint16_t *seq_out);
 void     xfer_xtest(unsigned seed); // fill acq_buf[ACQ_N] with the 16-bit LFSR pattern (x ^= ..., Galois 0xB400), n = ACQ_N
 uint16_t xfer_lfsr_next(uint16_t x);

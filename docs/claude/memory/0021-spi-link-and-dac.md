@@ -1,6 +1,6 @@
 # 0021 — SPI capture payload link + PIC DAC test signal (2026-11-21, session 13)
 
-**Status:** current · rp 1.1.4 / pic 1.1.1, **proto 11** · design `docs/claude/specs/2026-11-21-dac-spi-link-design.md` ·
+**Status:** current · rp 1.1.5 / pic 1.1.2, **proto 12** (was 11 on 2026-11-21) · design `docs/claude/specs/2026-11-21-dac-spi-link-design.md` ·
 bench `docs/bench/2026-11-21-spi-dac/`
 
 ## SPI payload link
@@ -32,3 +32,19 @@ bench `docs/bench/2026-11-21-spi-dac/`
 - `acq` now prints a line when all 8 tries were `slow` (it used to print nothing).
 - Library: `Minus.link()`, `linktest()`, `dac()`; `Capture.link` / `.xfer_us` from the `# acq` line tail; parsers use
   `_fail_on_usage` because their normal lines start with `<cmd>:`.
+
+## Proto 12 (2026-11-22, rp 1.1.5 / pic 1.1.2)
+- `SPIX` has **no reply line**: the PIC drops RDY, preloads its FIFO, raises RDY ("clock now"), computes the CRC while
+  feeding, drops RDY when done. The RP waits for the `SPIX\n` to leave its UART + 20 us, then for RDY high (5 ms max).
+  SPIX → RDY = 455 us (5 UART characters).
+- **SPI mode 1** (RP CPHA 1, PIC CKE 0): the PL022 in mode 0 pulses its frame signal between bytes (+1 bit each, +19 %).
+  12.5 MHz → 5.7 ms per capture; 18.75 → 3.96; **25 MHz now clean** (3000/3000 frames) — mode 1 samples on the other edge.
+- Host side: an `acq` took 185 ms end to end; 50 ms was `link_flush_rx`'s idle window (now 2 ms) and the rest the 24.8 KB
+  of text at ~200 kB/s → 4 KB blocks give 107 ms. The cap left is pico-sdk's hard-coded 256-byte CDC TX buffer
+  (~270 kB/s; a `-DCFG_TUD_CDC_TX_BUFSIZE` has no effect). Next lever: a compact output format (base64 ~11 KB).
+
+## Slow lock = per-PLL-lock state (bench docs/bench/2026-11-22-slowlock/)
+- After a PLL1 lock the ADC either never or almost always (85–100 %) locks to the 40/60/60 ns pattern; ~half the boots;
+  plus a rarer mixed state (~35 %). Re-sourcing CLKGEN12 does not change it; a new PLL1 lock does.
+- pic 1.1.2 re-locks at boot until 8 test captures are all uniform (≤ 12 locks): 19/20 boots clean; `raw LOCK?` reports it.
+  The RP sends `RELOCK` after 3 slow captures in a row and restores UGE (RELOCK re-runs acq_init).

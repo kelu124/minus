@@ -43,8 +43,10 @@ chain in `main.c`, to `help()`, to the table in `firmware/README.md`, bump PATCH
 
 ## Capture payload over SPI (proto 11, 2026-11-21)
 `ACQ`/`ACQCPU`/`ACQIL` send the header line only; the RP pulls the samples with `SPIX` (SPI0 master GPIO2/4, CS GPIO5 →
-PIC SPI1 client RD1/RC2/RD0, frame + CRC-32 checked in `rp2354/link_frame.c`, host test `rp2354/tests`) or `UTX` (UART
-fallback). `link [uart|spi [MHz]]` (12.5 MHz default; 18.75 clean, 25 fails), `linktest [n [MHz]]` checks it with no capture.
+PIC SPI1 client RD1/RC2/RD0, **mode 1**; proto 12: frame announced on **RDY**, no reply line; frame + CRC-32 checked in
+`rp2354/link_frame.c`, host test `rp2354/tests`) or `UTX` (UART fallback). `link [uart|spi [MHz]]` (12.5 MHz default, 5.7 ms;
+18.75 and 25 MHz clean), `linktest [n [MHz]]` checks it with no capture. **Slow lock = per-PLL-lock state**: the PIC re-locks
+at boot until uniform (`raw LOCK?`), the RP sends `RELOCK` after 3 slow captures (docs/bench/2026-11-22-slowlock).
 `dac off|dc|tri|sine` drives DACOUT1 (U9 pin 3, `acq … 19` = AD2AN3): use `tri` during captures; the DMA `sine` makes
 20–25 Msps captures `slow`. USB: manufacturer `kelu124`, product `minUS badge`. Design: `docs/claude/specs/2026-11-21-dac-spi-link-design.md`.
 
@@ -59,7 +61,7 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.4 / pic 1.1.1, proto 11)
+## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.5 / pic 1.1.2, proto 12)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.

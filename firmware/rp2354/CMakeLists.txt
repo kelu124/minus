@@ -35,5 +35,7 @@ target_link_libraries(minus_rp pico_stdlib hardware_uart hardware_spi hardware_p
 pico_enable_stdio_usb(minus_rp 1)    # CLI over USB-C CDC
 # USB descriptor strings (owner, 2026-11-21); VID/PID stay 2E8A:0009 (pico-sdk CDC), serial = the RP unique board id (sdk default)
 target_compile_definitions(minus_rp PRIVATE USBD_MANUFACTURER="kelu124" USBD_PRODUCT="minUS badge")
+# (USB CDC TX buffer: pico-sdk hard-codes 256 B in pico_stdio_usb/include/tusb_config.h, which caps capture text at ~270 kB/s
+#  — a -D here has no effect; bench 2026-11-22.)
 pico_enable_stdio_uart(minus_rp 0)   # UART0 is the PIC link, not a console
 pico_add_extra_outputs(minus_rp)     # .uf2 / .bin / .hex

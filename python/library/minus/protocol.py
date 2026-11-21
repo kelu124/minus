@@ -288,6 +288,24 @@ def parse_capture(lines: List[str], cmd: str = "acq") -> Capture:
 _LINK_TAIL = re.compile(r" link=(spi@[\d.]+MHz|uart(?:\(.*\))?) xfer=(\d+)us$")
 
 
+@dataclass
+class PicLock:
+    """``raw LOCK?`` / ``raw RELOCK``: PLL1 locks tried at the last (re)lock and slow test captures (of 8) of the final one."""
+    tries: int
+    slow: int
+
+    @property
+    def good(self) -> bool:
+        return self.slow == 0
+
+
+def parse_pic_lock(reply: Optional[str]) -> PicLock:
+    m = re.match(r"^LOCK (\d+) (\d+)$", reply or "")
+    if not m:
+        raise MinusError(f"LOCK? -> {reply!r}")
+    return PicLock(int(m[1]), int(m[2]))
+
+
 # ------------------------------------------------------------------------------------------------ SPI link + DAC (proto 11)
 @dataclass
 class LinkStatus:

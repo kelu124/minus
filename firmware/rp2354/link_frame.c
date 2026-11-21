@@ -14,23 +14,15 @@ uint32_t link_crc32(uint32_t crc, const uint8_t *p, unsigned n) {
 
 uint16_t link_lfsr_next(uint16_t x) { return (uint16_t)((x >> 1) ^ ((x & 1u) ? 0xB400u : 0u)); }
 
-int link_parse_spix(const char *line, unsigned *n, unsigned *seq, uint32_t *crc) {
-    unsigned a, b; unsigned long c; int used = 0;
-    if (sscanf(line, "SPIX %u %u %lx%n", &a, &b, &c, &used) != 3 || line[used] != 0) return 0;
-    if (a == 0 || a > LINK_MAX_N) return 0;
-    *n = a; *seq = b; *crc = (uint32_t)c;
-    return 1;
-}
-
-link_err_t link_frame_check(const uint8_t *f, unsigned len, unsigned n, unsigned seq, uint32_t crc, link_frame_t *out) {
+link_err_t link_frame_check(const uint8_t *f, unsigned len, unsigned n, long seq, link_frame_t *out) {
     if (len < LINK_FRAME_LEN(0)) return LINK_ELEN;
     if (f[0] != 0xA5u || f[1] != 0x5Au || f[2] != 'M' || f[3] != '1') return LINK_EMAGIC;
     unsigned fn = (unsigned)f[4] | (unsigned)f[5] << 8, fs = (unsigned)f[6] | (unsigned)f[7] << 8;
-    if (fn != n || fs != (seq & 0xFFFFu)) return LINK_EHDR;
+    if (fn != n || (seq >= 0 && fs != ((unsigned long)seq & 0xFFFFu))) return LINK_EHDR;
     if (len != LINK_FRAME_LEN(n)) return LINK_ELEN;
     uint32_t c = link_crc32(0, f, len - 4), tail = 0;
     for (unsigned k = 0; k < 4; k++) tail |= (uint32_t)f[len - 4 + k] << (8 * k);
-    if (c != tail || c != crc) return LINK_ECRC;
+    if (c != tail) return LINK_ECRC;
     if (out) { out->n = fn; out->seq = fs; out->crc = c; out->payload = f + 8; }
     return LINK_OK;
 }

@@ -40,7 +40,8 @@
 #define LINK_UART      uart0
 #define LINK_BAUD      115200
 #define LINK_TIMEOUT_US 200000   // 200 ms for a one-line reply (PIC answers within ~1 ms)
-#define LINK_IDLE_US    50000    // link_flush_rx: drain until the PIC has been silent this long
+#define LINK_IDLE_US    2000     // link_flush_rx: drain until the PIC has been silent this long (was 50 ms while the PIC pushed
+                                 // 0.7 s payloads unasked; since proto 11 it only streams on UTX, 23 characters per 2 ms)
 #define LINK_DRAIN_MAX_US 2000000 // ... but never longer than this (a PIC that never goes quiet must not hang the CLI)
 
 static uint32_t stat_sent, stat_ok, stat_bad, stat_timeout;
@@ -194,30 +195,42 @@ static uint8_t  link_buf[LINK_FRAME_LEN(LINK_MAX_N)];
 
 static void link_spi_init(void) {
     link_spi_hz = spi_init(LINK_SPI, LINK_SPI_HZ_DEF);
-    spi_set_format(LINK_SPI, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    spi_set_format(LINK_SPI, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);   // mode 1: no inter-byte gap (mode 0 on the PL022 costs ~19 %)
     gpio_set_function(MINUS_PIN_SPI_SCK, GPIO_FUNC_SPI);
     gpio_set_function(MINUS_PIN_SPI_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(MINUS_PIN_SPI_MISO, GPIO_FUNC_SPI);
     gpio_init(MINUS_PIN_SPI_CS); gpio_put(MINUS_PIN_SPI_CS, 1); gpio_set_dir(MINUS_PIN_SPI_CS, GPIO_OUT);
 }
 
-// Ask for the pending payload as an SPI frame. 0 = ok (*payload points into link_buf), -1 = failed (why filled in).
+// Ask for the pending payload as an SPI frame (proto 12): "SPIX" on the UART, the PIC preloads its FIFO and raises RDY,
+// the RP clocks the frame with CS low; no reply line. 0 = ok (*payload points into link_buf), -1 = failed (why filled in).
+static int64_t lk_last_ready_us = -1, lk_last_wire_us = -1;
 static int link_spi_fetch(unsigned want_n, const uint8_t **payload, int64_t *us, char *why, unsigned whylen) {
-    char rx[64];
     absolute_time_t t0 = get_absolute_time();
     link_puts("SPIX\n");
-    if (link_readline(rx, sizeof rx, LINK_TIMEOUT_US) < 0) { lk_noreply++; snprintf(why, whylen, "no SPIX reply"); return -1; }
-    unsigned n, seq; uint32_t crc;
-    if (!link_parse_spix(rx, &n, &seq, &crc)) { lk_frame_err++; snprintf(why, whylen, "bad reply '%.40s'", rx); return -1; }
-    if (want_n && n != want_n) { lk_frame_err++; snprintf(why, whylen, "n=%u, expected %u", n, want_n); return -1; }
-    unsigned len = LINK_FRAME_LEN(n);
+    uart_tx_wait_blocking(LINK_UART);                    // the '\n' has left: the PIC parses SPIX within a few us
+    busy_wait_us(20);                                    // past its RDY drop (RDY may be high from an old PING toggle)
+    absolute_time_t dl = make_timeout_time_us(5000);
+    while (!gpio_get(MINUS_PIN_RDY) && !time_reached(dl)) {
+        if (uart_is_readable(LINK_UART)) break;          // "SPIX 0" = nothing pending
+    }
+    if (!gpio_get(MINUS_PIN_RDY)) {
+        char rx[48] = "";
+        int r = link_readline(rx, sizeof rx, 2000);
+        lk_noreply++; snprintf(why, whylen, r >= 0 ? "PIC said '%.30s'" : "no RDY from the PIC", rx);
+        return -1;
+    }
+    absolute_time_t t1 = get_absolute_time();
+    unsigned len = LINK_FRAME_LEN(want_n);
     gpio_put(MINUS_PIN_SPI_CS, 0);
     busy_wait_us(1);                                     // SS1 set-up on the PIC side
     spi_read_blocking(LINK_SPI, 0x00, link_buf, len);
     gpio_put(MINUS_PIN_SPI_CS, 1);
+    absolute_time_t t2 = get_absolute_time();
     link_frame_t fr;
-    link_err_t e = link_frame_check(link_buf, len, n, seq, crc, &fr);
-    *us = absolute_time_diff_us(t0, get_absolute_time());
+    link_err_t e = link_frame_check(link_buf, len, want_n, LINK_ANY_SEQ, &fr);
+    *us = absolute_time_diff_us(t0, t2);
+    lk_last_ready_us = absolute_time_diff_us(t0, t1); lk_last_wire_us = absolute_time_diff_us(t1, t2);
     if (e != LINK_OK) { lk_frame_err++; snprintf(why, whylen, "frame %s", link_err_name(e)); return -1; }
     lk_frames++; lk_last_us = *us; lk_last_bytes = len;
     *payload = fr.payload;
@@ -542,6 +555,20 @@ static const char *acq_in_name(int in) {
     default: return in < 16 ? "ADC1 input" : "ADC2 input";
     }
 }
+// PIC slow lock (pic >= 1.1.2): a PLL1 lock can leave the ADC in the 40/60/60 ns pattern for good (bench 2026-11-22). The PIC
+// re-locks at boot until uniform; if captures still come back slow 3 times in a row, ask it to re-lock now ("RELOCK" re-runs
+// its acq_init, so the op-amp unity-gain bits are restored from the RP's gain state afterwards).
+static unsigned gain_u1_cur(void);
+static unsigned gain_u2_cur(void);
+static void pic_relock(void) {
+    char rx[48] = "", tx[24];
+    link_flush_rx(); link_puts("RELOCK\n");
+    int r = link_readline(rx, sizeof rx, 1000000);
+    snprintf(tx, sizeof tx, "UGE %u %u\n", gain_u1_cur(), gain_u2_cur());
+    link_puts(tx); char rx2[32]; link_readline(rx2, sizeof rx2, LINK_TIMEOUT_US);
+    printf("# PIC re-locked its PLL after 3 slow captures: %s\n", r >= 0 ? rx : "no reply");
+}
+
 static void cmd_acq(const char *arg) {
     char hdr[96];
     unsigned div = 0; int samc = -2; int in = -1; int navg = 0;            // div 0 = PIC default; samc -2 / in -1 / navg 0 = not given
@@ -567,7 +594,10 @@ static void cmd_acq(const char *arg) {
     // the PIC answers "slow" (no payload) when the ADC locked to the 40/60/60 ns pattern: capture again, up to 8 times
     char cmdline[96]; memcpy(cmdline, hdr, sizeof cmdline);
     int tries = 1, r;
-    while ((r = acq_receive(hdr, sizeof hdr, note, 0xFFFFFFFFul)) == 1 && tries < 8) { tries++; link_flush_rx(); memcpy(hdr, cmdline, sizeof cmdline); link_puts(hdr); }
+    while ((r = acq_receive(hdr, sizeof hdr, note, 0xFFFFFFFFul)) == 1 && tries < 8) {
+        if (tries == 3) pic_relock();
+        tries++; link_flush_rx(); memcpy(hdr, cmdline, sizeof cmdline); link_puts(hdr);
+    }
     if (r == 1) printf("acq: %d captures, every one had a non-uniform (slow) sample clock — nothing printed (DMA busy elsewhere, e.g. 'dac sine'? try div 10)\n", tries);
 }
 // pe [hi_ns [lo_ns [in [dead_ns]]]]: pulse-echo. Arms the pulser on the PIC's RDY rising edge (the PIC raises RDY
@@ -593,7 +623,7 @@ static void cmd_pe(const char *arg) {
         r = acq_receive(hdr, sizeof hdr, note, max_fill_ns);
         fired = pulser_fired();
         pulser_disarm();
-        if (r == 1) sleep_ms(2);   // a different start phase next time
+        if (r == 1) { sleep_ms(2); if (tries == 3) pic_relock(); }   // a different start phase next time; re-lock after 3
     }
     if (r == 1) printf("pe: %d shots, every capture had a non-uniform (slow) sample clock — nothing printed\n", tries);
     printf("# pulse %s, %d shot(s)\n", fired ? "fired" : "did NOT fire (no RDY edge)", tries);
@@ -613,6 +643,8 @@ static void cmd_gain(const char *arg) {
     }
     char d[160]; gain_desc(d, sizeof d); printf("%s\n", d);
 }
+static unsigned gain_u1_cur(void) { return gain_u1; }
+static unsigned gain_u2_cur(void) { return gain_u2; }
 // pc [0|1]: PIC-side period-4 fixed-pattern correction (on at PIC boot) off/on; prints state + the last capture's offsets
 static void cmd_pc(const char *arg) {
     char tx[16], rx[64];
@@ -681,7 +713,14 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     const uint8_t *payload = link_fetch(h.n, info, sizeof info);   // proto 11: the RP pulls the payload (SPI, UART fallback)
     if (!payload) return -1;
     printf("# acq n=%u %s rp_fill=%lldus (RDY window timed by the RP crystal) %s %s\n", h.n, rate, (long long)rp_fill_us, note, info);
-    for (unsigned i = 0; i < h.n; i++) printf("%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
+    // one printf per line runs at ~200 kB/s over USB CDC; 4 KB blocks run several times faster (bench 2026-11-22)
+    static char tbuf[4096]; unsigned tl = 0;
+    for (unsigned i = 0; i < h.n; i++) {
+        tl += (unsigned)snprintf(tbuf + tl, sizeof tbuf - tl, "%u\n", (unsigned)payload[2 * i] | (unsigned)payload[2 * i + 1] << 8);
+        if (tl > sizeof tbuf - 16) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
+    }
+    if (tl) fwrite(tbuf, 1, tl, stdout);
+    fflush(stdout);
     return 0;
 }
 
@@ -722,7 +761,7 @@ static void cmd_linktest(const char *arg) {
     if (count < 1 || count > 10000) { printf("usage: linktest [count 1..10000 [MHz 0.1..25]]\n"); return; }
     link_flush_rx();
     unsigned ok = 0, ferr = 0, werr_frames = 0, noreply = 0; unsigned long werr_words = 0;
-    int64_t tsum = 0, tmin = INT64_MAX, tmax = 0; uint16_t seed = 1; char rx[64], why[80];
+    int64_t tsum = 0, tmin = INT64_MAX, tmax = 0, rsum = 0, wsum = 0; uint16_t seed = 1; char rx[64], why[80];
     absolute_time_t t_all = get_absolute_time();
     for (unsigned i = 0; i < count; i++) {
         seed = (uint16_t)((i * 7919u + 1u) & 0xFFFFu); if (!seed) seed = 1;
@@ -738,6 +777,7 @@ static void cmd_linktest(const char *arg) {
         if (bad) { werr_frames++; werr_words += bad; }
         else ok++;
         tsum += us; if (us < tmin) tmin = us; if (us > tmax) tmax = us;
+        rsum += lk_last_ready_us; wsum += lk_last_wire_us;
     }
     int64_t t_total = absolute_time_diff_us(t_all, get_absolute_time());
     unsigned bytes = LINK_FRAME_LEN(LINK_MAX_N);
@@ -747,6 +787,8 @@ static void cmd_linktest(const char *arg) {
         double mean = (double)tsum / (ok + werr_frames);
         printf("linktest: SPIX request+frame %.0f us mean (min %lld, max %lld) = %.0f kB/s; wire time alone %.0f us; %u frames in %.2f s\n",
                mean, (long long)tmin, (long long)tmax, bytes * 1e3 / mean, bytes * 8e6 / link_spi_hz, count, t_total / 1e6);
+        printf("linktest: of which SPIX -> RDY %.0f us, SPI clocking %.0f us (mean)\n",
+               (double)rsum / (ok + werr_frames), (double)wsum / (ok + werr_frames));
     }
     // the last pattern over the UART: must be identical
     int64_t us; why[0] = 0;

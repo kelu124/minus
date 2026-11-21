@@ -1,0 +1,134 @@
+[
+ {
+  "try": 0,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 1,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 2,
+   "slow": 8
+  }
+ },
+ {
+  "try": 2,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 6,
+   "slow": 4
+  }
+ },
+ {
+  "try": 3,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 4,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 5,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 6,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 7,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 2,
+   "slow": 8
+  }
+ },
+ {
+  "try": 8,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 1,
+   "slow": 9
+  }
+ },
+ {
+  "try": 9,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 4,
+   "slow": 6
+  }
+ },
+ {
+  "try": 10,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 2,
+   "slow": 8
+  }
+ },
+ {
+  "try": 11,
+  "clk12": [
+   "CLK12 cosc=1 rdy=1",
+   "CLK12 cosc=5 rdy=1"
+  ],
+  "status": {
+   "ok": 4,
+   "slow": 6
+  }
+ }
+]

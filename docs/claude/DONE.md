@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-22: proto 12 (rp 1.1.5 / pic 1.1.2): `SPIX` announced on RDY with on-the-fly CRC, SPI mode 1 → 5.7 ms per capture,
+  25 MHz clean; **slow lock = per-PLL-lock state** (12/20-boot studies) + PIC boot re-lock + RP `RELOCK` → 100/100 `acq` ok over
+  20 boots; link idle 50 → 2 ms and block-buffered text → `acq` 185 → 107 ms end to end; library `pic_lock()`; fixture +
+  notebooks re-run (`docs/bench/2026-11-22-slowlock/`).
 - 2026-11-21: **SPI capture payload link** (proto 11, rp 1.1.4 / pic 1.1.1): PIC SPI1 client frame + CRC-32, RP pulls it at
   12.5 MHz (10.6 ms vs 0.71 s), UART fallback, `link` / `linktest`; **PIC DAC test signal** `dac off|dc|tri|sine` on DACOUT1
   (PLL2 → CLKGEN7 500 MHz); USB strings kelu124 / "minUS badge"; library + fixture + notebooks (03 §5) re-synced;

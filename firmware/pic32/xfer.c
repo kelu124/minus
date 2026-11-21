@@ -51,8 +51,8 @@ void xfer_spi_init(void) {
     SPI1CON2 = 0;                           // WLENGTH 0 = MODE32/MODE16 decide: 8-bit
     SPI1CON1bits.MSTEN  = 0;                // client
     SPI1CON1bits.SSEN   = 1;                // SS1 pin frames the transfer (SDO idle while SS is high)
-    SPI1CON1bits.CKP    = 0;                // idle low  } RP SPI_CPOL_0 / SPI_CPHA_0
-    SPI1CON1bits.CKE    = 1;                // out on active->idle (falling), RP samples on rising
+    SPI1CON1bits.CKP    = 0;                // idle low  } RP SPI_CPOL_0 / SPI_CPHA_1 = mode 1 (pic 1.1.2): the RP PL022 in mode 0
+    SPI1CON1bits.CKE    = 0;                // } pulses its frame signal between bytes (+1 bit each, ~19 %); mode 1 streams. Out on rising, RP samples on falling
     SPI1CON1bits.SMP    = 0;                // must be 0 in client mode
     SPI1CON1bits.ENHBUF = 1;                // FIFO
     SPI1CON1bits.DISSDI = 1;                // we only transmit
@@ -60,50 +60,54 @@ void xfer_spi_init(void) {
     SPI1CON1bits.ON     = 1;
 }
 
-// frame segments: header, payload, crc; fed in order
-static const uint8_t *seg_p[3];
-static unsigned seg_n[3];
-static unsigned seg_i, seg_off;
+// Proto 12: no UART reply. The frame is announced on RDY (RA7 -> RP GPIO7, idle low after a capture): low while the
+// FIFO is preloaded, high = "clock now", low again once the last byte left (or on timeout). The CRC is computed while
+// feeding, so the RP can start clocking ~10 us after SPIX instead of after a full-buffer CRC + a 25-character reply.
+#define RDY_LAT LATAbits.LATA7
 
-static int feed(int blocking, uint32_t *budget) {
-    while (seg_i < 3) {
-        if (seg_off >= seg_n[seg_i]) { seg_i++; seg_off = 0; continue; }
-        if (SPI1STATbits.SPITBF) {
-            if (!blocking) return 1;
-            if (--*budget == 0) return -2;
-            continue;
-        }
-        SPI1BUF = seg_p[seg_i][seg_off++];
-    }
-    return 0;
-}
+static uint32_t crc_t[16] = {
+    0x00000000u, 0x1DB71064u, 0x3B6E20C8u, 0x26D930ACu, 0x76DC4190u, 0x6B6B51F4u, 0x4DB26158u, 0x5005713Cu,
+    0xEDB88320u, 0xF00F9344u, 0xD6D6A3E8u, 0xCB61B38Cu, 0x9B64C2B0u, 0x86D3D2D4u, 0xA00AE278u, 0xBDBDF21Cu };
 
 int xfer_spix(void (*reply)(const char *), uint16_t *seq_out) {
-    static uint8_t hdr[XFER_HDR], tail[4];
-    if (xfer_n == 0) return -1;
+    static uint8_t hdr[XFER_HDR];
+    if (xfer_n == 0) { reply("SPIX 0\n"); return -1; }
+    RDY_LAT = 0;
     xfer_seq++;
-    unsigned nb = 2u * xfer_n;
     hdr[0] = XFER_MAGIC0; hdr[1] = XFER_MAGIC1; hdr[2] = XFER_MAGIC2; hdr[3] = XFER_MAGIC3;
     hdr[4] = (uint8_t)(xfer_n & 0xFFu); hdr[5] = (uint8_t)(xfer_n >> 8);
     hdr[6] = (uint8_t)(xfer_seq & 0xFFu); hdr[7] = (uint8_t)(xfer_seq >> 8);
-    uint32_t crc = crc32_update(0, hdr, XFER_HDR);
-    crc = crc32_update(crc, (const uint8_t *)acq_buf, nb);
-    for (unsigned k = 0; k < 4; k++) tail[k] = (uint8_t)(crc >> (8 * k));
-    seg_p[0] = hdr;  seg_n[0] = XFER_HDR;
-    seg_p[1] = (const uint8_t *)acq_buf; seg_n[1] = nb;
-    seg_p[2] = tail; seg_n[2] = 4;
-    seg_i = 0; seg_off = 0;
+    const uint8_t *pay = (const uint8_t *)acq_buf;
+    unsigned nb = 2u * xfer_n, total = XFER_HDR + nb, i = 0;
+    uint32_t crc = 0xFFFFFFFFu, budget = XFER_BUDGET;
+    int raised = 0, r = 0;
     spi_reset();                            // start from an empty FIFO / shift register
-    uint32_t budget = XFER_BUDGET;
-    feed(0, &budget);                       // preload the FIFO, then tell the RP to clock
-    char line[48];
-    snprintf(line, sizeof line, "SPIX %u %u %08lX\n", xfer_n, (unsigned)xfer_seq, (unsigned long)crc);
-    reply(line);
-    int r = feed(1, &budget);
-    if (r == 0) {                           // all bytes queued: wait until the RP clocked the last one out
+    while (i < total) {                     // header + payload, CRC on the fly
+        if (SPI1STATbits.SPITBF) {
+            if (!raised) { RDY_LAT = 1; raised = 1; }    // FIFO full: the RP may clock
+            if (--budget == 0) { r = -2; break; }
+            continue;
+        }
+        uint8_t b = i < XFER_HDR ? hdr[i] : pay[i - XFER_HDR];
+        SPI1BUF = b;
+        crc ^= b; crc = (crc >> 4) ^ crc_t[crc & 15u]; crc = (crc >> 4) ^ crc_t[crc & 15u];
+        i++;
+    }
+    crc = ~crc;
+    for (unsigned k = 0; k < 4 && r == 0; ) {           // CRC-32 LE tail
+        if (SPI1STATbits.SPITBF) {
+            if (!raised) { RDY_LAT = 1; raised = 1; }
+            if (--budget == 0) { r = -2; break; }
+            continue;
+        }
+        SPI1BUF = (uint8_t)(crc >> (8 * k)); k++;
+    }
+    if (!raised) RDY_LAT = 1;               // tiny frame that fit in the FIFO
+    if (r == 0) {                           // wait until the RP clocked the last byte out
         while ((SPI1STATbits.TXELM != 0 || !SPI1STATbits.SRMT) && --budget) ;
         if (!budget) r = -2;
     }
+    RDY_LAT = 0;
     if (r != 0) spi_reset();                // timed out: drop what is left so the next frame starts clean
     if (seq_out) *seq_out = xfer_seq;
     return r;
