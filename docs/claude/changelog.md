@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  299a809  Proto 14 (rp 1.1.7 / pic 1.1.4): fmt b64 sample output (30 vs 110 ms per capture), tgc gain-leg steps (switch transient ~17 us), ACQ navg reset, acqos RF warning; library b64 + tgc + framing fix (split end-marker line); bench docs/bench/2026-11-22-tgc-b64
+
 - 2026-11-22  6ae0bf3  Proto 13 (rp 1.1.6 / pic 1.1.3): ADC extras for pulse-echo — acqos 4|16 (hardware oversampling, 13/14-bit), tof (ADC comparator time of flight, 8.9 ms), env (on-PIC envelope, multi-shot average); library + fixture + notebook 02; bench docs/bench/2026-11-22-adc-extras
 
 - 2026-11-22  3114543  Proto 12 (rp 1.1.5 / pic 1.1.2): SPIX announced on RDY, SPI mode 1 (5.7 ms per capture, 25 MHz clean), slow lock shown to be a per-PLL-lock state + boot re-lock / RELOCK (100/100 acq over 20 boots), host output 185 -> 107 ms; bench docs/bench/2026-11-22-slowlock
