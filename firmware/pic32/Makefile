@@ -24,7 +24,7 @@ GLD     := $(DFP)/$(DFPSUB)/support/PIC32A/gld/p$(DEVICE).gld
 LDFLAGS := -mcpu=$(DEVICE) -Wl,--gc-sections,-Map=build/minus_pic.map -T $(GLD) \
           $(if $(DFP),-mdfp=$(DFP)/$(DFPSUB),)
 
-SRC := main.c acq.c dac.c xfer.c
+SRC := main.c acq.c dac.c xfer.c pe_ext.c
 OBJ := $(SRC:%.c=build/%.o)
 
 all: build/minus_pic.hex
@@ -34,7 +34,7 @@ info:
 	@test -x "$(CC)" && $(CC) --version | head -1 || echo "xc-dsc-gcc not found"
 	@grep -h "FW_VERSION_\(MAJOR\|MINOR\|PATCH\)" version.h | tr -s ' ' | cut -d' ' -f2,3 | tr '\n' ' '; echo
 
-build/%.o: %.c version.h acq.h dac.h xfer.h | build
+build/%.o: %.c version.h acq.h dac.h xfer.h pe_ext.h | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/minus_pic.elf: $(OBJ)

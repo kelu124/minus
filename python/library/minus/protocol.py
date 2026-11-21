@@ -289,6 +289,74 @@ _LINK_TAIL = re.compile(r" link=(spi@[\d.]+MHz|uart(?:\(.*\))?) xfer=(\d+)us$")
 
 
 @dataclass
+class Tof:
+    """``tof``: first sample after the blank with |x - ref| > thr, computed on the PIC (no A-line transfer)."""
+    found: bool
+    index: Optional[int]           # sample index of the first crossing
+    t_ns: Optional[float]          # its time from the capture start (= the pulse)
+    depth_mm: Optional[float]      # one-way depth at 1540 m/s
+    peak_lsb: Optional[int]        # largest |x - ref| in the 64 samples from the crossing
+    peak_index: Optional[int]
+    ref: int
+    hw_tripped: bool               # the ADC channel comparator flag (2048 +- thr when ref is automatic)
+    dt_ns: float
+    pulse_fired: bool
+    raw: str = field(default="", repr=False)
+
+
+def parse_tof(lines: List[str]) -> Tof:
+    _fail_on_usage(lines, "tof")
+    ln = next((l for l in lines if l.startswith("tof: ")), None)
+    if ln is None:
+        raise MinusError(f"tof -> {lines[0] if lines else 'no output'}")
+    fired = "pulse fired" in ln
+    dt = float(_match(r"dt=([\d.]+)ns", ln, "tof")[1]) if re.search(r"dt=", ln) else float("nan")
+    if ln.startswith("tof: none"):
+        m = _match(r"ref (\d+) after", ln, "tof")
+        return Tof(False, None, None, None, None, None, int(m[1]), "tripped" in ln, dt, fired)
+    m = re.match(r"^tof: first crossing at sample (\d+) = ([\d.]+) ns .* -> ([\d.]+) mm at 1540 m/s\); peak (\d+) LSB at sample "
+                 r"(-?\d+) .*; ref (\d+) \(.*\); hw comparator (tripped|quiet)", ln)
+    if not m:
+        raise MinusError(f"tof -> {ln}")
+    return Tof(True, int(m[1]), float(m[2]), float(m[3]), int(m[4]), int(m[5]), int(m[6]), m[7] == "tripped", dt, fired)
+
+
+@dataclass
+class Envelope:
+    """``env``: |x - mean| integrated over ``dec`` samples on the PIC, averaged over ``shots`` pulses."""
+    values: np.ndarray             # LSB (float; the firmware sends 1/16 LSB)
+    n: int
+    dec: int
+    shots: int
+    dt_ns: float                   # time per envelope value
+    pulses_fired: int
+    link: Optional[str] = None
+    xfer_us: Optional[int] = None
+    raw: str = field(default="", repr=False)
+
+    @property
+    def t_us(self) -> np.ndarray:
+        return np.arange(self.n) * self.dt_ns / 1000.0
+
+    def depth_mm(self, c_m_s: float = 1540.0) -> np.ndarray:
+        return self.t_us * 1e-6 * c_m_s / 2 * 1000.0
+
+
+def parse_env(lines: List[str]) -> Envelope:
+    _fail_on_usage(lines, "env")
+    h = next((i for i, l in enumerate(lines) if l.startswith("# env ")), None)
+    if h is None:
+        raise MinusError(f"env -> {next((l for l in lines if l.strip()), 'no output')}")
+    m = _match(r"^# env n=(\d+) dec=(\d+) shots=(\d+) dt=([\d.]+)ns .*pulses fired (\d+)/\d+", lines[h], "env")
+    n = int(m[1]); body = lines[h + 1:h + 1 + n]
+    if len(body) != n or not all(s.strip().isdigit() for s in body):
+        raise MinusError(f"env: expected {n} values, got {len(body)}")
+    lk = _LINK_TAIL.search(lines[h])
+    return Envelope(np.array([int(s) for s in body], dtype=float) / 16.0, n, int(m[2]), int(m[3]), float(m[4]), int(m[5]),
+                    lk[1] if lk else None, int(lk[2]) if lk else None)
+
+
+@dataclass
 class PicLock:
     """``raw LOCK?`` / ``raw RELOCK``: PLL1 locks tried at the last (re)lock and slow test captures (of 8) of the final one."""
     tries: int

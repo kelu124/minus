@@ -37,6 +37,12 @@ acq_status_t acq_il_run(unsigned off, unsigned navg, uint32_t *ticks);   // two-
 uint32_t     acq_adc_bb(unsigned n, unsigned ovs, uint32_t *data);   // DMA-free ADC throughput test: Timer1 ticks for n back-to-back conversions
 void         acq_set_pc(unsigned on);      // period-4 fixed-pattern correction on (default) / off; acq_run only, navg 1
 unsigned     acq_get_pc(const int32_t **off); // on/off + last per-phase offsets (1/16 LSB)
+// ADC extras (pic 1.1.3): hardware oversampling and the channel-0 digital comparator, used by acq_run while set
+void         acq_set_os(unsigned os);      // 0 off, 4 or 16 conversions per sample (MODE 11, 13 / 14-bit); caller sets a div that fits
+unsigned     acq_get_os(void);
+void         acq_set_cmp(unsigned mode, unsigned lo, unsigned hi);   // CMPMOD (0 off, 1 out of [lo,hi], 2 in, 3 > lo, 4 <= lo)
+unsigned     acq_cmp_flag(void);           // channel-0 comparator flag of the last capture
+uint32_t    *acq_scratch32(unsigned *words); // the second capture buffer (acqil) as u32 scratch (1023 words)
 extern uint16_t acq_buf[ACQ_N];            // unsigned 12-bit right-aligned samples
 
 #endif

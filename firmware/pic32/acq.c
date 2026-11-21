@@ -23,6 +23,15 @@ unsigned acq_get_input(void) { return acq_input; }
 static unsigned acq_navg = 1;                 // 1 = single conversion per trigger; N>1 = integration mode, N back-to-back conversions summed
 void     acq_set_navg(unsigned n) { if (n < 1) n = 1; if (n > 16) n = 16; acq_navg = n; }
 unsigned acq_get_navg(void) { return acq_navg; }
+// ADC extras (pic 1.1.3, docs/claude/specs/2026-11-22-adc-extras-design.md): hardware oversampling (MODE 11) and the
+// channel-0 digital comparator, applied by acq_run / acq_run_adc2 while set.
+static unsigned acq_os = 0;                    // 0 = off, 4 or 16 conversions per sample (ACCNUM 0 / 1)
+static unsigned acq_cmpmod = 0, acq_cmplo = 0, acq_cmphi = 0, acq_cmpflag = 0;
+void acq_set_cmp(unsigned mode, unsigned lo, unsigned hi) { acq_cmpmod = mode & 7u; acq_cmplo = lo; acq_cmphi = hi; }
+unsigned acq_cmp_flag(void) { return acq_cmpflag; }
+uint32_t *acq_scratch32(unsigned *words) { if (words) *words = sizeof acq_buf1 / 4u; return (uint32_t *)acq_buf1; }
+void acq_set_os(unsigned os) { acq_os = (os == 4u || os == 16u) ? os : 0u; }
+unsigned acq_get_os(void) { return acq_os; }
 
 // Sampling time (SAMC, 0.5 + n*2 TAD at 62.5 MHz TAD = 16 ns) chosen to fit the trigger period: conversion
 // takes 1.5 TAD = 24 ns, so sample time <= period - 24 ns - margin. Longer sampling helps the
@@ -149,7 +158,7 @@ static void acq_pc_apply(void) {
 // some start phases lock to 40/60/60 ns (fill ~226 us instead of 164.7 us, nothing dropped, so DMA status is clean). Expected
 // sample period = the smallest multiple of the trigger period >= 32 ns (SAMC 0 only); > +5 % = ACQ_SLOW.
 static acq_status_t acq_check_slow(acq_status_t st, uint32_t t) {
-    if (st != ACQ_OK || acq_samc != 0 || acq_navg > 1) return st;
+    if (st != ACQ_OK || acq_samc != 0 || acq_navg > 1 || acq_os) return st;
     uint32_t per = acq_div * 5u, k = (32u + per - 1u) / per;
     uint64_t exp_ticks = (uint64_t)ACQ_N * per * k / ACQ_TICK_NS;
     return (uint64_t)t * 100u > exp_ticks * 105u ? ACQ_SLOW : st;
@@ -164,8 +173,12 @@ static acq_status_t acq_run_adc2(uint32_t *ticks) {
     CCP1PR = acq_div - 1u;
     AD1CH0CONbits.TRG1SRC = 0;
     AD2CH0CONbits.PINSEL = IN_PINSEL;
-    if (acq_navg > 1) { AD2CH0CONbits.MODE = 2; AD2CH0CONbits.TRG2SRC = 2; AD2CH0CNT = acq_navg; AD2CH0CONbits.ACCRO = 0; }
+    if (acq_os) { AD2CH0CONbits.MODE = 3; AD2CH0CONbits.ACCNUM = acq_os == 16u ? 1u : 0u; AD2CH0CONbits.ACCBRST = 1;
+                  AD2CH0CONbits.TRG2SRC = 2; AD2CH0CONbits.ACCRO = 0; }
+    else if (acq_navg > 1) { AD2CH0CONbits.MODE = 2; AD2CH0CONbits.TRG2SRC = 2; AD2CH0CNT = acq_navg; AD2CH0CONbits.ACCRO = 0; }
     else              { AD2CH0CONbits.MODE = 0; AD2CH0CONbits.TRG2SRC = 0; }
+    AD2CH0CONbits.CMPMOD = acq_cmpmod; AD2CH0CMPLO = acq_cmplo; AD2CH0CMPHI = acq_cmphi;
+    AD2CMPSTATbits.CH0CMP = 0;
     AD2CH0CONbits.SAMC = acq_samc < 0 ? samc_for_div(acq_div) : (unsigned)acq_samc;
     AD2CH0CONbits.TRG1SRC = 12;         // SCCP1 Trigger out
 
@@ -203,7 +216,8 @@ static acq_status_t acq_run_adc2(uint32_t *ticks) {
     DMA0SELbits.CHSEL = 0x2B;
     (void)AD2CH0DATA;
     st = acq_check_slow(st, t);
-    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
+    acq_cmpflag = AD2CMPSTATbits.CH0CMP; AD2CH0CONbits.CMPMOD = 0;
+    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1 && !acq_os) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;
 }
@@ -218,8 +232,12 @@ acq_status_t acq_run(uint32_t *ticks) {
     // lands in AD1CH0DATA (12 + log2(navg) bits) and raises the channel-ready DMA request once. Each
     // conversion is 1.5 TAD + sampling (0.5 TAD at SAMC 0) = 32 ns, i.e. the ADC core runs at 31.25 Msps
     // while the DMA only has to move one word per trigger (25 Msps max at div 8).
-    if (acq_navg > 1) { AD1CH0CONbits.MODE = 2; AD1CH0CONbits.TRG2SRC = 2; AD1CH0CNT = acq_navg; AD1CH0CONbits.ACCRO = 0; }
+    if (acq_os) { AD1CH0CONbits.MODE = 3; AD1CH0CONbits.ACCNUM = acq_os == 16u ? 1u : 0u; AD1CH0CONbits.ACCBRST = 1;
+                  AD1CH0CONbits.TRG2SRC = 2; AD1CH0CONbits.ACCRO = 0; }
+    else if (acq_navg > 1) { AD1CH0CONbits.MODE = 2; AD1CH0CONbits.TRG2SRC = 2; AD1CH0CNT = acq_navg; AD1CH0CONbits.ACCRO = 0; }
     else              { AD1CH0CONbits.MODE = 0; AD1CH0CONbits.TRG2SRC = 0; }
+    AD1CH0CONbits.CMPMOD = acq_cmpmod; AD1CH0CMPLO = acq_cmplo; AD1CH0CMPHI = acq_cmphi;
+    AD1CMPSTATbits.CH0CMP = 0;
     AD1CH0CONbits.SAMC = acq_samc < 0 ? samc_for_div(acq_div) : (unsigned)acq_samc;
 
     // DMA0: one-shot, 16-bit, fixed source (AD1CH0DATA), incrementing destination (acq_buf).
@@ -261,7 +279,8 @@ acq_status_t acq_run(uint32_t *ticks) {
     else if (DMA0STATbits.OVERRUN) st = ACQ_OVERRUN;   // a trigger arrived while the previous transfer was still running: samples dropped
     DMA0CHbits.CHEN = 0;
     st = acq_check_slow(st, t);
-    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1) acq_pc_apply();
+    acq_cmpflag = AD1CMPSTATbits.CH0CMP; AD1CH0CONbits.CMPMOD = 0;
+    if (st == ACQ_OK && acq_pc_on && acq_navg <= 1 && !acq_os) acq_pc_apply();
     if (ticks) *ticks = t;
     return st;
 }

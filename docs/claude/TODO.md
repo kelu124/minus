@@ -8,7 +8,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 - **RESUME HERE (2026-11-22, session 13): rp 1.1.5 / pic 1.1.2, proto 12 on board 3** — payload over SPI (mode 1, frame on RDY,
   5.7 ms at 12.5 MHz, 25 MHz clean), PIC DAC test signal, **slow lock found to be a per-PLL-lock state and self-healed** (boot
   re-lock + RP `RELOCK`; `docs/bench/2026-11-22-slowlock/`, memory 0021). End-to-end `acq` 185 → 107 ms. Next:
-  (a) PIC ADC extras for pulse-echo, reachable from the RP (owner request 2026-11-22, in progress);
+  (a) ~~PIC ADC extras~~ done 2026-11-22 (rp 1.1.6 / pic 1.1.3: `acqos`, `tof`, `env`; DONE.md) — next with a piezo: run
+  `tof` / `env` on real echoes (choose thr / blank from a `pe`), and try `acqos 4` + pulse for deep, low-noise A-lines;
   (b) compact host output (base64 lines ~11 KB vs 24.8 KB text: the USB CDC 256-byte buffer caps text at ~270 kB/s);
   (c) RP ADC0 read of the DAC once v1.2 has the DACOUT1 → GPIO26 trace; (d) a cleaner sine source for the ADC ENOB test
   (external generator; the PIC DAC gives 42 dB SINAD and its DMA sine cannot run during a capture); (e) re-measure the E3

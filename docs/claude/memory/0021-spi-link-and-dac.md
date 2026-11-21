@@ -48,3 +48,13 @@ bench `docs/bench/2026-11-21-spi-dac/`
   plus a rarer mixed state (~35 %). Re-sourcing CLKGEN12 does not change it; a new PLL1 lock does.
 - pic 1.1.2 re-locks at boot until 8 test captures are all uniform (≤ 12 locks): 19/20 boots clean; `raw LOCK?` reports it.
   The RP sends `RELOCK` after 3 slow captures in a row and restores UGE (RELOCK re-runs acq_init).
+
+## ADC extras for pulse-echo (2026-11-22, rp 1.1.6 / pic 1.1.3, proto 13; design docs/claude/specs/2026-11-22-adc-extras-design.md)
+- `acqos 4|16`: MODE 11 oversampling, ACCBRST, TRG2SRC 2; result is **scaled** (4 → 13-bit = 2× a 12-bit code, 16 → 14-bit
+  = 4×), not a raw sum; trigger period must cover N·32 + ~48 ns (div 35 / 113 → 181 / 560 ns measured). Noise ÷2.1 / ÷3.1.
+  64/256 not offered: fill 8.6 / 34 ms > Timer1's 5.2 ms (80 ns × 16 bit).
+- `tof`: CMPMOD 001 (out of [lo, hi]) on ADnCH0CMPLO/HI, flag ADnCMPSTAT.CH0CMP (cleared before the capture), then a CPU
+  scan for the first crossing after the blank + the peak in 64 samples. 8.9 ms end to end.
+- `env`: |x − mean| integrate-and-dump over dec 4..64, running u32 sum in acq_buf1 (1023 words = dec ≥ 4), average (1/16 LSB)
+  written back into acq_buf for SPIX. Envelopes can be averaged across shots despite the random comb phase (E3).
+- Without a piezo all three are checked with the DAC on input 19 (`docs/bench/2026-11-22-adc-extras/`).

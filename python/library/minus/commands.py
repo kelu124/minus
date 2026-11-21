@@ -11,9 +11,9 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.5"},
-    "pic": {"name": "minus-pic32", "version": "1.1.2"},
-    "proto": 12,
+    "rp": {"name": "minus-rp2354", "version": "1.1.6"},
+    "pic": {"name": "minus-pic32", "version": "1.1.3"},
+    "proto": 13,
 }
 
 
@@ -54,6 +54,9 @@ RP_COMMANDS: Dict[str, Cmd] = {
     "linktest": Cmd("linktest [count [MHz]]", "linktest", "SPI link self-test with a PIC LFSR pattern"),
     "dac":     Cmd("dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]", "dac",
                    "PIC DAC1 test signal on DACOUT1 (read back with acq input 19)"),
+    "acqos":   Cmd("acqos <4|16> [in [pe]]", "acqos", "capture with ADC hardware oversampling (13 / 14-bit)"),
+    "tof":     Cmd("tof <thr> [blank_ns [in [ref]]]", "tof", "pulse-echo time of flight on the PIC (ADC comparator), one line"),
+    "env":     Cmd("env <dec> [shots [in]]", "env", "pulse-echo envelope computed on the PIC, averaged over shots"),
 }
 
 # `raw <PIC command>` lines that `help` documents: usage -> Minus method
@@ -96,6 +99,9 @@ PIC_LINK: Dict[str, Optional[str]] = {
     "DAC": "dac",
     "LOCK?": "pic_lock",     # pic >= 1.1.2: how the boot-time PLL lock went ("LOCK <tries> <slow of 8>")
     "RELOCK": "pic_lock",    # re-lock now (the RP also sends it after 3 slow captures in a row)
+    "ACQOS": "acqos",        # proto 13: ADC oversampling capture
+    "TOF": "tof",            # proto 13: comparator + first-crossing search on the PIC
+    "ENV": "env",            # proto 13: on-PIC envelope, multi-shot average
     "CLK12": None,           # clock-source diagnostic: raw("CLK12 n")
 }
 

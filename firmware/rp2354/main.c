@@ -724,6 +724,97 @@ static int acq_receive(char *hdr, unsigned hdrlen, const char *note, unsigned lo
     return 0;
 }
 
+// ---------------------------------------------------------------- ADC extras for pulse-echo (proto 13, pic >= 1.1.3)
+// Design: docs/claude/specs/2026-11-22-adc-extras-design.md. tof / env fire the pulser on the PIC's RDY rise like pe.
+#define PE_HI_NS 200u
+#define PE_LO_NS 500u
+#define PE_DEAD_NS 27u
+// send one PIC command that captures (TOF / ENV), pulse armed on RDY when pulse != 0; retries 'slow' captures (<= 8, RELOCK after
+// 3). Returns 0 with the reply in rx, -1 on error (printed). *fired = pulse seen.
+static int pe_ext_shot(const char *tx, bool pulse, char *rx, unsigned rxlen, bool *fired) {
+    pulse_cyc_t pc; int tries = 0;
+    for (;;) {
+        tries++;
+        link_flush_rx();
+        if (pulse && !pulser_arm(PE_HI_NS, PE_LO_NS, PE_DEAD_NS, false, &pc)) { printf("pulser arm failed\n"); return -1; }
+        link_puts(tx);
+        int n = link_readline(rx, rxlen, 500000);
+        if (fired) *fired = pulse && pulser_fired();
+        if (pulse) pulser_disarm();
+        if (n < 0) { printf("no reply from the PIC to '%.20s'\n", tx); return -1; }
+        size_t L = strlen(rx);
+        bool slow = L >= 5 && !strcmp(rx + L - 5, " slow");
+        if (!slow) return 0;
+        if (tries >= 8) { printf("%d captures, every one slow — nothing to report\n", tries); return -1; }
+        if (tries == 3) pic_relock();
+        sleep_ms(2);
+    }
+}
+// acqos <4|16> [in [pe]]: hardware oversampling (13 / 14-bit, 175 / 565 ns per sample = 0.72 / 2.3 ms window); pe 1 = pulse on RDY
+static void cmd_acqos(const char *arg) {
+    unsigned os = 0, pe = 0; int in = 25; char hdr[96];
+    if (!arg || sscanf(arg, "%u %d %u", &os, &in, &pe) < 1 || (os != 4 && os != 16) || in < 0 || in > 31) {
+        printf("usage: acqos <4|16> [in [pe]]   oversampling: each sample = 4 or 16 x 32 ns conversions (13 / 14-bit), in = input code (25 default, 19 = DAC), pe 1 = fire the pulser\n"); return;
+    }
+    pulse_cyc_t pc; bool fired = false;
+    link_flush_rx();
+    if (pe && !pulser_arm(PE_HI_NS, PE_LO_NS, PE_DEAD_NS, false, &pc)) { printf("acqos: pulser arm failed\n"); return; }
+    snprintf(hdr, sizeof hdr, "ACQOS %u %d\n", os, in);
+    link_puts(hdr);
+    char note[200];
+    snprintf(note, sizeof note, "oversampling %u x 32 ns conversions per sample (%u-bit result, %s), in=%d %s; %s", os, os == 4 ? 13 : 14,
+             os == 4 ? "0..8191 = 2 x a 12-bit code" : "0..16383 = 4 x a 12-bit code", in, acq_in_name(in), pe ? "pulse on RDY" : "no pulse");
+    acq_receive(hdr, sizeof hdr, note, 0);
+    if (pe) { fired = pulser_fired(); pulser_disarm(); printf("# pulse %s, 1 shot(s)\n", fired ? "fired" : "did NOT fire (no RDY edge)"); }
+}
+// tof <thr> [blank_ns [in [ref]]]: pulse + capture, first sample after blank_ns with |x - ref| > thr (ref 0/omitted = capture mean)
+static void cmd_tof(const char *arg) {
+    unsigned thr = 0, blank_ns = 0, ref = 0; int in = 25;
+    if (!arg || sscanf(arg, "%u %u %d %u", &thr, &blank_ns, &in, &ref) < 1 || thr == 0 || thr > 4095 || in < 0 || in > 31 || ref > 4095) {
+        printf("usage: tof <thr> [blank_ns [in [ref]]]   pulse + first |x-ref| > thr after blank_ns (ref 0 = capture mean; 40 ns per sample)\n"); return;
+    }
+    char tx[64], rx[112]; bool fired = false;
+    snprintf(tx, sizeof tx, "TOF %u %u %d %u\n", thr, blank_ns / 40u, in, ref);
+    if (pe_ext_shot(tx, true, rx, sizeof rx, &fired) < 0) return;
+    int idx, pidx; unsigned peak, rf, hw; unsigned long ticks; unsigned tick_ns; char st[12];
+    if (sscanf(rx, "TOF %d %d %u %u %u %lu %u %11s", &idx, &pidx, &peak, &rf, &hw, &ticks, &tick_ns, st) != 8) { printf("tof: bad reply '%s'\n", rx); return; }
+    if (strcmp(st, "ok")) { printf("tof: status %s\n", st); return; }
+    double dt = ticks * (double)tick_ns / 4095.0;                  // ns per sample, measured
+    if (idx < 0) printf("tof: none — no sample beyond +-%u LSB of ref %u after %u ns (hw comparator %s); dt=%.2fns; pulse %s\n",
+                        thr, rf, blank_ns, hw ? (ref ? "tripped before the blank" : "tripped on 2048+-thr (ref auto)") : "quiet", dt, fired ? "fired" : "did NOT fire");
+    else printf("tof: first crossing at sample %d = %.0f ns (%.1f mm round trip -> %.1f mm at 1540 m/s); peak %u LSB at sample %d (%.0f ns); "
+                "ref %u (%s); hw comparator %s; dt=%.2fns; pulse %s\n", idx, idx * dt, idx * dt * 1.54e-3, idx * dt * 0.77e-3, peak, pidx, pidx * dt,
+                rf, ref ? "given" : "capture mean; comparator on 2048+-thr", hw ? "tripped" : "quiet", dt, fired ? "fired" : "did NOT fire");
+}
+// env <dec> [shots [in]]: pulse + capture + on-PIC envelope (|x - mean| integrated over dec samples), averaged over shots, then pulled
+static void cmd_env(const char *arg) {
+    unsigned dec = 0, shots = 1; int in = 25;
+    if (!arg || sscanf(arg, "%u %u %d", &dec, &shots, &in) < 1 || dec < 4 || dec > 64 || shots < 1 || shots > 1000 || in < 0 || in > 31) {
+        printf("usage: env <dec 4..64> [shots 1..1000 [in]]   on-PIC envelope, |x-mean| over dec samples, averaged over shots (one pulse each)\n"); return;
+    }
+    char tx[48], rx[96]; unsigned n = 0, d = 0, sh = 0, tick_ns = 0, fired_n = 0; unsigned long ticks = 0; char st[12] = "";
+    for (unsigned k = 0; k < shots; k++) {
+        bool fired = false;
+        snprintf(tx, sizeof tx, "ENV %u %d %u\n", dec, in, k ? 1u : 0u);
+        if (pe_ext_shot(tx, true, rx, sizeof rx, &fired) < 0) return;
+        if (sscanf(rx, "ENV %u %u %u %lu %u %11s", &n, &d, &sh, &ticks, &tick_ns, st) != 6 || strcmp(st, "ok")) { printf("env: bad reply '%s'\n", rx); return; }
+        fired_n += fired;
+    }
+    char info[112];
+    const uint8_t *p = link_fetch(n, info, sizeof info);
+    if (!p) return;
+    double dt = ticks * (double)tick_ns / 4095.0 * dec;
+    printf("# env n=%u dec=%u shots=%u dt=%.2fns fill=%.1fus in=%d values=mean |x-mean| x16 (1/16 LSB) per %u samples; pulses fired %u/%u %s\n",
+           n, d, sh, dt, ticks * (double)tick_ns / 1000.0, in, dec, fired_n, shots, info);
+    static char tbuf[4096]; unsigned tl = 0;
+    for (unsigned i = 0; i < n; i++) {
+        tl += (unsigned)snprintf(tbuf + tl, sizeof tbuf - tl, "%u\n", (unsigned)p[2 * i] | (unsigned)p[2 * i + 1] << 8);
+        if (tl > sizeof tbuf - 16) { fwrite(tbuf, 1, tl, stdout); tl = 0; }
+    }
+    if (tl) fwrite(tbuf, 1, tl, stdout);
+    fflush(stdout);
+}
+
 // ---------------------------------------------------------------- link / linktest / dac (proto 11)
 static void link_status(void) {
     double kbps = lk_last_us > 0 ? lk_last_bytes * 1e3 / (double)lk_last_us : 0;
@@ -863,7 +954,10 @@ static void help(void) {
            "  pic ...     ICSP programmer: pic id | image | flash | verify | erase   (pic help)\n"
            "  link [uart|spi [MHz]]  capture payload path: SPI0 frame from the PIC (default, 12.5 MHz, CRC-checked, UART fallback) or UART only (0.7 s); no args = counters\n"
            "  linktest [count [MHz]]  SPI link self-test: PIC LFSR pattern pulled count times (default 10), every word + CRC checked, then once over the UART\n"
-           "  dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]  PIC DAC1 test signal on DACOUT1 (U9 pin 3, read back with acq 4 0 19); codes 205..3890\n");
+           "  dac [off | dc <code> | tri <lo> <hi> <slope> | sine <hz> [amp [mid]]]  PIC DAC1 test signal on DACOUT1 (U9 pin 3, read back with acq 4 0 19); codes 205..3890\n"
+           "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 175 / 565 ns per sample, 0.72 / 2.3 ms window); pe 1 = fire the pulser\n"
+           "  tof <thr> [blank_ns [in [ref]]]  pulse-echo time of flight on the PIC: first |x-ref| > thr after blank_ns (ADC comparator armed; ref 0 = capture mean), one line, no A-line transfer\n"
+           "  env <dec> [shots [in]]  pulse-echo envelope computed on the PIC (|x-mean| over dec = 4..64 samples), averaged over shots (one pulse each), then pulled: 4095/dec values\n");
 }
 
 int main(void) {
@@ -919,6 +1013,9 @@ int main(void) {
             printf("uart0 loopback: %s\n", n < 0 ? "FAILED (nothing received)" : !strcmp(rx, "LOOP 42") ? "ok" : rx);
         }
         else if (!strncmp(line, "acqil", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqil(line[5] == ' ' ? line + 6 : "");
+        else if (!strncmp(line, "acqos", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqos(line[5] == ' ' ? line + 6 : "");
+        else if (!strncmp(line, "tof", 3) && (line[3] == 0 || line[3] == ' ')) cmd_tof(line[3] == ' ' ? line + 4 : "");
+        else if (!strncmp(line, "env", 3) && (line[3] == 0 || line[3] == ' ')) cmd_env(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "acqcpu", 6) && (line[6] == 0 || line[6] == ' ')) cmd_acqcpu(line[6] == ' ' ? line + 7 : "");
         else if (!strncmp(line, "acq", 3) && (line[3] == 0 || line[3] == ' ')) cmd_acq(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "pe", 2) && (line[2] == 0 || line[2] == ' ')) cmd_pe(line[2] == ' ' ? line + 3 : "");

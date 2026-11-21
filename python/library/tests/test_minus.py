@@ -142,6 +142,28 @@ class TestDevice(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.d.dac("tri", 1, 2)
 
+    def test_adc_extras(self):
+        self.d.dac("dc", 2048)
+        a4, a16 = self.d.acqos(4, 19), self.d.acqos(16, 19)
+        self.assertAlmostEqual(a4.samples.mean() / 2, 2030, delta=40)          # 13-bit = 2 x the 12-bit code
+        self.assertAlmostEqual(a16.samples.mean() / 4, 2030, delta=40)         # 14-bit = 4 x
+        self.assertAlmostEqual(a16.dt_ns, 565, delta=20)
+        self.assertLess(a16.samples[64:].std() / 4, 1.0)                       # < 1 LSB rms after 16x oversampling
+        self.d.dac("dc", 3100)
+        t = self.d.tof(1000, 0, 19, 2048)
+        self.assertTrue(t.found and t.index == 0 and t.hw_tripped and t.pulse_fired)
+        self.d.dac("dc", 2900)                                                 # (distinct command text: the fixture is keyed by it)
+        t = self.d.tof(1000, 40, 19, 2048)
+        self.assertFalse(t.found or t.hw_tripped)
+        self.d.dac("tri", 512, 3584, 16)
+        e1, e4 = self.d.env(8, 1, 19), self.d.env(8, 4, 19)
+        self.assertEqual((e1.n, e1.dec, e1.shots, e4.shots), (511, 8, 1, 4))
+        self.assertAlmostEqual(e1.values.max(), 1490, delta=100)
+        self.assertAlmostEqual(e1.values.mean(), 760, delta=120)
+        self.assertLess(e4.values.std(), e1.values.std())                     # random triangle phase averages out
+        self.assertAlmostEqual(e1.dt_ns, 321.7, delta=2)
+        self.d.dac("off")
+
     def test_pic_programmer(self):
         self.assertEqual(self.d.pic_id().part, "PIC32AK1216GC41048")
         img = self.d.pic_image()

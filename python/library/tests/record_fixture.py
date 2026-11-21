@@ -17,6 +17,8 @@ CMDS = ["help", "version", "raw ID?", "ping", "stat", "rdy", "trig", "raw TRIG?"
         "raw AMP1 1", "raw AMP2 0", "raw ADCBB 100 0", "pot 0", "acq 4 0 25 1", "pe", "pe 200 500 25 27",
         "link spi 12.5", "linktest 3", "dac tri 512 3584 16", "acq 4 0 19 1", "dac dc 2048", "dac sine 20000 800 2048",
         "dac off", "dac", "link", "raw LOCK?",
+        "dac dc 2048", "acqos 4 19", "acqos 16 19", "dac dc 3100", "tof 1000 0 19 2048", "dac dc 2900", "tof 1000 40 19 2048",
+        "dac tri 512 3584 16", "env 8 1 19", "env 8 4 19", "dac off",
         "pic help", "pic image", "pic id", "bogus"]
 
 if __name__ == "__main__":

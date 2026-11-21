@@ -314,6 +314,29 @@ class Minus:
             raise ValueError("dac: mode is off | dc | tri | sine")
         return self._run(cmd, P.parse_dac)
 
+    # ------------------------------------------------------------------ ADC extras for pulse-echo (proto 13)
+    def acqos(self, os: int, in_: Optional[int] = None, pe: Optional[bool] = None) -> P.Capture:
+        """Capture with ADC hardware oversampling: each sample = ``os`` (4 or 16) back-to-back 32 ns conversions, 13 / 14-bit
+        (2x / 4x a 12-bit code), 175 / 565 ns per sample = 0.72 / 2.3 ms window. ``pe=True`` fires the pulser on RDY."""
+        if os not in (4, 16):
+            raise ValueError("acqos: os is 4 or 16")
+        if pe is not None and in_ is None:
+            in_ = 25
+        cmd = f"acqos {os}" + ("" if in_ is None else f" {int(in_)}") + ("" if pe is None else f" {int(bool(pe))}")
+        return self._run(cmd, lambda ls: P.parse_capture(ls, "acqos"))
+
+    def tof(self, thr: int, blank_ns: Optional[int] = None, in_: Optional[int] = None, ref: Optional[int] = None) -> P.Tof:
+        """Pulse-echo time of flight on the PIC: fires the pulser, captures, returns the first sample after ``blank_ns``
+        with |x - ref| > thr and the peak in the next 64 samples (ref None/0 = capture mean). One line, no A-line transfer."""
+        cmd = "tof" + _args(thr, blank_ns, in_, ref)
+        return self._run(cmd, P.parse_tof)
+
+    def env(self, dec: int, shots: Optional[int] = None, in_: Optional[int] = None) -> P.Envelope:
+        """Pulse-echo envelope computed on the PIC: |x - mean| integrated over ``dec`` (4..64) samples, averaged over
+        ``shots`` pulses (default 1), 4095/dec values."""
+        cmd = "env" + _args(dec, shots, in_)
+        return self._run(cmd, P.parse_env, timeout=60)
+
     # ------------------------------------------------------------------ front end
     def pulse(self, hi: Optional[int] = None, lo: Optional[int] = None, dead: Optional[int] = None) -> P.Pulse:
         """One pulser shot now, no capture (scope check)."""

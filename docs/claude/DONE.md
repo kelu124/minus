@@ -2,6 +2,10 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-22: **ADC extras for pulse-echo** (proto 13, rp 1.1.6 / pic 1.1.3): `acqos 4|16` (hardware oversampling, 13/14-bit,
+  noise ÷2.1/÷3.1, 0.74/2.3 ms window), `tof` (ADC comparator + on-PIC first crossing, one line, 8.9 ms), `env` (on-PIC envelope,
+  multi-shot average, 20.7 ms single shot); library `acqos()/tof()/env()`, fixture (54 replies), notebook 02 section; bench
+  `docs/bench/2026-11-22-adc-extras/`.
 - 2026-11-22: proto 12 (rp 1.1.5 / pic 1.1.2): `SPIX` announced on RDY with on-the-fly CRC, SPI mode 1 → 5.7 ms per capture,
   25 MHz clean; **slow lock = per-PLL-lock state** (12/20-boot studies) + PIC boot re-lock + RP `RELOCK` → 100/100 `acq` ok over
   20 boots; link idle 50 → 2 ms and block-buffered text → `acq` 185 → 107 ms end to end; library `pic_lock()`; fixture +

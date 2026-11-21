@@ -9,7 +9,7 @@ through them with the real bytes on the wire.
 | [`library/tests/`](library/tests/) | offline tests replaying replies recorded from a real board (`fixtures/board3_transcript.json`) |
 | [`notebooks/`](notebooks/) | step-by-step worked examples, executed on a board (outputs kept) |
 
-Written for firmware **rp 1.1.5 / pic 1.1.2, link protocol 12** (`minus.FIRMWARE`). On connect the library reads
+Written for firmware **rp 1.1.6 / pic 1.1.3, link protocol 13** (`minus.FIRMWARE`). On connect the library reads
 both versions and warns if the board runs something else.
 
 ## Install

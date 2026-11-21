@@ -30,6 +30,7 @@
 #include "acq.h"
 #include "dac.h"
 #include "xfer.h"
+#include "pe_ext.h"
 
 // ---------------------------------------------------------------- configuration bits
 // JTAG must be OFF: TCK/TDO/TDI/TMS sit on RD1 (SPI_CLK), RD2 (SPI_MOSI), RD3, RB1 (digipot).
@@ -244,6 +245,42 @@ int main(void) {
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
                     char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_IL_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
                     xfer_set_n(st == ACQ_OK ? ACQ_IL_N : 0);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "ACQOS ", 6)) {
+                    // ACQOS <4|16> [in]: one capture with hardware oversampling (MODE 11): 13 / 14-bit, 175 / 565 ns per sample
+                    // (div raised to fit, restored after); reply = an ACQ header, payload pulled by SPIX / UTX
+                    char *e; unsigned os = (unsigned)strtoul(line + 6, &e, 10);
+                    if (*e == ' ') acq_set_input((unsigned)strtoul(e + 1, NULL, 10));
+                    RDY_LAT = 0;
+                    uint32_t t = 0; acq_status_t st = pe_os(os, &t);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_TIMEOUT ? "timeout" : st == ACQ_DMAERR ? "dmaerr" : st == ACQ_OVERRUN ? "overrun" : st == ACQ_SLOW ? "slow" : "notready";
+                    char out[48]; snprintf(out, sizeof out, "ACQ %u %lu %u %s\n", (unsigned)ACQ_N, (unsigned long)t, (unsigned)ACQ_TICK_NS, sname);
+                    xfer_set_n(st == ACQ_OK ? ACQ_N : 0);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "TOF ", 4)) {
+                    // TOF <thr> [blank [in [ref]]]: capture + first |x - ref| > thr at or after sample blank (comparator armed on
+                    // [ref-thr, ref+thr], ref 0 = capture mean). Reply: TOF <idx|-1> <peak_idx> <peak> <ref> <hw> <ticks> <tick_ns> <status>
+                    char *e; unsigned thr = (unsigned)strtoul(line + 4, &e, 10), blank = 0, ref = 0;
+                    if (*e == ' ') { blank = (unsigned)strtoul(e + 1, &e, 10);
+                        if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10)); if (*e == ' ') ref = (unsigned)strtoul(e + 1, NULL, 10); } }
+                    RDY_LAT = 0;
+                    tof_t r; acq_status_t st = pe_tof(thr, blank, ref, &r);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
+                    xfer_set_n(st == ACQ_OK ? ACQ_N : 0);   // the A-line stays pullable (SPIX / UTX) for checks
+                    char out[96]; snprintf(out, sizeof out, "TOF %d %d %u %u %u %lu %u %s\n", r.idx, r.peak_idx, r.peak, r.ref, r.hw,
+                                           (unsigned long)r.ticks, (unsigned)ACQ_TICK_NS, sname);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "ENV ", 4)) {
+                    // ENV <dec> [in [acc]]: capture + envelope (|x - mean| integrated over dec samples, 1/16 LSB), acc 1 = add to the
+                    // running average of the previous shots. Reply: ENV <n> <dec> <shots> <ticks> <tick_ns> <status>; the average
+                    // (n values) is pulled by SPIX / UTX
+                    char *e; unsigned dec = (unsigned)strtoul(line + 4, &e, 10), acc = 0;
+                    if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10)); if (*e == ' ') acc = (unsigned)strtoul(e + 1, NULL, 10); }
+                    RDY_LAT = 0;
+                    env_t r; acq_status_t st = pe_env(dec, acc, &r);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
+                    xfer_set_n(st == ACQ_OK ? r.n : 0);
+                    char out[64]; snprintf(out, sizeof out, "ENV %u %u %u %lu %u %s\n", r.n, r.dec, r.shots, (unsigned long)r.ticks, (unsigned)ACQ_TICK_NS, sname);
                     uart1_puts(out);
                 } else if (!strcmp(line, "SPIX")) {
                     // SPIX (proto 12): send the last capture (or XTEST pattern) as one SPI frame, announced on RDY (high = clock
