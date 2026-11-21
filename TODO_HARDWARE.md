@@ -26,6 +26,11 @@ history (this file before 2026-11-19).
   **R69 is fitted by default** (owner, 2026-11-21): TX and RX are joined, either connector drives and receives. RX is
   protected by C45 10 nF + D2 BAV99 (±0.6 V). Remove R69 (or mark it DNP in the BOM) for separate TX/RX probes.
   **To do: route** (owner), then re-export JLC outputs.
+- **[should] Gain-mux select pull-downs — in schematic + placed, routing pending (2026-11-21, owner):** **R72 10 kΩ
+  `RP_GC1` (GPIO25 → U1 S0, pin 10) → GND** and **R73 10 kΩ `RP_GC2` (GPIO23 → U1 S1, pin 9) → GND** (0402, C25744 like
+  R33), sheet RX_FRONT_END/FE_A. Defined 74HC4052 selects (leg 0, Rf 2.2 k) while the RP is in reset/boot; 10 kΩ rather
+  than 100 kΩ so it also stays below the ~8.2 kΩ-class external pull-down suggested for the RP2350 GPIO erratum E9 (to
+  confirm for our stepping). Footprints: R72 above U1, R73 between C87/C86 (nearest free spots). **To do: route** (owner).
 - **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.
   Delete the dangling stubs on OA2OUT, PIC32_ADC, AVDD; enlarge the C5 reference text.
 
