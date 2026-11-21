@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  6ae0bf3  Proto 13 (rp 1.1.6 / pic 1.1.3): ADC extras for pulse-echo — acqos 4|16 (hardware oversampling, 13/14-bit), tof (ADC comparator time of flight, 8.9 ms), env (on-PIC envelope, multi-shot average); library + fixture + notebook 02; bench docs/bench/2026-11-22-adc-extras
+
 - 2026-11-22  3114543  Proto 12 (rp 1.1.5 / pic 1.1.2): SPIX announced on RDY, SPI mode 1 (5.7 ms per capture, 25 MHz clean), slow lock shown to be a per-PLL-lock state + boot re-lock / RELOCK (100/100 acq over 20 boots), host output 185 -> 107 ms; bench docs/bench/2026-11-22-slowlock
 
 - 2026-11-21  1b02fb3  Memory 0022: lessons of session 13 (datasheet in the owner Trash, header names, 16 KB RAM, DMA contention, SCCP dual-16 DMA trigger PRH+2, FFT bins, KiCad-by-script checks)
