@@ -81,6 +81,11 @@ class Minus:
 
     # ------------------------------------------------------------------ plumbing
     def close(self) -> None:
+        if self.fmt_active == "b64":            # leave the CLI readable for a human in a terminal
+            try:
+                self.exchange("fmt text", record=False, timeout=2)
+            except Exception:
+                pass
         self.t.close()
 
     def __enter__(self):

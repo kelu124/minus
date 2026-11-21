@@ -217,6 +217,13 @@ class TestDevice(unittest.TestCase):
         t.out += t.held.encode()                 # the late reply shows up before the next command's
         self.assertEqual(d.pic_ident().part, "PIC32AK1216GC41048")   # not confused by the stale version lines
 
+    def test_close_restores_text(self):
+        t = ReplayTransport(REPLIES)
+        d = Minus(transport=t, check_firmware=False)
+        self.assertEqual(d.fmt_active, "b64")
+        d.close()
+        self.assertEqual(t.sent[-1], "fmt text")
+
     def test_history_and_framing(self):
         self.d.version()
         self.assertEqual(self.d.last.command, "version")
