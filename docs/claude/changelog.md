@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  1b02fb3  Memory 0022: lessons of session 13 (datasheet in the owner Trash, header names, 16 KB RAM, DMA contention, SCCP dual-16 DMA trigger PRH+2, FFT bins, KiCad-by-script checks)
+
 - 2026-11-21  1a74291  Firmware proto 11 (rp 1.1.4 / pic 1.1.1): capture payload over SPI (frame + CRC-32, 12.5 MHz default, 10.6 ms vs 0.71 s, UART fallback, link/linktest), PIC DAC test signal on DACOUT1 (dac off|dc|tri|sine), USB strings kelu124 / minUS badge; library + fixture + notebooks re-synced; bench docs/bench/2026-11-21-spi-dac
 
 - 2026-11-21  3c61bf2  Schematic: DACOUT1 (U9 pin 3) joined to RP_GPIO26 (U8 pin 40, ADC0) with a global label on the PIC32 sheet; PCB update + routing by the owner
