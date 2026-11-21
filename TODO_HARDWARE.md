@@ -19,18 +19,21 @@ history (this file before 2026-11-19).
   (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) had no pull-up, so the RP2350 pad pull-down turned Q1 on until the firmware
   idled the pins (a few ms). Added **R70 10 kΩ pull-up GPIO9 → +3V3_DVDD** and **R71 10 kΩ pull-down GPIO8
   (`RP2354 PIO-PWM_H`) → GND** (0402, LCSC C25744 like R18), sheet PULSER/PUSH_PULL; footprints placed below U3, next to its input pins 2/4.
-  **To do: route** (owner), then re-export JLC outputs.
+  Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
 - **[should] Single-connector probe (E11) — in schematic + placed, routing pending (2026-11-21):** **R69 0 Ω between TX**
   (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works
   without an external tee. 0402, LCSC C844673 like R29, sheet RX_FRONT_END/TRANSDUCER; footprint placed below RF1.
   **R69 is fitted by default** (owner, 2026-11-21): TX and RX are joined, either connector drives and receives. RX is
   protected by C45 10 nF + D2 BAV99 (±0.6 V). Remove R69 (or mark it DNP in the BOM) for separate TX/RX probes.
-  **To do: route** (owner), then re-export JLC outputs.
+  Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
 - **[should] Gain-mux select pull-downs — in schematic + placed, routing pending (2026-11-21, owner):** **R72 10 kΩ
   `RP_GC1` (GPIO25 → U1 S0, pin 10) → GND** and **R73 10 kΩ `RP_GC2` (GPIO23 → U1 S1, pin 9) → GND** (0402, C25744 like
   R33), sheet RX_FRONT_END/FE_A. Defined 74HC4052 selects (leg 0, Rf 2.2 k) while the RP is in reset/boot; 10 kΩ rather
   than 100 kΩ so it also stays below the ~8.2 kΩ-class external pull-down suggested for the RP2350 GPIO erratum E9 (to
-  confirm for our stepping). Footprints: R72 above U1, R73 between C87/C86 (nearest free spots). **To do: route** (owner).
+  confirm for our stepping). Footprints: R72 above U1, R73 between C87/C86 (nearest free spots). Routed by the owner 2026-11-21.
+- **[should] In1 GND plane slots (review 2026-11-21):** `TRANSDUCER` (R69 → H10, 22.5 mm) and `+3V3_DVDD` (R70 feed,
+  18.5 mm, crossed by SPI_CLK/CS/MOSI on F.Cu) are routed on In1.Cu, a solid GND plane → move to B.Cu. Also remove the two
+  0.1 mm In1 stubs on Net-(U9-RP38/PWM4L/RC5) near (107.5, 93.6).
 - **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.
   Delete the dangling stubs on OA2OUT, PIC32_ADC, AVDD; enlarge the C5 reference text.
 
