@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  add2f00  Hardware: R72/R73 10 kΩ (C25744) pull-downs on 74HC4052 S0/S1 (GPIO25/GPIO23) in schematic, footprints placed near U1 (unrouted, owner routes); TODO_HARDWARE item
+
 - 2026-11-21  90e01f5  Hardware: U3 = MIC4427YMM / C152165 in schematic, PCB fields and production/bom.csv (E9); TODO_HARDWARE, memory 0014, datasheet E9 updated, PDF rebuilt
 
 - 2026-11-21  fab4b9f  Hardware: R69 0 Ω TX↔RX link (fitted by default, E11) + R70/R71 10 kΩ pull-up GPIO9 / pull-down GPIO8 (E1) in schematic, footprints placed (unrouted, owner routes); TODO_HARDWARE updated
