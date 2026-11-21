@@ -34,7 +34,7 @@ history (this file before 2026-11-19).
 - **[should] In1 GND plane slots (review 2026-11-21):** `TRANSDUCER` (R69 → H10, 22.5 mm) and `+3V3_DVDD` (R70 feed,
   18.5 mm, crossed by SPI_CLK/CS/MOSI on F.Cu) are routed on In1.Cu, a solid GND plane → move to B.Cu. Also remove the two
   0.1 mm In1 stubs on Net-(U9-RP38/PWM4L/RC5) near (107.5, 93.6).
-- **[should] DACOUT1 → RP ADC0 trace (owner, 2026-11-21, adding it in v1.2):** U9 pin 3 (PGC2/DACOUT1/AD1AN7/AD2AN3,
+- **[should] DACOUT1 → RP ADC0 trace (owner, 2026-11-21) — in the schematic (global label `RP_GPIO26` on the U9.3 wire, PIC32 sheet); PCB: update from schematic + route (owner):** U9 pin 3 (PGC2/DACOUT1/AD1AN7/AD2AN3,
   today only on H6.16) to U8 pin 40 (GPIO26/ADC0, net `RP_GPIO26`, also CN1.37). Lets the RP ADC read the PIC DAC; the PIC
   ADCs already see it on the same pin (AD1AN7/AD2AN3). Firmware: keep GPIO26 as a Hi-Z ADC input, pulls off.
 - **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.

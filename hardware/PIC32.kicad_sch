@@ -10149,4 +10149,28 @@
 			)
 		)
 	)
+	(global_label "RP_GPIO26"
+		(shape bidirectional)
+		(at 115.57 193.04 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "10a0346b-6ea0-4a09-a18e-42872ede3e73")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 115.57 193.04 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
 )
