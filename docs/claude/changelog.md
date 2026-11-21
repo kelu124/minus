@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  1a74291  Firmware proto 11 (rp 1.1.4 / pic 1.1.1): capture payload over SPI (frame + CRC-32, 12.5 MHz default, 10.6 ms vs 0.71 s, UART fallback, link/linktest), PIC DAC test signal on DACOUT1 (dac off|dc|tri|sine), USB strings kelu124 / minUS badge; library + fixture + notebooks re-synced; bench docs/bench/2026-11-21-spi-dac
+
 - 2026-11-21  3c61bf2  Schematic: DACOUT1 (U9 pin 3) joined to RP_GPIO26 (U8 pin 40, ADC0) with a global label on the PIC32 sheet; PCB update + routing by the owner
 
 - 2026-11-21  18ef70b  TODO_HARDWARE: DACOUT1 (U9 pin 3) → RP ADC0 (U8 pin 40, GPIO26) trace planned for v1.2
