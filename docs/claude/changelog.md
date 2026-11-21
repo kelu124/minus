@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  47d633e  Hardware v1.2: owner-routed R69–R73, silkscreen "minUS v1.2" + TX/RX label, renders regenerated; DRC 0 unconnected / parity clean; review notes (In1 slots) in TODO_HARDWARE; datasheet figures unchanged
+
 - 2026-11-21  add2f00  Hardware: R72/R73 10 kΩ (C25744) pull-downs on 74HC4052 S0/S1 (GPIO25/GPIO23) in schematic, footprints placed near U1 (unrouted, owner routes); TODO_HARDWARE item
 
 - 2026-11-21  90e01f5  Hardware: U3 = MIC4427YMM / C152165 in schematic, PCB fields and production/bom.csv (E9); TODO_HARDWARE, memory 0014, datasheet E9 updated, PDF rebuilt
