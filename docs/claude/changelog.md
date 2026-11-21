@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-21  3c61bf2  Schematic: DACOUT1 (U9 pin 3) joined to RP_GPIO26 (U8 pin 40, ADC0) with a global label on the PIC32 sheet; PCB update + routing by the owner
+
 - 2026-11-21  18ef70b  TODO_HARDWARE: DACOUT1 (U9 pin 3) → RP ADC0 (U8 pin 40, GPIO26) trace planned for v1.2
 
 - 2026-11-21  47d633e  Hardware v1.2: owner-routed R69–R73, silkscreen "minUS v1.2" + TX/RX label, renders regenerated; DRC 0 unconnected / parity clean; review notes (In1 slots) in TODO_HARDWARE; datasheet figures unchanged
