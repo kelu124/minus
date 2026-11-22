@@ -19,13 +19,13 @@ history (this file before 2026-11-19).
   (`RP2354 PIO-PWM_L` → U3 IN B → Q1 P-FET) had no pull-up, so the RP2350 pad pull-down turned Q1 on until the firmware
   idled the pins (a few ms). Added **R70 10 kΩ pull-up GPIO9 → +3V3_DVDD** and **R71 10 kΩ pull-down GPIO8
   (`RP2354 PIO-PWM_H`) → GND** (0402, LCSC C25744 like R18), sheet PULSER/PUSH_PULL; footprints placed below U3, next to its input pins 2/4.
-  Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
+  Routed by the owner 2026-11-21; JLC outputs re-exported 2026-11-22.
 - **[should] Single-connector probe (E11) — in schematic, placed and routed (owner, 2026-11-21):** **R69 0 Ω between TX**
   (`Transducer`, Q1/Q2 drains, RF3/RF1/H5) **and RX** (`TRANSDUCER`, C45, RF22/RF23/H10), so a single-element probe works
   without an external tee. 0402, LCSC C844673 like R29, sheet RX_FRONT_END/TRANSDUCER; footprint placed below RF1.
   **R69 is fitted by default** (owner, 2026-11-21): TX and RX are joined, either connector drives and receives. RX is
   protected by C45 10 nF + D2 BAV99 (±0.6 V). Remove R69 (or mark it DNP in the BOM) for separate TX/RX probes.
-  Routed by the owner 2026-11-21; still to do: re-export JLC outputs.
+  Routed by the owner 2026-11-21; JLC outputs re-exported 2026-11-22.
 - **[should] Gain-mux select pull-downs — in schematic, placed and routed (owner, 2026-11-21):** **R72 10 kΩ
   `RP_GC1` (GPIO25 → U1 S0, pin 10) → GND** and **R73 10 kΩ `RP_GC2` (GPIO23 → U1 S1, pin 9) → GND** (0402, C25744 like
   R33), sheet RX_FRONT_END/FE_A. Defined 74HC4052 selects (leg 0, Rf 2.2 k) while the RP is in reset/boot; 10 kΩ rather
@@ -39,8 +39,8 @@ history (this file before 2026-11-19).
   ADCs already see it on the same pin (AD1AN7/AD2AN3). Firmware: keep GPIO26 as a Hi-Z ADC input, pulls off.
 - **[could] SAO add-on header J3 (owner, 2026-11-22) — in the schematic (RP2354A sheet, under CN1); placed at (147.1, 126.1)
   and routed by the owner 2026-11-22** (checked: parity 0, unconnected 0, DRC counts = baseline; 3V3 = 50 mm of 0.2 mm
-  from C19, ~12 mV at 100 mA; silk labels match the pads; renders regenerated, J3 model omitted like the other headers). Still to do: re-export JLC outputs; optional
-  cosmetic — the "3.3V" silk label touches the pin-1 corner of the outline. 2×3 2.54 mm male header, Shitty Add-On v1.69bis pinout: 1 `+3V3_DVDD`, 2 GND, 3 SDA, 4 SCL, 5
+  from C19, ~12 mV at 100 mA; silk labels match the pads; renders regenerated, J3 model omitted like the other headers). JLC outputs re-exported by the owner 2026-11-22
+  (bom.csv has J3 C492420 and R69–R73). Optional cosmetic — the "3.3V" silk label touches the pin-1 corner of the outline. 2×3 2.54 mm male header, Shitty Add-On v1.69bis pinout: 1 `+3V3_DVDD`, 2 GND, 3 SDA, 4 SCL, 5
   `RP_GPIO27` (ADC1), 6 `RP_GPIO28` (ADC2). GPIO27/28 instead of GPIO21/22: those reach the PIC ICSP PGC1/PGD1 through
   R22/R23 0 Ω, so an add-on would sit on `pic flash` traffic. Part PZ254V-12-6P, LCSC C492420 (same family as H6; a keyed
   shrouded BH254V-6P C492441 does not fit the gap). Free area between CN1 (ends x 139.4) and RF23/H3: x 139.5–148.3,
