@@ -19,8 +19,8 @@ cd "$ROOT" || exit 0
   echo "--- last session log: ${LOG:-none} (last 45 lines) ---"
   [ -n "$LOG" ] && tail -45 "$LOG"
   echo
-  echo "--- memory 0008 'Bench state' ---"
-  awk '/^## Bench state/{p=1;next} /^## /{p=0} p' docs/claude/memory/0008-devkit-minUS_10102026.md 2>/dev/null | head -30
+  echo "--- current firmware (firmware/VERSIONS.md, newest rows) ---"
+  grep -m 2 '^| 20' firmware/VERSIONS.md 2>/dev/null | cut -c1-240
   echo
   echo "--- hardware on USB right now ---"
   if command -v lsusb >/dev/null; then

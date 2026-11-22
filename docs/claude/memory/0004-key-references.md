@@ -2,6 +2,9 @@
 
 **Status:** current (as of 2026-09-17) · type: reference
 
+> Note (2026-11-22): `pdfs/`, `systems/`, `design/` and `analysis.md` paths below were removed in the 2026-11-19 cleanup
+> (`f47057f`); read them from git history (`git show f47057f^:<path>`).
+
 Anchor sources for the *minus* survey (PDFs in `pdfs/`, distilled in
 `systems/literature.md`):
 

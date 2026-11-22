@@ -1,6 +1,6 @@
 # 0020 — Python library, fw-sync rule, E3 comb phase (2026-11-19, session 12)
 
-**Python library** `python/library/minus` (written for rp 1.1.2 / pic 1.1.0, proto 10):
+**Python library** `python/library/minus` (written for rp 1.1.2 / pic 1.1.0, proto 10; now rp 1.1.9 / pic 1.1.6, proto 15 — see 0021 for fmt b64, live viewer):
 - Framing: each CLI line is followed by a sentinel `#end<k>`; the firmware answers `unknown '#end<k>' — try help`, which marks the
   end of the reply (works for 4097-line `pe` captures). One `Minus` method per command, parsers in `protocol.py`.
 - `commands.py` = registry (dispatch token, exact `help` usage, method, `FIRMWARE`). `fwsync.py` checks it against

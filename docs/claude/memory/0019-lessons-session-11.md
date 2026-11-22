@@ -30,7 +30,7 @@
   fails and a following `pic flash` re-flashes the *old* embedded PIC image. `reboot dfu` sometimes returns to the app
   (`2e8a:0009`): ask the owner to hold SW2 (BOOTSEL) while plugging in. The CDC port may come back as `/dev/ttyACM1`.
   A unplugged board looks exactly like a failed reboot — ask before debugging.
-- `rpcli.py --wait=S` always waits ≥ S: never use it to time anything (`bench/2026-11-19-datasheet/time_pe.py` does).
+- `rpcli.py --wait=S` always waits ≥ S: never use it to time anything (`docs/bench/2026-11-19-datasheet/time_pe.py` does).
 - Long bench loops: run in the background (`run_in_background`), write each capture to its own file, keep the script in
   the bench folder so the data is reproducible; `LC_NUMERIC=C` in shell scripts (this machine's locale uses a decimal comma).
 - matplotlib lives in `/usr/bin/python3` only (not the pyenv python).

@@ -16,11 +16,10 @@ knowing the past discussions/discoveries.
 - `.claude/` (repo root) — repo-local Claude Code config/notes.
 
 Repo (outside `docs/claude/`):
-- `systems/` — device datasheets (subfolder per design) + `TEMPLATE.md` + `literature.md`.
-- `pdfs/` — downloaded source PDFs (papers, datasheets, reference designs), indexed
-  in `pdfs/README.md`. Always save PDFs here, never a temp dir.
-- `design/` — schematics & design files, one subfolder per design (slug matching
-  `systems/<name>/`), each with a `SOURCE.md` noting the upstream repo + version.
+- Since the 2026-11-19 cleanup (`f47057f`) the repo is flat: `hardware/` (current board), `firmware/`, `python/`,
+  `datasheet/`, `docs/` (`claude/`, `bench/`). The former `systems/` (survey), `pdfs/` (source PDFs) and `design/`
+  (reference designs) folders, and `analysis.md`, are in git history only. **Reference PDFs / third-party datasheets
+  are not stored in the repo any more: link to them** (CLAUDE.md).
 - **File-size cap:** repo total size is fine, but never commit a single file > 45 MB.
 
 ## Rules (also codified in repo root `CLAUDE.md`)

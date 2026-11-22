@@ -15,7 +15,7 @@
 | 20 M sums/s ("20 Msps integrated over 2") on one channel | **not possible**: CNT=2 sequence = 88 ns → 11.4 M sums/s max (div 15) | oversampling mode starts at ACCNUM=4, so CNT=2 integration is the only hardware 2-sum; the ≈ 40 ns per-trigger overhead cannot be skipped (no self-retrigger for TRG1SRC) |
 | **Two-channel interleave `acqil` (CH0 on SCCP1, CH1 on SCCP2 preloaded ~half a period, CNT=2 each, DMA0 + DMA1)** | **works: `acqil 16` = 4094 2-sums in 206.0 µs = 19.87 M sums/s** (pic 0.1.19 / rp 0.1.27) | both DMAs finish, no overrun; with 4 conversions per 100 ns the ADC core is saturated and packs conversions on its 25 ns grid → even/odd channel means equal to 0.1 LSB for any `off` (uniform 40 Msps comb, pairs summed, 13-bit). Period must be a multiple of 2×25 ns per channel: div 20 (5 slots) gives 10–22 LSB channel offset, `acqil 24 0 4` overloads (fill ×2, order scrambled); `acqil 32 0 4` = 4-sums at 9.94 M/s. The first pair can come out swapped (startup); `off 5` at div 16 avoids it. Still to prove with a known tone |
 
-## Tone verification (2026-11-02, 1 MHz square at RF7 = PIC32_ADC node, `bench/2026-11-02-tone/`)
+## Tone verification (2026-11-02, 1 MHz square at RF7 = PIC32_ADC node, `docs/bench/2026-11-02-tone/`)
 | Path | samples per 1 MHz period | verdict |
 | --- | --- | --- |
 | `acq 8` (DMA, 50 ns) | 20 | **20 Msps proven** |
@@ -30,7 +30,7 @@ Clock facts settled the same day: 200 MHz CPU is the **rated** maximum (DS700055
 (CPU Fout vs ADC VCO/(2·INTDIV)). VCO 1000 → CPU 200 + ADC 250 MHz = **25 Msps clean DMA (40 ns)
 with no PLL2**; PLL2 (VCO 640 → 320 MHz, CLKGEN6 source 1000) needed only for the 40 Msps core.
 
-## After the clock change (pic 0.1.20 / rp 0.1.28, 2026-11-02, session 08 part 2, `bench/2026-11-02-tone/clk200*`)
+## After the clock change (pic 0.1.20 / rp 0.1.28, 2026-11-02, session 08 part 2, `docs/bench/2026-11-02-tone/clk200*`)
 PLL1 VCO 1000 MHz: CPU **200 MHz** (rated max, not an overclock), ADC **250 MHz** (TAD 62.5 MHz), SCCP counts **5 ns**,
 Timer1 tick **80 ns**. One PLL cannot give 200 MHz Fout and 320 MHz VCO-div at once; 320 MHz for the ADC needs PLL2 (todo).
 | Path | Measured (1 MHz tone) | Why |

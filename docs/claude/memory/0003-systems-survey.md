@@ -2,6 +2,9 @@
 
 **Status:** current (as of 2026-09-17), first pass
 
+> Note (2026-11-22): `pdfs/`, `systems/`, `design/` and `analysis.md` paths below were removed in the 2026-11-19 cleanup
+> (`f47057f`); read them from git history (`git show f47057f^:<path>`).
+
 Background survey of lightweight/low-cost ultrasound acquisition designs, to
 inform *minus*. Lives in [`systems/`](../../../systems/README.md); template at
 `systems/TEMPLATE.md`, one subfolder per design.

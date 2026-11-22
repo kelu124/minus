@@ -2,6 +2,7 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-22: last stale-docs pass — memory status lines (0007/0008/0013/0014/0018/0020), removed-folder notes, bench paths, link check; resume hook now injects current firmware rows instead of the devkit bench state.
 - 2026-11-22: stale-docs sweep (README, intended-use, python/firmware READMEs, skill, memory index, notebook 04) + workshop notebook `00_acquisition_101.ipynb` for complete beginners (executed on board 3).
 - 2026-11-22: **datasheet rev 0.3** from a 12-test campaign with the transducer (`docs/bench/2026-11-22-datasheet-ext/`, .npz):
   link, envelope detection step by step (PIC env, host Hilbert, PIC **envbp** band-pass = owner's FFT idea as a Gaussian FIR,

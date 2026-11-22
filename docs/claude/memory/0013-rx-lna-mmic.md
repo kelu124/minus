@@ -1,6 +1,7 @@
 # 0013 — RX front: a cheap MMIC LNA (BGA2817) ahead of the PIC op-amps, and the FE-A fixes
 
-**Status:** **kept for the next board redesign** (owner, 2026-11-06); no devkit test planned now — nothing built or measured · type: project ·
+**Status:** **adopted** — the BGA2817 (24 dB) is the LNA of board 3 / minus v1.1 (`hardware/`; datasheet rev 0.3); this note
+is the selection study (owner, 2026-11-06). Source PDFs below are in git history (pre-2026-11-19) · type: project ·
 sources: `pdfs/datasheets/BGA2817_MMIC-wideband-amp_24dB_3V3.md` (NXP Rev. 7, 2017),
 `pdfs/datasheets/BGA2869_MMIC-wideband-amp_31dB_5V.md` (NXP Rev. 3, 2015), memory 0012, `TODO_HARDWARE.md`.
 

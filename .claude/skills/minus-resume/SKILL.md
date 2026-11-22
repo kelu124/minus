@@ -8,7 +8,7 @@ description: Use at the start of any minus session, or whenever the user says "p
 ## Overview
 The SessionStart hook (`.claude/hooks/session-resume.sh`, wired in `.claude/settings.json`)
 injects a "RESUME CONTEXT" block: last 5 commits, uncommitted files, `TODO.md` "Now" block,
-tail of the newest `docs/claude/log/*.md`, memory 0008 "Bench state", and what is on USB.
+tail of the newest `docs/claude/log/*.md`, the newest `firmware/VERSIONS.md` rows, and what is on USB.
 This skill is what to do with it. The same hook also prints a short **summary to the user**
 (hook `systemMessage`: last commit, unpushed count, RESUME HERE, the last log section, USB).
 
@@ -28,4 +28,5 @@ This skill is what to do with it. The same hook also prints a short **summary to
 ## Keeping it resumable (every session end)
 - Last log section = "handoff": what was measured/decided, the exact next command.
 - `TODO.md` top item starts with **RESUME HERE:** and names the next physical/CLI step.
-- Memory 0008 "Bench state" and private `minus-bench-state` updated; commit + push.
+- Private `minus-bench-state` and the current-state memory (0021 for firmware/link, 0022 lessons) updated;
+  `firmware/VERSIONS.md` rows added for every bump; commit + push.

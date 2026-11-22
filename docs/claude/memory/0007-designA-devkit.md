@@ -1,6 +1,6 @@
 # 0007 — DesignA + DesignA-DK devkit (RP2354A + PIC32AK)
 
-**Status:** active design direction (as of 2026-09-21) · type: project
+**Status:** the direction that became **minus v1.1** (board 3, `hardware/`); the DK devkit (boards 1/2) is retired (as of 2026-11-22) · type: project
 
 ## The concept
 A cheap single-channel pulse-echo ultrasound board pairing:
