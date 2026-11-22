@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  83dc9c6  hardware v1.2: J3 SAO add-on header (3V3/GND/I2C/GPIO27/28) in schematic + owner routing; renders regenerated (J3 omitted); README, TODO_HARDWARE, memory
+
 - 2026-11-22  d99dce2  Last stale-docs pass: memory status lines, removed-folder notes, docs/bench paths, link check; resume hook injects current firmware rows
 
 - 2026-11-22  8287ce3  Skills + memory: workshop notebook convention, average RF before envelope, Hilbert edge effect, stale-docs sweep recipe
