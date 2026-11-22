@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  c789831  Datasheet rev 0.3 final (22 pages) from a 12-test campaign with the transducer (.npz), envbp band-pass envelope on the PIC (+12 dB), DAC / live-view / period-4 before-after figures, Annex fix; rp 1.1.9 / pic 1.1.6 proto 15; notebooks cover every function
+
 - 2026-11-22  0ea951a  Datasheet rev 0.3 (link, envelope detection step by step, tof, acqos, tgc, lock check, period-4 correction) from a campaign with the transducer; data as .npz in docs/bench/2026-11-22-datasheet-ext; DAC test pending (board off USB)
 
 - 2026-11-22  b949f31  minus.live: auto GUI backend (Qt/Tk/GTK), clear error when only agg exists (pyenv python3 showed nothing), progress lines; README launch notes
