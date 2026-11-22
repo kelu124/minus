@@ -249,27 +249,60 @@ class LiveView:
             self.w_status.value = f"stopped after {self.frames} frames"
 
 
+NON_INTERACTIVE = ("agg", "pdf", "svg", "ps", "cairo", "pgf", "template")
+
+
+def pick_backend(requested: Optional[str] = None) -> str:
+    """The matplotlib backend for the window: ``requested`` if given, else the first of QtAgg / TkAgg / GTK3Agg that loads.
+    Returns the backend in use (possibly a non-interactive one when nothing else is installed)."""
+    import matplotlib
+    if requested:
+        matplotlib.use(requested, force=True)
+        return matplotlib.get_backend()
+    if matplotlib.get_backend().lower() not in NON_INTERACTIVE:
+        return matplotlib.get_backend()
+    for cand in ("QtAgg", "TkAgg", "GTK3Agg"):
+        try:
+            matplotlib.use(cand, force=True)
+            import matplotlib.pyplot as plt          # noqa: F401  (raises if the toolkit is missing)
+            plt.figure(); plt.close("all")
+            return matplotlib.get_backend()
+        except Exception:
+            continue
+    matplotlib.use("Agg", force=True)
+    return "agg"
+
+
 def run_window(port: Optional[str] = None, mode: str = "pe", in_: int = 25, frames: Optional[int] = None,
                save: Optional[str] = None, backend: Optional[str] = None, gain: Optional[int] = None, **source_kw) -> int:
     """Desktop loop: draws until the window is closed (or ``frames`` frames); ``save`` writes the last frame as PNG."""
-    import matplotlib
-    if backend:
-        matplotlib.use(backend, force=True)
+    import sys
+    used = pick_backend(backend)
+    interactive = used.lower() not in NON_INTERACTIVE
+    if not interactive and not save:
+        sys.exit("minus.live: no GUI backend for matplotlib in this Python (%s, backend %s): nothing could be shown.\n"
+                 "  Use a Python with Tk or Qt, e.g.   /usr/bin/python3 -m minus.live\n"
+                 "  or install one here:              pip install PyQt5\n"
+                 "  (or run headless:                 --frames 20 --save live.png)" % (sys.executable, used))
     import matplotlib.pyplot as plt
+    print(f"minus.live: {mode} on input {in_}, backend {used} — " +
+          ("close the window or Ctrl-C to stop" if interactive else f"headless, {frames or 'endless'} frames -> {save}"), flush=True)
     dev = Minus(port)
     try:
         if gain is not None:
             dev.gain(gain, 0, 0)
         src = LiveSource(dev, mode, in_, **source_kw)
         fig = LiveFigure()
-        interactive = matplotlib.get_backend().lower() not in ("agg", "pdf", "svg", "ps", "cairo")
         if interactive:
             plt.ion()
             plt.show(block=False)
-        n = 0
+        n, t_print = 0, time.time()
         while frames is None or n < frames:
-            fig.update(src.grab())
+            f = src.grab()
+            fig.update(f)
             n += 1
+            if time.time() - t_print > 2:                # a sign of life in the terminal
+                print(f"  frame {n}: {f.info}", flush=True); t_print = time.time()
             if interactive:
                 if not plt.fignum_exists(fig.fig.number):
                     break
@@ -296,9 +329,12 @@ def main(argv=None) -> None:
     ap.add_argument("--save", help="write the last frame as PNG")
     ap.add_argument("--backend", help="matplotlib backend (e.g. Agg for headless, TkAgg, QtAgg)")
     a = ap.parse_args(argv)
-    n = run_window(a.port, a.mode, a.in_, a.frames, a.save, a.backend, a.gain,
-                   dec=a.dec, shots=a.shots, thr=a.thr, blank_ns=a.blank_ns)
-    print(f"{n} frames")
+    try:
+        n = run_window(a.port, a.mode, a.in_, a.frames, a.save, a.backend, a.gain,
+                       dec=a.dec, shots=a.shots, thr=a.thr, blank_ns=a.blank_ns)
+    except KeyboardInterrupt:
+        n = "stopped:"
+    print(f"{n} frames" if isinstance(n, int) else "stopped")
 
 
 if __name__ == "__main__":

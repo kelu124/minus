@@ -63,8 +63,14 @@ reply. Long captures (`pe`, ~0.9 s, 4097 lines) frame the same way as one-liners
 `minus.live` shows each shot as three panels — the A-line, its envelope (dB) and a scrolling M-mode image — in `pe`
 (pulse + RF), `acq`, `env` (envelope computed on the PIC) or `tof` mode:
 
+It needs a Python whose matplotlib has a GUI backend (Qt or Tk) and can import `minus`: run it from `python/library`, or
+`pip install -e python/library` once. On this machine the system Python has both (`/usr/bin/python3`); the pyenv 3.11 has
+matplotlib with only the non-interactive `agg` backend (no `_tkinter`, no Qt) — the viewer then stops with a message
+instead of drawing into nothing; `pip install PyQt5` there fixes it.
+
 ```bash
-python3 -m minus.live                                # desktop window, pe on input 25, until closed (~22 frames/s)
+cd python/library
+/usr/bin/python3 -m minus.live                       # desktop window (QtAgg/TkAgg picked automatically), pe on input 25
 python3 -m minus.live --mode env --dec 8 --shots 4   # PIC envelope, 4 shots averaged per frame
 python3 -m minus.live --frames 20 --save live.png --backend Agg   # headless
 ```
