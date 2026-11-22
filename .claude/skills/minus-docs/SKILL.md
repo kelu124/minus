@@ -82,3 +82,7 @@ macros written by the bench analysis script — never type a measured value by h
 change: collect `dev.<method>(` from the code cells and compare with `commands.RP_COMMANDS/RAW_HELPERS/PIC_LINK/PIC_SUBCOMMANDS`
 methods; only destructive or session-breaking ones (`pic_erase`, `reboot`) may be described without running. Re-execute all on
 the board (nbclient) with 0 errors before committing.
+`00_acquisition_101.ipynb` is the **workshop notebook for complete beginners** (plain language, "✋ Try it" cells, glossary,
+no jargon without a definition, echoes found automatically so any reflector works). Keep it simple: new features go in
+01–04; touch 00 only when the basics change (pe, gain, depth_mm, envbp, hilbert_envelope). Teach averaging RF-before-envelope.
+After firmware/doc changes, run the stale-docs sweep in memory 0022 (version strings, speeds, datasheet rev).

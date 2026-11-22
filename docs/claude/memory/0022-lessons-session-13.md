@@ -56,3 +56,13 @@
   from "slow mount", and use a background loop to wait for the owner's replug.
 - Git: `git checkout -- file` to revert one experiment also drops every other uncommitted edit in that file — re-check the
   diff; stash untested firmware instead of committing it when the board is away.
+
+## Late afternoon 2026-11-22 (docs sweep, workshop notebook)
+- **Average the RF, then take the envelope**: averaging envelopes does not lower the floor (5.9 → 4.9 LSB at 64 shots);
+  RF first does (5.9 → 1.8 / 1.6 at 16 / 64), the floor stops falling because part of it is coherent interference, and the
+  echo peak drops ~20 % from the comb jitter (E3) unless shots are aligned.
+- **Hilbert edge effect**: `hilbert_envelope` blows up in the last few µs of a record; any "strongest echo" search or dB
+  normalisation must exclude t > t_end − 5 µs (and the main bang, t < 20 µs).
+- Stale-docs sweep recipe: grep every tracked .md/.ipynb (not logs/changelog/DONE/dated bench READMEs) for old version
+  strings (`rp 1.1.[0-8]`, `proto 1[0-4]`), old speeds (`0.9 s`, `0.71 s`), old datasheet revs, "not yet / unused /
+  uncompiled", then read each hit in context; keep "since rp x.y.z" history lines.
