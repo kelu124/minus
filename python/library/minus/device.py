@@ -383,6 +383,17 @@ class Minus:
             cmd = "tgc " + " ".join(f"{int(t)} {int(l)}" for t, l in steps)
         return self._run(cmd, P.parse_tgc)
 
+    def envbp(self, dec: int, shots: Optional[int] = None, in_: Optional[int] = None, fc_khz: Optional[int] = None,
+              bw_khz: Optional[int] = None) -> P.Envelope:
+        """Band-pass envelope computed on the PIC: a Gaussian complex filter centred on ``fc_khz`` (default 3300) with a
+        ``bw_khz`` full width at half maximum (default 2500) — the FFT band-pass + Hilbert envelope done as a short FIR at the
+        decimated outputs. Values = amplitude of the in-band signal (LSB). Removes the out-of-band floor (fs/4, fs/2 pattern
+        residues, the 2.74 MHz line): +12 dB peak/floor over ``env`` on the bench echoes."""
+        if (fc_khz is not None or bw_khz is not None) and (shots is None or in_ is None):
+            raise ValueError("envbp: fc/bw need shots and in_ (positional CLI arguments)")
+        cmd = "envbp" + _args(dec, shots, in_, fc_khz, bw_khz)
+        return self._run(cmd, P.parse_env, timeout=60)
+
     # ------------------------------------------------------------------ front end
     def pulse(self, hi: Optional[int] = None, lo: Optional[int] = None, dead: Optional[int] = None) -> P.Pulse:
         """One pulser shot now, no capture (scope check)."""

@@ -2,7 +2,7 @@
 and ~85-99 us), one compressed .npz per test in this folder (arrays + settings + firmware versions; no raw text dumps).
 
 Run from the repo root:   /usr/bin/python3 docs/bench/2026-11-22-datasheet-ext/campaign.py [test ...]
-Tests: pe_ref link fmt lock dac acqos tof env tgc pc   (default: all, in that order). Then analyze.py.
+Tests: pe_ref link fmt lock dac acqos tof env envbp tgc pc live   (default: all, in that order). Then analyze.py.
 """
 import sys, time, json, re, traceback
 from pathlib import Path
@@ -83,16 +83,45 @@ def t_lock():
 
 
 def t_dac():
-    """PIC DAC on AD2AN3 (input 19): triangle over SPI and UART, DC levels, sine at 20 Msps."""
+    """PIC DAC on AD2AN3 (input 19): DC sweep, triangle over SPI and UART, sine at 10 Msps (fit / SINAD), sine vs 25 Msps capture."""
     res = {}
+    codes = np.array([205, 512, 1024, 1536, 2048, 2560, 3072, 3584, 3890])
+    dc = []
+    for code in codes:
+        d.dac("dc", int(code)); time.sleep(0.01); s, _ = caps("acq 4 0 19 1", 3); dc.append(s.astype(float)[:, 64:].mean())
+    res["dc_codes"] = codes; res["dc_adc"] = np.array(dc)
     d.dac("tri", 512, 3584, 16)
     s, c = caps("acq 4 0 19 1", 4); res["tri_spi"] = s; res["tri_dt_ns"] = c[0].dt_ns
     d.link("uart"); s, _ = caps("acq 4 0 19 1", 1); res["tri_uart"] = s; d.link("spi", 12.5)
-    for code in (512, 2048, 3584):
-        d.dac("dc", code); time.sleep(0.01); s, _ = caps("acq 4 0 19 1", 3); res[f"dc_{code}"] = s
-    d.dac("sine", 20000, 800, 2048); s, c = caps("acq 10 0 19 1", 3); res["sine_div10"] = s; res["sine_dt_ns"] = c[0].dt_ns
-    d.dac("off")
+    for amp in (800, 1500):
+        d.dac("sine", 20000, amp, 2048)
+        try:
+            s, c = caps("acq 20 0 19 1", 4); res[f"sine{amp}_div20"] = s; res["sine_dt_ns"] = c[0].dt_ns
+        except Exception as e:
+            print("   sine at div 20:", e)
+    st = [((d.raw("ACQ 4 0 19 1") or "x").split()[-1]) for _ in range(12)]   # the documented contention at 25 Msps
+    res["sine_slow"] = st.count("slow"); res["sine_n"] = len(st)
+    d.dac("off"); res["lock_after_sine"] = np.array([d.pic_lock().tries, d.pic_lock().slow])
     save("dac", **res)
+
+
+def t_envbp():
+    """envbp (band-pass envelope on the PIC) vs env on the echoes (gain x3.2): fc/bw variants, 1 and 16 shots, 5 runs; pe shots."""
+    d.gain(0, 1, 0)
+    res = {}
+    for fc, bw in ((3300, 1500), (3300, 2500), (3300, 4000), (4000, 4000)):
+        for shots in (1, 16):
+            runs = [d.exchange(f"envbp 8 {shots} 25 {fc} {bw}", timeout=60).lines for _ in range(5)]
+            res[f"bp_f{fc}_b{bw}_s{shots}"] = np.array([P.parse_env(r).values for r in runs])
+    for shots in (1, 16):
+        res[f"env_s{shots}"] = np.array([d.env(8, shots, 25).values for _ in range(5)])
+    res["dt_ns"] = P.parse_env(d.exchange("envbp 8 1 25", timeout=60).lines).dt_ns
+    s, c = caps("pe", 16); res["pe_ref"] = s; res["pe_dt_ns"] = c[0].dt_ns
+    tt = []
+    for _ in range(10):
+        t0 = time.perf_counter(); d.exchange("envbp 8 1 25", timeout=60); tt.append(time.perf_counter() - t0)
+    res["time_s1"] = np.array(tt)
+    save("envbp", **res)
 
 
 def t_acqos():
@@ -143,12 +172,15 @@ def t_env():
     save("env", **res)
 
 
+TGC_T_US = 75                                             # owner, 2026-11-22: between the first echo (43 us) and the later ones
+
+
 def t_tgc():
-    """tgc on the echoes: gain 0 0 0 (x10) with and without a step to leg 2 (x61) at 30 us, 16 shots each."""
+    """tgc on the echoes: gain 0 0 0 (x10) with and without a step to leg 2 (x61) at 75 us, 16 shots each."""
     d.gain(0, 0, 0)
-    res = {}
+    res = {"step_us": TGC_T_US}
     d.tgc("off"); res["off"], c = caps("pe", 16); res["dt_ns"] = c[0].dt_ns
-    d.tgc((30, 2)); res["step30_leg2"], c = caps("pe", 16)
+    d.tgc((TGC_T_US, 2)); res["step_leg2"], c = caps("pe", 16)
     d.tgc("off")
     d.gain(2, 0, 0); res["leg2_const"], _ = caps("pe", 16)
     d.gain(0, 0, 0)
@@ -169,8 +201,27 @@ def t_pc():
     save("pc", **res)
 
 
-TESTS = dict(pe_ref=t_pe_ref, link=t_link, fmt=t_fmt, lock=t_lock, dac=t_dac, acqos=t_acqos, tof=t_tof, env=t_env, tgc=t_tgc,
-             pc=t_pc)
+def t_live():
+    """The live viewer on the echoes (gain x3.2): 60 frames in pe and envbp modes; PNG for the datasheet + the last frames' data."""
+    import matplotlib; matplotlib.use("Agg")
+    from minus.live import LiveSource, LiveFigure
+    d.gain(0, 1, 0)
+    res = {}
+    for mode in ("pe", "envbp"):
+        src, fig = LiveSource(d, mode, 25, dec=8, shots=1), LiveFigure()
+        t0 = time.time()
+        for _ in range(60):
+            f = src.grab(); fig.update(f)
+        res[f"{mode}_fps"] = 60 / (time.time() - t0)
+        fig.fig.savefig(OUT.parents[2] / "datasheet" / "figures" / f"ext_live_{mode}.png", dpi=110)
+        res[f"{mode}_depth_mm"] = f.depth_mm; res[f"{mode}_env"] = f.env; res[f"{mode}_mmode_db"] = np.array(fig.cols)
+        if f.rf is not None: res[f"{mode}_rf"] = f.rf
+        fig.plt.close(fig.fig)
+    save("live", **res)
+
+
+TESTS = dict(pe_ref=t_pe_ref, link=t_link, fmt=t_fmt, lock=t_lock, dac=t_dac, acqos=t_acqos, tof=t_tof, env=t_env, envbp=t_envbp,
+             tgc=t_tgc, pc=t_pc, live=t_live)
 sel = sys.argv[1:] or list(TESTS)
 failed = []
 for name in sel:

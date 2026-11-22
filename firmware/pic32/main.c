@@ -109,11 +109,16 @@ static void rdy_low_settle(void) {
     RDY_LAT = 0;
 }
 static void lock_until_uniform(void) {
+    // A running DAC sine (DMA2) makes every capture 'slow' through bus contention, not through the lock: pause it during the
+    // test, or the check re-locks 12 times for nothing (seen 2026-11-22: LOCK 12 8 after "dac sine" + acq), then resume.
+    unsigned dma2 = DMA2CHbits.CHEN;
+    DMA2CHbits.CHEN = 0;
     for (lock_tries = 1; ; lock_tries++) {
         lock_slow = lock_check();
         if (lock_slow == 0 || lock_tries >= LOCK_MAX) break;
         clocks_relock();
     }
+    DMA2CHbits.CHEN = dma2;
 }
 
 // ---------------------------------------------------------------- pins
@@ -290,6 +295,19 @@ int main(void) {
                     if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10)); if (*e == ' ') acc = (unsigned)strtoul(e + 1, NULL, 10); }
                     rdy_low_settle();
                     env_t r; acq_status_t st = pe_env(dec, acc, &r);
+                    const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
+                    xfer_set_n(st == ACQ_OK ? r.n : 0);
+                    char out[64]; snprintf(out, sizeof out, "ENV %u %u %u %lu %u %s\n", r.n, r.dec, r.shots, (unsigned long)r.ticks, (unsigned)ACQ_TICK_NS, sname);
+                    uart1_puts(out);
+                } else if (!strncmp(line, "ENVBP ", 6)) {
+                    // ENVBP <dec> [in [acc [fc_khz [bw_khz]]]]: band-pass envelope (Gaussian complex filter, default 3300 / 2500 kHz);
+                    // reply and payload as ENV
+                    char *e; unsigned dec = (unsigned)strtoul(line + 6, &e, 10), acc = 0, fc = 3300, bw = 2500;
+                    if (*e == ' ') { acq_set_input((unsigned)strtoul(e + 1, &e, 10));
+                        if (*e == ' ') { acc = (unsigned)strtoul(e + 1, &e, 10);
+                            if (*e == ' ') { fc = (unsigned)strtoul(e + 1, &e, 10); if (*e == ' ') bw = (unsigned)strtoul(e + 1, NULL, 10); } } }
+                    rdy_low_settle();
+                    env_t r; acq_status_t st = pe_envbp(dec, acc, fc, bw, &r);
                     const char *sname = st == ACQ_OK ? "ok" : st == ACQ_SLOW ? "slow" : st == ACQ_TIMEOUT ? "timeout" : "err";
                     xfer_set_n(st == ACQ_OK ? r.n : 0);
                     char out[64]; snprintf(out, sizeof out, "ENV %u %u %u %lu %u %s\n", r.n, r.dec, r.shots, (unsigned long)r.ticks, (unsigned)ACQ_TICK_NS, sname);

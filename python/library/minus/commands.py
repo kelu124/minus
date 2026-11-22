@@ -11,9 +11,9 @@ from typing import Dict, Optional
 
 # Firmware this library version was written and tested against.
 FIRMWARE = {
-    "rp": {"name": "minus-rp2354", "version": "1.1.8"},
-    "pic": {"name": "minus-pic32", "version": "1.1.5"},
-    "proto": 14,
+    "rp": {"name": "minus-rp2354", "version": "1.1.9"},
+    "pic": {"name": "minus-pic32", "version": "1.1.6"},
+    "proto": 15,
 }
 
 
@@ -57,6 +57,7 @@ RP_COMMANDS: Dict[str, Cmd] = {
     "acqos":   Cmd("acqos <4|16> [in [pe]]", "acqos", "capture with ADC hardware oversampling (13 / 14-bit)"),
     "tof":     Cmd("tof <thr> [blank_ns [in [ref]]]", "tof", "pulse-echo time of flight on the PIC (ADC comparator), one line"),
     "env":     Cmd("env <dec> [shots [in]]", "env", "pulse-echo envelope computed on the PIC, averaged over shots"),
+    "envbp":   Cmd("envbp <dec> [shots [in [fc_khz [bw_khz]]]]", "envbp", "band-pass envelope on the PIC (Gaussian filter)"),
     "fmt":     Cmd("fmt [text|b64]", "fmt", "sample output format (the library switches to b64 on connect)"),
     "tgc":     Cmd("tgc [off | <t_us> <leg> ...]", "tgc", "time-gain steps: 4052 gain leg switched at set times after the pulse"),
 }
@@ -104,6 +105,7 @@ PIC_LINK: Dict[str, Optional[str]] = {
     "ACQOS": "acqos",        # proto 13: ADC oversampling capture
     "TOF": "tof",            # proto 13: comparator + first-crossing search on the PIC
     "ENV": "env",            # proto 13: on-PIC envelope, multi-shot average
+    "ENVBP": "envbp",        # proto 15: band-pass envelope (Gaussian complex filter)
     "CLK12": None,           # clock-source diagnostic: raw("CLK12 n")
 }
 

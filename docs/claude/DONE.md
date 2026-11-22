@@ -2,6 +2,11 @@
 
 Completed work items, newest first. Each line: `YYYY-MM-DD — what was done`.
 
+- 2026-11-22: **datasheet rev 0.3** from a 12-test campaign with the transducer (`docs/bench/2026-11-22-datasheet-ext/`, .npz):
+  link, envelope detection step by step (PIC env, host Hilbert, PIC **envbp** band-pass = owner's FFT idea as a Gaussian FIR,
+  +12 dB), tof, acqos (RF warning quantified), tgc at 75 µs, DAC figures (DC sweep, triangle, sine at 10 Msps), lock check,
+  period-4 correction with the host-computed before/after signal and slipped captures, live-view figures; "Annex 12" fixed.
+  rp 1.1.9 / pic 1.1.6 (proto 15); library envbp(); notebooks 01–04 cover every function (except pic_erase/reboot, described).
 - 2026-11-22: proto 14 (rp 1.1.7 / pic 1.1.4): `fmt b64` sample output (30 vs 110 ms per capture), `tgc` time-gain steps
   (switch transient ~2 µs saturation + ~15 µs settling, masked by `Capture.tgc_valid()`), `ACQ` resets navg, `acqos` RF
   warning; library framing fix (split end-marker line leaked into the next reply); **live viewer** `minus.live` (desktop

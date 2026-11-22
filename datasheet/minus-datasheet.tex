@@ -53,7 +53,7 @@
 
 \newcommand{\product}{minus}
 \newcommand{\repo}{\href{https://github.com/kelu124/minus}{github.com/kelu124/minus}}
-\newcommand{\rpfwrel}{1.1.8}\newcommand{\picfwrel}{1.1.5}
+\newcommand{\rpfwrel}{1.1.9}\newcommand{\picfwrel}{1.1.6}
 \newcommand{\board}{v1.1}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
 \newcommand{\us}{\,\textmu s}
@@ -112,7 +112,7 @@
   \item ADC alone: \vadcenob{}~noise-limited bits\meas{}; in-band input noise \veninmax{}\,nV/$\sqrt{\text{Hz}}$ at the OA1 input at full gain\meas{}
   \item On-chip fixed-pattern correction (period-4 pin pattern removed, \cmd{pc}): \xPcRaw{} → \xPcCor\,LSB rms\meas{}
   \item \textbf{Fast capture link}: RP↔PIC SPI frame with CRC (\xLinkMeanA\,ms), base64 to the host: one \cmd{pe} in \xFmtBsix\,ms end to end\meas{}
-  \item On the PIC: \textbf{envelope} (\cmd{env}, multi-shot average), \textbf{time of flight} (\cmd{tof}, one line), ADC
+  \item On the PIC: \textbf{envelope} (\cmd{env}; band-pass \cmd{envbp}, multi-shot average), \textbf{time of flight} (\cmd{tof}, one line), ADC
         \textbf{oversampling} (\cmd{acqos}, 13/14-bit); \textbf{time-gain steps} (\cmd{tgc}); DAC test signal (\cmd{dac})
   \item Two MCUs: RP2354A (USB, control, pulser PIO) + PIC32AK1216GC41048 (op-amps, ADC, DMA)
   \item USB-C powered and controlled (CDC console, text commands); in-system programming of the PIC by the RP
@@ -181,7 +181,7 @@
 \vspace{6pt}
 \begin{tcolorbox}[colback=accentlight,colframe=accent,arc=1mm,boxrule=0.5pt,title={\bfseries How to read this datasheet},fonttitle=\small]
 \small Values marked \meas{} were measured on one board (RP2354A unique ID \vuid, firmware rp~\vrpfw{} / pic~\vpicfw{}, link protocol~\vproto; the released firmware rp~\rpfwrel{} / pic~\picfwrel{} has the same acquisition code, plus the LP5562 LED driver and new names)
-with a 3.3\,MHz single-element piezo transducer connected (characterised in Annex~\ref{sec:piezo}), at room temperature, powered from a PC USB port. Values marked \des{} come
+with a 3.3\,MHz single-element piezo transducer connected (characterised in \hyperref[sec:piezo]{Annex~A}), at room temperature, powered from a PC USB port. Values marked \des{} come
 from the schematic, the component datasheets or the firmware and were not independently measured. Every measurement can be
 reproduced with the scripts in \texttt{docs/bench/2026-11-19-*/} of the repository (\repo); the raw captures are stored next to them.
 There is a single unit: no min/max over production is available.
@@ -456,6 +456,27 @@ correction (it is also skipped for \cmd{navg} > 1, \cmd{samc} > 0 and oversampli
 \caption{Period-4 pattern\meas. Left: phase means minus the mean, \xPcN{} raw captures, rotated so the low phase comes first.
 Middle: pattern rms per capture, raw (\cmd{pc 0}) and corrected (\cmd{pc 1}). Right: mean spectra; the fs/4 and fs/2 lines go away.}\end{figure}
 
+\textbf{The signal before and after, computed on the host.} To see exactly what the correction does to the samples, \xPcN{} captures
+were taken with the correction \emph{off} (\cmd{pc 0}) and the PIC's algorithm was applied to them on the host, bit for bit
+(integer arithmetic, 1/16\,LSB, same rounding; \texttt{analyze.py} \texttt{pc\_host}, results in \texttt{pc\_host.npz}):
+\begin{itemize}[nosep]
+  \item \textbf{Raw}: in a clean capture one phase sits \xPcOffB\,LSB from the mean and the three others at \xPcOffA, \xPcOffC,
+        \xPcOffD\,LSB — the four per-phase histograms are separated (Fig.~\ref{fig:pcsignal}, top right); in the time trace every
+        fourth sample dips.
+  \item \textbf{Corrected}: the four offsets are subtracted and the four histograms coincide (middle left); the dips are gone and
+        the trace is the noise of the chain. The sample standard deviation falls from \xPcHostRaw{} to \xPcHostCor\,LSB (mean of
+        \xPcN{} captures); the PIC's own corrected captures (other shots) give \xPcPicCor\,LSB — the same.
+  \item \textbf{Slipped captures}: in \xPcSlipN{} of \xPcN{} captures (\xPcSlip\,\%) the low phase moves by one sample in the middle of the
+        record (E3 comb slip, bottom left). One set of four offsets cannot fit both halves, so two populations remain after the
+        correction (bottom right) and the fs/4 line is only partly removed in those captures. A per-segment estimate would fix it at
+        the cost of noisier offsets; not done yet.
+\end{itemize}
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_pc_signal.pdf}
+\caption{The period-4 correction applied on the host to raw captures (no pulse, gain ×10)\meas. Top: 40 samples of a clean
+capture, raw and corrected (red squares: the low phase), and its per-phase histograms (raw). Middle: the same after the
+correction; mean spectra (raw, host-corrected, PIC-corrected). Bottom: a slipped capture — the phase means along the record, and
+the two populations left after the correction.}\label{fig:pcsignal}\end{figure}
+
 \subsection{Noise summary}
 \begin{table}[H]\centering\small
 \caption{Output noise at the ADC node vs gain (firmware correction on, no pulse)\meas. Band = 1.5–5\,MHz with the 2.72\,MHz line notched;
@@ -533,6 +554,45 @@ emulation and the host Hilbert envelope × $2/\pi$.}\label{fig:envsteps}\end{fig
 \begin{figure}[H]\centering\includegraphics[width=0.55\textwidth]{figures/ext_env_shots.pdf}
 \caption{Run-to-run spread of the \cmd{env} noise floor vs shots averaged\meas.}\end{figure}
 
+\subsubsection*{Band-pass envelope on the PIC (\cmd{envbp})}\label{sec:envbp}
+Between the echoes, most of what \cmd{env} reports is not noise in the probe band: it is the fs/4 and fs/2 residues of the
+period-4 pattern (6.2 / 12.4\,MHz) and the 2.74\,MHz interference line (E5). Filtering to the probe band before detecting removes
+it. The textbook way is an FFT, keep the band, inverse FFT, take the magnitude; a 4096-point complex FFT does not fit in the PIC's
+16\,KB of RAM, so \cmd{envbp} does the equivalent convolution, evaluated only where an output value is needed.
+
+\textbf{\cmd{envbp <dec> [shots [in [fc\_kHz [bw\_kHz]]]]}, step by step} (firmware \texttt{pe\_ext.c} \texttt{pe\_envbp}; defaults
+fc 3300\,kHz, bw 2500\,kHz):
+\begin{enumerate}[nosep]
+  \item \textbf{Capture} as for \cmd{env} (pulse, standard settings, period-4 correction).
+  \item \textbf{Filter design}, from the measured sample period $\Delta t$: a Gaussian window $g_k = e^{-k^2\Delta t^2/2\sigma_t^2}$ with
+        $\sigma_t = 1/(2\pi\sigma_f)$ and $\sigma_f = \text{bw}/2.355$ (bw = full width at half maximum of the pass band), cut at
+        $\pm3\sigma_t$ (21 taps for 2.5\,MHz), times $e^{j2\pi f_c k\Delta t}$. In frequency this is a Gaussian pass band centred on
+        $+f_c$ only: band-pass and Hilbert transform in one complex filter.
+  \item \textbf{Baseline}: subtract the capture mean.
+  \item \textbf{Filter at the output points only}: for block $j$ (centre sample $c = j\cdot\text{dec} + \text{dec}/2$),
+        $I + jQ = \sum_k h_k\,x_{c+k}$ — the analytic, band-limited signal at that sample.
+  \item \textbf{Magnitude}: $2\sqrt{I^2+Q^2}/\sum_k g_k$ = the amplitude of the in-band signal (a sine of amplitude $A$ at $f_c$
+        gives $A$), in 1/16\,LSB.
+  \item \textbf{Average over shots and transfer} exactly as \cmd{env} (running 32-bit sum, 4095/dec values over SPI).
+\end{enumerate}
+The pass band must be \emph{tapered}: on the recorded echoes a brick-wall 2–6\,MHz FFT mask rings (sinc in time) and spreads the
+first echo into the floor (43.2\,dB peak/floor), a raised-cosine 2–6\,MHz band gives 53.0\,dB and the Gaussian 3.3/2.5\,MHz
+62.2\,dB, against 49.8\,dB for both \cmd{env} and a full-band Hilbert envelope (host prototype on 16 shots,
+\texttt{bandpass\_env.py}, Fig.~\ref{fig:bpenv}). On the PIC\meas: \cmd{envbp} gains \xBpGain\,dB of peak/floor over \cmd{env} on a
+single shot, in \xBpTime\,ms per shot (Table~\ref{tab:envbp}). A narrower band lowers the floor further but lengthens the
+envelope (less axial resolution): 2.5\,MHz is a compromise for this 3.3\,MHz probe.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_bpenv.pdf}
+\caption{Host prototype of the band-pass envelope on 16 recorded shots: spectrum with the 2–6\,MHz band (left); one shot with
+each envelope, legend = first-echo peak / floor 55–78\us{} (right)\meas.}\label{fig:bpenv}\end{figure}
+\begin{table}[H]\centering\small
+\caption{On the PIC, first echo, gain ×\xRefGain, dec 8, 5 runs per setting\meas. Floor = rms of the envelope in 55–78\us{} (LSB).}\label{tab:envbp}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+\textbf{Detector (fc / bw kHz)} & \textbf{peak (LSB)} & \textbf{floor, 1 shot} & \textbf{peak/floor (dB)} & \textbf{floor, 16 shots} & \textbf{dB, 16 shots}\\\midrule
+\xBpRows
+\bottomrule\end{tabular}\end{table}
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_envbp.pdf}
+\caption{\cmd{env} vs \cmd{envbp} on the PIC, same session\meas.}\end{figure}
+
 \subsection{Time of flight}\label{sec:tof}
 \textbf{\cmd{tof <thr> [blank\_ns [in [ref]]]}, step by step} (firmware \texttt{pe\_tof}):
 \begin{enumerate}[nosep]
@@ -558,6 +618,17 @@ at thr 100. Choose thr well between two cycle peaks, or use \cmd{env} for an env
 \begin{figure}[H]\centering\includegraphics[width=0.85\textwidth]{figures/ext_tof.pdf}
 \caption{\cmd{tof} crossing times per threshold\meas.}\end{figure}
 
+\subsection{Live view}
+\texttt{python3 -m minus.live} (desktop window) and \texttt{minus.live.LiveView(dev)} (Jupyter, ipywidgets) show each shot as the
+A-line, its envelope in dB and an M-mode image (the last 120 envelopes, depth down, time to the right). Modes: \cmd{pe}, \cmd{acq},
+\cmd{env}, \cmd{envbp}, \cmd{tof} (the \cmd{tof} result as a marker). On the bench transducer\meas: \xLiveFpsPe{} frames/s in \cmd{pe}
+mode and \xLiveFpsBp{} in \cmd{envbp} mode (the window is drawn with Agg here; Jupyter is slower, $\approx$\,5 frames/s, because each
+frame is sent as an image).
+\begin{figure}[H]\centering
+\includegraphics[width=0.49\textwidth]{figures/ext_live_pe.png}\hfill\includegraphics[width=0.49\textwidth]{figures/ext_live_envbp.png}
+\caption{The live viewer on the bench echoes, gain ×3.2\meas. Left: \cmd{pe} mode (RF, Hilbert envelope, M-mode). Right: \cmd{envbp}
+mode (the PIC sends only the band-pass envelope; the RF panel stays empty).}\end{figure}
+
 \subsection{Oversampling (\cmd{acqos})}
 \cmd{acqos 4|16 [in [pe]]} sets the ADC channel to hardware oversampling (MODE 11): every trigger runs 4 or 16 back-to-back 32\,ns
 conversions and returns one 13- or 14-bit result (2× or 4× a 12-bit code). The trigger period is raised to fit: \xOsDtB{} and
@@ -570,10 +641,12 @@ of its \cmd{pe} amplitude. Use it for slow signals and long, low-noise windows; 
 
 \subsection{Time-gain steps (\cmd{tgc})}
 \cmd{tgc <t\_us> <leg> [<t\_us> <leg> …]} switches the 74HC4052 gain leg of both stages at up to four times after the pulse, during
-every capture; the leg set by \cmd{gain} is restored after. With a step from ×10 to ×61 at 30\us{} the second echo grows ×\xTgcRatio{}
-(a constant ×61 gives ×\xTgcConst)\meas. Each switch costs $\approx$\,2\us{} of saturation and $\approx$\,15\us{} of settling: the 4052
-breaks before it makes, so the op-amp feedback opens for a moment. Place steps away from echoes of interest; the Python
-\texttt{Capture.tgc\_valid()} masks 17\us{} after each step.
+every capture; the leg set by \cmd{gain} is restored after. Measured with a step from ×10 to ×61 at \xTgcAt\us, between the first
+echo and the later ones\meas: the first echo (before the step) is unchanged (×\xTgcBefore), the third echo (after the transient)
+grows ×\xTgcRatio{} (a constant ×61 gives ×\xTgcConst), and the second echo at \xEchoBt\us{} falls inside the switch transient
+(\xTgcAt–\xTgcEnd\us): it still comes out ×\xTgcInB{} (×\xTgcInBc{} for a constant ×61), but on top of the settling tail. Each switch costs $\approx$\,2\us{} of saturation and $\approx$\,15\us{} of
+settling: the 4052 breaks before it makes, so the op-amp feedback opens for a moment. Place steps at least 17\us{} before the
+echoes of interest; the Python \texttt{Capture.tgc\_valid()} masks 17\us{} after each step.
 \begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_tgc.pdf}
 \caption{Time-gain step on the echoes (mean envelope of 16 shots)\meas.}\end{figure}
 
@@ -582,8 +655,14 @@ breaks before it makes, so the op-amp feedback opens for a moment. Place steps a
 AD2AN3: \cmd{acq 4 0 19} reads it with no wiring. Codes 205…3890 = 5…95\,\% of 3.3\,V; the PDM DAC settles in 0.75–2\us.
 \cmd{tri} runs in hardware (half period (hi−lo)·16/slope × 4\,ns) and is the reference to use during captures; \cmd{sine} is fed by
 DMA and makes 20–25\,Msps captures \cmd{slow} (bus contention) — the PIC pauses it during its lock check.
-\IfFileExists{figures/ext_dac.pdf}{\begin{figure}[H]\centering\includegraphics[width=0.9\textwidth]{figures/ext_dac.pdf}
-\caption{DAC triangle read back by the capture ADC: period \xTriPer\us{} (nominal 24.58), codes \xTriLo…\xTriHi\meas.}\end{figure}}{}
+Measured\meas: the DC sweep is linear to within \xDacInl\,LSB (ADC code = \xDacGain\,× DAC code + \xDacOff); the triangle has a period of
+\xTriPer\us{} (nominal 24.58) and the same values over SPI and UART; a 20\,kHz, 50-point sine captured at 10\,Msps (\cmd{acq 20 0 19},
+where the capture DMA has the slack to share the bus) fits at \xSineF\,kHz with \xSineRes\,LSB rms residual = \xSineSinad\,dB SINAD
+— the DAC (pulse density, 1\us{} steps) limits it, so it is a shape reference, not an ADC test source. At 25\,Msps
+\xSineSlow{} of \xSineN{} captures came back \cmd{slow} with the sine running, and the PIC's lock check was unaffected.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_dac.pdf}
+\caption{DAC test signal read back by ADC2 on AD2AN3\meas: DC sweep with the deviation from a line, triangle over SPI and UART,
+sine with fit residual, and its spectrum.}\end{figure}
 
 \subsection{PLL lock check at boot (E2)}\label{sec:lock}
 The 40/60/60\,ns ``slow'' lock is set when PLL1 locks: the phase between its CPU/SCCP divider (VCO/5) and its ADC divider (VCO/4)
@@ -639,6 +718,7 @@ H1–H4 & M2 holes & mounting, padded.\\\bottomrule
 \cmd{acq [div [samc [in [navg]]]]} & Capture without pulsing. \cmd{div}: trigger period in 5\,ns (4 = 25\,Msps, 10 = 20, 20 = 10); \cmd{samc} 0–7 sampling time; \cmd{in} input code (19 = DAC); \cmd{navg} 1–16 summed conversions (back to 1 when not given).\\
 \cmd{pc [0|1]} & Fixed-pattern correction off/on; show last offsets (\S\ref{sec:pc}).\\
 \cmd{env <dec> [shots [in]]} & Pulse + envelope computed on the PIC (dec 4–64), averaged over shots; 4095/dec values (\S\ref{sec:env}).\\
+\cmd{envbp <dec> [shots [in [fc [bw]]]]} & Pulse + band-pass envelope on the PIC (Gaussian complex filter, default 3300 / 2500\,kHz).\\
 \cmd{tof <thr> [blank\_ns [in [ref]]]} & Pulse + first threshold crossing after the blank, computed on the PIC; one line (\S\ref{sec:tof}).\\
 \cmd{acqos <4|16> [in [pe]]} & Capture with ADC oversampling, 13/14-bit, 186/565\,ns per sample; not for RF echoes.\\
 \cmd{tgc [off|<t\_us> <leg> …]} & Time-gain steps: gain leg switched at up to 4 times after the pulse.\\

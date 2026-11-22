@@ -2,6 +2,7 @@
 // docs/claude/specs/2026-11-22-adc-extras-design.md. All run one capture through acq_run (RDY rises at the start, so the
 // RP's pulser fires on it exactly as for "pe").
 #include <xc.h>
+#include <math.h>
 #include <string.h>
 #include "pe_ext.h"
 
@@ -58,7 +59,7 @@ acq_status_t pe_tof(unsigned thr, unsigned blank, unsigned ref_in, tof_t *r) {
     return st;
 }
 
-static unsigned env_shots, env_dec_cur;
+static unsigned env_shots, env_dec_cur;      // env_dec_cur = dec | method << 8 | fc_khz << 9 ... (a different setting restarts the sum)
 void pe_env_invalidate(void) { env_dec_cur = 0; env_shots = 0; }
 acq_status_t pe_env(unsigned dec, unsigned acc, env_t *r) {
     r->n = 0; r->dec = dec; r->shots = env_shots; r->ticks = 0;
@@ -70,7 +71,7 @@ acq_status_t pe_env(unsigned dec, unsigned acc, env_t *r) {
     if (st != ACQ_OK) return st;
     unsigned words; uint32_t *sum = acq_scratch32(&words);
     if (r->n > words) return ACQ_NOTREADY;
-    if (!acc || dec != env_dec_cur) { memset(sum, 0, r->n * 4u); env_shots = 0; env_dec_cur = dec; }
+    if (!acc || dec != env_dec_cur) { memset(sum, 0, r->n * 4u); env_shots = 0; env_dec_cur = dec; }   // method 0
     unsigned m = buf_mean();
     for (unsigned k = 0; k < r->n; k++) {                  // integrate-and-dump of |x - mean| over dec samples, 1/16 LSB
         uint32_t s = 0; const uint16_t *x = acq_buf + k * dec;
@@ -79,6 +80,62 @@ acq_status_t pe_env(unsigned dec, unsigned acc, env_t *r) {
     }
     env_shots++;
     for (unsigned k = 0; k < r->n; k++) {                  // running average back into acq_buf for SPIX / UTX
+        uint32_t v = (sum[k] + env_shots / 2u) / env_shots;
+        acq_buf[k] = (uint16_t)(v > 65535u ? 65535u : v);
+    }
+    r->shots = env_shots;
+    return st;
+}
+
+// ---------------------------------------------------------------------------------------------- band-pass envelope
+// Owner idea (2026-11-22): FFT, keep 2-6 MHz, inverse FFT, magnitude. A 4096-point complex FFT does not fit the 16 KB RAM, so the
+// same operation is done as a convolution: h[k] = g[k] * exp(j*2*pi*fc*k*dt), g Gaussian with FWHM bw in frequency (a tapered
+// pass band: a brick-wall FFT mask rings and was 6.6 dB worse on the recorded echoes, the Gaussian 12 dB better than |x - mean|,
+// docs/bench/2026-11-22-datasheet-ext/bandpass_env.py). Only one output per dec samples is computed (block centre).
+#define BP_MAXHALF 32
+static float bp_c[2 * BP_MAXHALF + 1], bp_s[2 * BP_MAXHALF + 1];
+acq_status_t pe_envbp(unsigned dec, unsigned acc, unsigned fc_khz, unsigned bw_khz, env_t *r) {
+    r->n = 0; r->dec = dec; r->shots = env_shots; r->ticks = 0;
+    if (dec < ENV_DEC_MIN || dec > ENV_DEC_MAX || fc_khz < 300u || fc_khz > 12000u || bw_khz < 200u || bw_khz > 10000u)
+        return ACQ_NOTREADY;
+    acq_saved_t sv = pe_std_begin();
+    acq_status_t st = acq_run(&r->ticks);
+    pe_std_end(sv);
+    r->n = ACQ_N / dec; r->shots = env_shots;
+    if (st != ACQ_OK) return st;
+    unsigned words; uint32_t *sum = acq_scratch32(&words);
+    if (r->n > words) return ACQ_NOTREADY;
+    unsigned key = dec | 1u << 7 | (fc_khz / 100u) << 8 | (bw_khz / 100u) << 16;
+    if (!acc || key != env_dec_cur) { memset(sum, 0, r->n * 4u); env_shots = 0; env_dec_cur = key; }
+    // filter taps for the measured sample period
+    float dt = (float)r->ticks * (float)ACQ_TICK_NS * 1e-9f / (float)ACQ_N;
+    float sig_f = (float)bw_khz * 1e3f / 2.3548f, sig_t = 1.0f / (6.2831853f * sig_f);
+    int half = (int)(3.0f * sig_t / dt + 0.5f);
+    if (half < 1) half = 1;
+    if (half > BP_MAXHALF) half = BP_MAXHALF;
+    float gsum = 0.0f, w = 6.2831853f * (float)fc_khz * 1e3f * dt;
+    for (int k = -half; k <= half; k++) {
+        float g = expf(-0.5f * ((float)k * dt / sig_t) * ((float)k * dt / sig_t));
+        bp_c[k + half] = g * cosf(w * (float)k); bp_s[k + half] = g * sinf(w * (float)k); gsum += g;
+    }
+    float scale = 2.0f * 16.0f / gsum;                     // 2: one side of a real sine; 16: 1/16 LSB units
+    float m = 0.0f;
+    for (unsigned i = 0; i < ACQ_N; i++) m += (float)acq_buf[i];
+    m /= (float)ACQ_N;
+    for (unsigned j = 0; j < r->n; j++) {
+        int c = (int)(j * dec + dec / 2u);
+        float re = 0.0f, im = 0.0f;
+        for (int k = -half; k <= half; k++) {
+            int i = c + k;
+            if (i < 0 || i >= (int)ACQ_N) continue;
+            float x = (float)acq_buf[i] - m;
+            re += bp_c[k + half] * x; im += bp_s[k + half] * x;
+        }
+        float a = sqrtf(re * re + im * im) * scale;
+        sum[j] += (uint32_t)(a + 0.5f);
+    }
+    env_shots++;
+    for (unsigned k = 0; k < r->n; k++) {
         uint32_t v = (sum[k] + env_shots / 2u) / env_shots;
         acq_buf[k] = (uint16_t)(v > 65535u ? 65535u : v);
     }

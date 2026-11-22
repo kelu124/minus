@@ -19,4 +19,7 @@ void         pe_env_invalidate(void);  // the ENV running sum lives in the ACQIL
 acq_status_t pe_os(unsigned os, uint32_t *ticks);                       // one capture with oversampling 4 / 16 (div raised to fit)
 acq_status_t pe_tof(unsigned thr, unsigned blank, unsigned ref, tof_t *r);   // ref 0 = capture mean (comparator uses 2048)
 acq_status_t pe_env(unsigned dec, unsigned acc, env_t *r);              // envelope into acq_buf[0..n) (1/16 LSB), running average
+// band-pass envelope (pic 1.1.6): Gaussian complex filter at fc_khz, FWHM bw_khz (= an FFT band-pass + Hilbert, done as a short
+// FIR evaluated only at the decimated outputs); amplitude of the in-band signal in 1/16 LSB; same averaging as pe_env
+acq_status_t pe_envbp(unsigned dec, unsigned acc, unsigned fc_khz, unsigned bw_khz, env_t *r);
 #endif

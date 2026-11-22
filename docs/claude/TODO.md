@@ -5,15 +5,12 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
-- **RESUME HERE (2026-11-22 night, session 13): rp 1.1.8 / pic 1.1.5, proto 14 on board 3** (reviewed + soaked) (no piezo on the bench). Done
-  tonight: SPI payload (5.7 ms), slow-lock self-heal, ADC extras (`acqos`/`tof`/`env`), `fmt b64` (30 ms per capture over USB),
-  `tgc` gain steps (~17 µs switch transient), `navg` reset, live viewer (`python3 -m minus.live`, Jupyter `LiveView`,
-  notebook 04). Next:
-  (a) **with a piezo**: run `tof` / `env` / the live viewer on real echoes (thr / blank from a `pe`), try `tgc` on a deep
-  target and judge the 17 µs switch transient; (b) TGC without the transient = hardware (make-before-break or a parallel Rf
-  switched in; TODO_HARDWARE); (c) RP ADC0 read of the DAC once v1.2 has the DACOUT1 → GPIO26 trace; (d) an external sine
-  generator for the ADC ENOB test; (e) re-measure the E3 comb slips on a good lock; datasheet E2 (per-lock state, self-heal)
-  and the new commands at the next datasheet rev.
+- **RESUME HERE (2026-11-22 afternoon, session 13): rp 1.1.9 / pic 1.1.6, proto 15 on board 3, transducer connected.**
+  Datasheet rev 0.3 (22 pages) from `docs/bench/2026-11-22-datasheet-ext/` (12 tests, .npz). Next: (a) **E8**: `reboot dfu` loses the
+  board when the transducer is connected — test with TX unplugged, then with R70/R71-like pulls (E1) bodged on; (b) period-4
+  correction per segment (18 % of captures slip mid-record); (c) `envbp` as the default envelope in the live viewer / a fc-bw
+  sweep vs axial resolution; (d) TGC without the 17 µs transient (make-before-break, hardware); (e) RP ADC0 read of the DAC (v1.2
+  trace); (f) external sine for an ADC ENOB test; (g) re-measure E3 slips on a good lock.
 - **Closed / parked 2026-11-22** (from the older resume points below): faster link (SPI, proto 11–12); LP5562 `rgb` (rp 1.1.1);
   GPIO9 pull-up (R70, v1.2); `acq` retry on slow + slow-lock root cause (per-PLL-lock state, boot re-lock + RELOCK);
   "`acq` should reset navg" (pic 1.1.4); TGC (`tgc`, rp 1.1.7); averaging over shots (`env … shots`); PC viewer

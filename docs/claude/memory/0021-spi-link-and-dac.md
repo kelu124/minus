@@ -73,3 +73,17 @@ bench `docs/bench/2026-11-21-spi-dac/`
 - `minus.live`: `LiveSource` (pe/acq/env/tof) → `LiveFigure` (A-line, envelope dB via FFT Hilbert, M-mode with automatic
   contrast) → `run_window()` / `python -m minus.live` (Tk window tested on the owner's desktop) and `LiveView` (ipywidgets
   Image updated from a thread; ~5 frames/s because of PNG rendering). While running it owns the serial port.
+
+## Datasheet rev 0.3 campaign + envbp (2026-11-22 afternoon, rp 1.1.9 / pic 1.1.6, proto 15; transducer connected)
+- `docs/bench/2026-11-22-datasheet-ext/campaign.py` (12 tests, one .npz each) + `analyze.py` (figures, `datasheet/ext_values.tex`).
+- **envbp** (owner idea: FFT, keep 2-6 MHz, IFFT, magnitude): a 4096-point complex FFT does not fit 16 KB RAM -> the same as a
+  Gaussian complex FIR at fc (FWHM bw), evaluated only at the decimated outputs. The pass band must be tapered: brick-wall
+  43 dB (sinc ringing), raised cosine 53, Gaussian 3.3/2.5 MHz 62 vs 50 dB for env (host prototype); on the PIC +12.2 dB over
+  env. The env floor between echoes is mostly out-of-band: fs/4, fs/2 pattern residues and the 2.74 MHz line.
+- Lock check vs `dac sine`: the sine's DMA makes every capture slow -> the RP's RELOCK made the PIC re-lock 12 times for nothing;
+  pic 1.1.6 pauses DMA2 during the lock check. Sine captures work at 10 Msps (acq 20 0 19): 43 dB SINAD.
+- Period-4 detail: in a clean capture one phase is ~-18 LSB, the three others ~+6; 7/40 captures (18 %) slip mid-record (the
+  low phase moves), which the single-offset correction cannot fix (two populations remain) -> per-segment estimate = TODO.
+- E8 recurred twice with the transducer connected (`reboot dfu` -> no USB device at all until replugged with BOOTSEL); it never
+  happened in ~15 reflashes the night before without a transducer. Hypothesis to test: E1 (Q1 on during reset) + the probe.
+- Datasheet "Annex 12" bug: \ref to an unnumbered \section* prints the last numbered section -> use \hyperref[...]{Annex A}.

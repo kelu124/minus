@@ -18,7 +18,7 @@ CMDS = ["fmt b64", "help", "version", "raw ID?", "ping", "stat", "rdy", "trig", 
         "link spi 12.5", "linktest 3", "dac tri 512 3584 16", "acq 4 0 19 1", "dac dc 2048", "dac sine 20000 800 2048",
         "dac off", "dac", "link", "raw LOCK?",
         "dac dc 2048", "acqos 4 19", "acqos 16 19", "dac dc 3100", "tof 1000 0 19 2048", "dac dc 2900", "tof 1000 40 19 2048",
-        "dac tri 512 3584 16", "env 8 1 19", "env 8 4 19", "dac off",
+        "dac tri 512 3584 16", "env 8 1 19", "env 8 4 19", "envbp 8 1 25", "envbp 8 4 25 3300 1500", "dac off",
         "gain 0 0 0", "tgc 60 3", "acq 4 0 25", "tgc off", "tgc", "fmt text", "acq 4 0 19", "fmt",
         "pic help", "pic image", "pic id", "bogus"]
 

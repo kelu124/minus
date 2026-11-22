@@ -70,10 +70,11 @@ class Frame:
 
 
 class LiveSource:
-    """Produces frames from a board: mode ``pe`` (pulse + RF), ``acq`` (no pulse), ``env`` (PIC envelope, ``dec``/``shots``)
+    """Produces frames from a board: mode ``pe`` (pulse + RF), ``acq`` (no pulse), ``env`` / ``envbp`` (PIC envelope, plain or
+    band-pass, ``dec``/``shots``)
     or ``tof`` (``pe`` + the PIC's time of flight on top, ``thr``/``blank_ns``)."""
 
-    MODES = ("pe", "acq", "env", "tof")
+    MODES = ("pe", "acq", "env", "envbp", "tof")
 
     def __init__(self, dev: Minus, mode: str = "pe", in_: int = 25, dec: int = 8, shots: int = 1,
                  thr: int = 200, blank_ns: int = 3000):
@@ -84,10 +85,10 @@ class LiveSource:
 
     def grab(self) -> Frame:
         d, now = self.dev, time.time()
-        if self.mode == "env":
-            e = d.env(self.dec, self.shots, self.in_)
+        if self.mode in ("env", "envbp"):
+            e = d.env(self.dec, self.shots, self.in_) if self.mode == "env" else d.envbp(self.dec, self.shots, self.in_)
             return Frame(e.depth_mm(C_M_S), None, e.values, now,
-                         f"env dec {e.dec} x{e.shots} shots, {e.n} pts, {e.link or ''}", raw=e)
+                         f"{self.mode} dec {e.dec} x{e.shots} shots, {e.n} pts, {e.link or ''}", raw=e)
         c = d.acq(4, 0, self.in_, 1) if self.mode == "acq" else d.pe(200, 500, self.in_, 27)
         y = c.samples.astype(float)
         rf = y - y.mean()

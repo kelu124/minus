@@ -858,15 +858,19 @@ static void cmd_tof(const char *arg) {
                 rf, ref ? "given" : "capture mean; comparator on 2048+-thr", hw ? "tripped" : "quiet", dt, fired ? "fired" : "did NOT fire");
 }
 // env <dec> [shots [in]]: pulse + capture + on-PIC envelope (|x - mean| integrated over dec samples), averaged over shots, then pulled
-static void cmd_env(const char *arg) {
-    unsigned dec = 0, shots = 1; int in = 25;
-    if (!arg || sscanf(arg, "%u %u %d", &dec, &shots, &in) < 1 || dec < 4 || dec > 64 || shots < 1 || shots > 1000 || in < 0 || in > 31) {
-        printf("usage: env <dec 4..64> [shots 1..1000 [in]]   on-PIC envelope, |x-mean| over dec samples, averaged over shots (one pulse each)\n"); return;
+static void env_common(const char *arg, bool bp) {
+    unsigned dec = 0, shots = 1, fc = 3300, bw = 2500; int in = 25;
+    int na = arg ? sscanf(arg, "%u %u %d %u %u", &dec, &shots, &in, &fc, &bw) : 0;
+    if (na < 1 || dec < 4 || dec > 64 || shots < 1 || shots > 1000 || in < 0 || in > 31 || (bp && (fc < 300 || fc > 12000 || bw < 200 || bw > 10000))) {
+        if (bp) printf("usage: envbp <dec 4..64> [shots 1..1000 [in [fc_khz [bw_khz]]]]   band-pass envelope on the PIC: Gaussian filter at fc (3300), FWHM bw (2500 kHz)\n");
+        else printf("usage: env <dec 4..64> [shots 1..1000 [in]]   on-PIC envelope, |x-mean| over dec samples, averaged over shots (one pulse each)\n");
+        return;
     }
-    char tx[48], rx[96]; unsigned n = 0, d = 0, sh = 0, tick_ns = 0, fired_n = 0; unsigned long ticks = 0; char st[12] = "";
+    char tx[64], rx[96]; unsigned n = 0, d = 0, sh = 0, tick_ns = 0, fired_n = 0; unsigned long ticks = 0; char st[12] = "";
     for (unsigned k = 0; k < shots; k++) {
         bool fired = false;
-        snprintf(tx, sizeof tx, "ENV %u %d %u\n", dec, in, k ? 1u : 0u);
+        if (bp) snprintf(tx, sizeof tx, "ENVBP %u %d %u %u %u\n", dec, in, k ? 1u : 0u, fc, bw);
+        else snprintf(tx, sizeof tx, "ENV %u %d %u\n", dec, in, k ? 1u : 0u);
         if (pe_ext_shot(tx, true, rx, sizeof rx, &fired) < 0) return;
         if (sscanf(rx, "ENV %u %u %u %lu %u %11s", &n, &d, &sh, &ticks, &tick_ns, st) != 6 || strcmp(st, "ok")) { printf("env: bad reply '%s'\n", rx); return; }
         fired_n += fired;
@@ -876,10 +880,16 @@ static void cmd_env(const char *arg) {
     if (!p) return;
     double dt = ticks * (double)tick_ns / 4095.0 * dec;
     char tg[96]; tgc_desc(tg, sizeof tg);
-    printf("# env n=%u dec=%u shots=%u dt=%.2fns fill=%.1fus in=%d values=mean |x-mean| x16 (1/16 LSB) per %u samples; pulses fired %u/%u%s %s\n",
-           n, d, sh, dt, ticks * (double)tick_ns / 1000.0, in, dec, fired_n, shots, tg, info);
+    char what[96];
+    if (bp) snprintf(what, sizeof what, "band-pass amplitude x16 (1/16 LSB), Gaussian fc=%ukHz bw=%ukHz, one value per %u samples", fc, bw, dec);
+    else snprintf(what, sizeof what, "mean |x-mean| x16 (1/16 LSB) per %u samples", dec);
+    printf("# env n=%u dec=%u shots=%u dt=%.2fns fill=%.1fus in=%d values=%s; pulses fired %u/%u%s %s\n",
+           n, d, sh, dt, ticks * (double)tick_ns / 1000.0, in, what, fired_n, shots, tg, info);
     print_samples(p, n);
 }
+
+static void cmd_env(const char *arg) { env_common(arg, false); }
+static void cmd_envbp(const char *arg) { env_common(arg, true); }
 
 // ---------------------------------------------------------------- link / linktest / dac (proto 11)
 static void link_status(void) {
@@ -1024,6 +1034,7 @@ static void help(void) {
            "  acqos <4|16> [in [pe]]  capture with ADC hardware oversampling: 4 / 16 conversions per sample (13 / 14-bit, 185 / 565 ns per sample, 0.76 / 2.32 ms window); pe 1 = fire the pulser. NOT for 3.3 MHz RF: 5.4 / 1.77 Msps alias it (Nyquist 2.7 / 0.88 MHz) and the 128 / 512 ns average cancels it; use acq/pe (RF), env (echo strength), tof (range)\n"
            "  tof <thr> [blank_ns [in [ref]]]  pulse-echo time of flight on the PIC: first |x-ref| > thr after blank_ns (ADC comparator armed; ref 0 = capture mean), one line, no A-line transfer\n"
            "  env <dec> [shots [in]]  pulse-echo envelope computed on the PIC (|x-mean| over dec = 4..64 samples), averaged over shots (one pulse each), then pulled: 4095/dec values\n"
+           "  envbp <dec> [shots [in [fc_khz [bw_khz]]]]  band-pass envelope on the PIC (Gaussian complex filter at fc, FWHM bw; default 3300 / 2500 kHz): amplitude in band, out-of-band noise and pattern residues removed\n"
            "  fmt [text|b64]  sample output of acq/pe/acqos/env: one decimal per line (default) or '# b64 <bytes>' + base64 lines of u16 LE (2.2x smaller, the Python library uses it)\n"
            "  tgc [off | <t_us> <leg> ...]  time-gain steps: switch the 4052 gain leg (0..3) at up to 4 times after the pulse during each capture; the gain leg is restored after\n");
 }
@@ -1083,6 +1094,7 @@ int main(void) {
         else if (!strncmp(line, "acqil", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqil(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "acqos", 5) && (line[5] == 0 || line[5] == ' ')) cmd_acqos(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "tof", 3) && (line[3] == 0 || line[3] == ' ')) cmd_tof(line[3] == ' ' ? line + 4 : "");
+        else if (!strncmp(line, "envbp", 5) && (line[5] == 0 || line[5] == ' ')) cmd_envbp(line[5] == ' ' ? line + 6 : "");
         else if (!strncmp(line, "env", 3) && (line[3] == 0 || line[3] == ' ')) cmd_env(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "fmt", 3) && (line[3] == 0 || line[3] == ' ')) cmd_fmt(line[3] == ' ' ? line + 4 : "");
         else if (!strncmp(line, "tgc", 3) && (line[3] == 0 || line[3] == ' ')) cmd_tgc(line[3] == ' ' ? line + 4 : "");

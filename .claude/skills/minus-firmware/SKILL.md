@@ -73,7 +73,7 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
-## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.8 / pic 1.1.5, proto 14)
+## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.9 / pic 1.1.6, proto 15)
 Same RP pin map as the devkit build (`minus_devkit` header). Differences that the firmware handles:
 - **Pulser** GPIO8 HIGH = Q2 N-FET → GND, GPIO9 LOW = Q1 P-FET → +5 V (names PWM_H/PWM_L swapped). Idle 8=0/9=1; never
   8=1+9=0 (shoot-through). `pulser.pio` on pio1 SM0, `pulser_init()` first in `main()`.

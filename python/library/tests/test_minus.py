@@ -171,6 +171,9 @@ class TestDevice(unittest.TestCase):
         self.assertAlmostEqual(e1.values.mean(), 760, delta=120)
         self.assertLess(e4.values.std(), e1.values.std())                     # random triangle phase averages out
         self.assertAlmostEqual(e1.dt_ns, 321.7, delta=2)
+        b1, b4 = self.d.envbp(8, 1, 25), self.d.envbp(8, 4, 25, 3300, 1500)
+        self.assertEqual((b1.n, b1.dec, b1.shots, b4.shots), (511, 8, 1, 4))
+        self.assertGreater(b1.values.max(), 50 * np.median(b1.values))              # echoes stand far above the in-band floor
         self.d.dac("off")
 
     def test_b64_and_tgc(self):

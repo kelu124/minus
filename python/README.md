@@ -9,7 +9,7 @@ through them with the real bytes on the wire.
 | [`library/tests/`](library/tests/) | offline tests replaying replies recorded from a real board (`fixtures/board3_transcript.json`) |
 | [`notebooks/`](notebooks/) | step-by-step worked examples, executed on a board (outputs kept) |
 
-Written for firmware **rp 1.1.8 / pic 1.1.5, link protocol 14** (`minus.FIRMWARE`). On connect the library reads
+Written for firmware **rp 1.1.9 / pic 1.1.6, link protocol 15** (`minus.FIRMWARE`). On connect the library reads
 both versions and warns if the board runs something else.
 
 ## Install
@@ -52,7 +52,7 @@ reply. Long captures (`pe`, ~0.9 s, 4097 lines) frame the same way as one-liners
 | `pic id/image/flash/verify/erase/pins/mclr/slow/fast/help` | `pic_id()`, `pic_image()`, `pic_flash()`, … | `PicProg`, `PicImage` |
 | `link`, `linktest`, `dac …` | `link(mode, mhz)`, `linktest(n, mhz)`, `dac(mode, *values)` | `LinkStatus`, `LinkTest`, `Dac` |
 | `acqos <4\|16> [in [pe]]` | `acqos(os, in_, pe)` (oversampling; **not for 3.3 MHz RF**) | `Capture` |
-| `tof …`, `env …` | `tof(thr, blank_ns, in_, ref)`, `env(dec, shots, in_)` | `Tof`, `Envelope` |
+| `tof …`, `env …`, `envbp …` | `tof(thr, blank_ns, in_, ref)`, `env(dec, shots, in_)`, `envbp(dec, shots, in_, fc_khz, bw_khz)` | `Tof`, `Envelope` |
 | `tgc …`, `fmt …` | `tgc((t_us, leg), …)`, `fmt("b64"\|"text")` (b64 is set on connect) | `Tgc`; `Capture.tgc_valid()` masks the switch transients |
 | `raw LOCK?` / `RELOCK` | `pic_lock(relock)` | `PicLock` |
 | `reboot [dfu]` | `reboot(dfu)` | closes the port |

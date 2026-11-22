@@ -16,6 +16,8 @@ Both firmwares carry a **semantic version `MAJOR.MINOR.PATCH`**, kept in one pla
 
 | Date | Firmware | Version | What changed |
 |------|----------|---------|--------------|
+| 2026-11-22 | rp2354 | 1.1.9 | **proto 15**: `envbp <dec> [shots [in [fc_khz [bw_khz]]]]` (band-pass envelope on the PIC, shares the shot loop with `env`); embeds pic 1.1.6 |
+| 2026-11-22 | pic32  | 1.1.6 | **proto 15**: `ENVBP` (Gaussian complex filter at fc, FWHM bw, evaluated at the decimated outputs = FFT band-pass + Hilbert in 16 KB RAM; +12 dB peak/floor over ENV on the bench echoes); the lock check pauses the DAC sine DMA (it re-locked 12 times for nothing with `dac sine` running) |
 | 2026-11-22 | rp2354 | 1.1.8 | review fixes (no protocol change, proto 14): acqos timing text 185 / 565 ns; embeds pic 1.1.5 |
 | 2026-11-22 | pic32  | 1.1.5 | review fixes: `tof`/`env`/`RELOCK` use the standard capture settings; `acqos` div 37 / 113 + its own slow check; RDY held low ~8 µs before a capture / frame when PING left it high; `SPIX 0` drops RDY; ENV result zeroed on error and invalidated after ACQIL (`docs/bench/2026-11-22-pc-robust/`) |
 | 2026-11-22 | rp2354 | 1.1.7 | **proto 14**: `fmt [text\|b64]` (base64 sample output: 11.4 KB / 30 ms instead of 24.8 KB / 110 ms; shared `print_samples`, `link_b64_encode` + host test), `tgc [off \| <t_us> <leg> ...]` (4052 gain-leg steps during each capture, run from the RDY window in acq/pe/acqos/tof/env; restored after), `acqos` RF warning; embeds pic 1.1.4 |
