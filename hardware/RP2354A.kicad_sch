@@ -5,6 +5,280 @@
 	(uuid "6f06c94e-161f-48e8-93ab-00785e957de9")
 	(paper "A3")
 	(lib_symbols
+(symbol "Connector_Generic:Conn_02x03_Odd_Even"
+		(pin_names
+			(offset 1.016)
+			(hide yes)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(duplicate_pin_numbers_are_jumpers no)
+		(property "Reference" "J"
+			(at 1.27 5.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Conn_02x03_Odd_Even"
+			(at 1.27 -5.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, double row, 02x03, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "connector"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_fp_filters" "Connector*:*_2x??_*"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(symbol "Conn_02x03_Odd_Even_1_1"
+			(rectangle
+				(start -1.27 3.81)
+				(end 3.81 -3.81)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type background)
+				)
+			)
+			(rectangle
+				(start -1.27 2.667)
+				(end 0 2.413)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(rectangle
+				(start -1.27 0.127)
+				(end 0 -0.127)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(rectangle
+				(start -1.27 -2.413)
+				(end 0 -2.667)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(rectangle
+				(start 3.81 2.667)
+				(end 2.54 2.413)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(rectangle
+				(start 3.81 0.127)
+				(end 2.54 -0.127)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(rectangle
+				(start 3.81 -2.413)
+				(end 2.54 -2.667)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(pin passive line
+				(at -5.08 2.54 0)
+				(length 3.81)
+				(name "Pin_1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 7.62 2.54 180)
+				(length 3.81)
+				(name "Pin_2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -5.08 0 0)
+				(length 3.81)
+				(name "Pin_3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 7.62 0 180)
+				(length 3.81)
+				(name "Pin_4"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "4"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -5.08 -2.54 0)
+				(length 3.81)
+				(name "Pin_5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "5"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 7.62 -2.54 180)
+				(length 3.81)
+				(name "Pin_6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "6"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
 		(symbol "EasyEDA:0402WGF1002TCE"
 			(pin_numbers
 				(hide yes)
@@ -20462,5 +20736,142 @@
 				)
 			)
 		)
+	)
+	(symbol
+		(lib_id "Connector_Generic:Conn_02x03_Odd_Even")
+		(at 373.38 203.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f53c0bc5-35ed-4c20-8928-829d03ce8f59")
+		(property "Reference" "J3"
+			(at 374.65 196.85 0)
+			
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "SAO"
+			(at 374.65 209.54999999999998 0)
+			
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical"
+			(at 373.38 203.2 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Datasheet" "https://hackaday.io/project/175182-simple-add-ons-sao"
+			(at 373.38 203.2 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Description" "Shitty Add-On header (SAO v1.69bis): 1 3V3, 2 GND, 3 SDA, 4 SCL, 5 GPIO27, 6 GPIO28"
+			(at 373.38 203.2 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "LCSC Part" "C492420"
+			(at 373.38 203.2 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "MPN" "PZ254V-12-6P"
+			(at 373.38 203.2 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(pin "1" (uuid "79e4326f-d3e7-493d-b07b-d4f8605b9b84"))
+		(pin "2" (uuid "44070394-9842-432f-ac38-ea7aa7cde63e"))
+		(pin "3" (uuid "b59b7bab-30a1-452c-8457-557a8710d786"))
+		(pin "4" (uuid "dbffaf18-edaa-4b0f-8d04-087b869f6dc6"))
+		(pin "5" (uuid "0651bf84-877b-433e-a4c5-6526af214db0"))
+		(pin "6" (uuid "5f35c2f7-ed8b-4561-a531-af9a7636328e"))
+		(instances
+			(project "minUS"
+				(path "/138f3b7a-f936-44b4-8e99-2835218d0b1a/506a9e16-0288-47d6-b7f3-8501f3681619"
+					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "+3V3_DVDD"
+		(shape passive)
+		(at 368.30 200.66 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "b40a8bb1-ebce-4f4c-8de4-517cb4f161d4")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 368.30 200.66 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify right))
+		)
+	)
+	(global_label "SDA"
+		(shape bidirectional)
+		(at 368.30 203.20 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "ac547241-5864-46da-a10e-9cda69f963ef")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 368.30 203.20 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify right))
+		)
+	)
+	(global_label "RP_GPIO27"
+		(shape bidirectional)
+		(at 368.30 205.74 180)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify right))
+		(uuid "a7a0d729-afcc-4b37-9157-f50afe079182")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 368.30 205.74 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify right))
+		)
+	)
+	(global_label "GND"
+		(shape passive)
+		(at 381.00 200.66 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "651919d3-57ad-45a0-96cb-afc0f5ce4f97")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 381.00 200.66 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+	)
+	(global_label "SCL"
+		(shape bidirectional)
+		(at 381.00 203.20 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "b3efb814-8612-4b01-8798-50d6a56dc1d3")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 381.00 203.20 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+	)
+	(global_label "RP_GPIO28"
+		(shape bidirectional)
+		(at 381.00 205.74 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "fdac4ef0-305a-4e83-aa69-87074f1a976a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 381.00 205.74 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)) (justify left))
+		)
+	)
+	(text "SAO add-on (Shitty Add-On v1.69bis pinout)\n3V3, GND, I2C (shared with LP5562/PIC), GPIO27/28 (ADC1/ADC2)"
+		(exclude_from_sim no)
+		(at 332.74 193.04 0)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "4a07aa17-ccf5-45f7-a9ce-9acf2573586c")
 	)
 )

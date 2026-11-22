@@ -18,7 +18,11 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 > (2026-11-20); the mark and UID are on the front silkscreen.
 > Non-clinical, for **research / education / NDT** only; not a medical device.
 
-![minUS board 3](hardware/minUS_angled.png)
+![minUS v1.2 design (render)](hardware/minUS_angled.png)
+
+*Render of the v1.2 design in [`hardware/`](hardware/). Compared with the built v1.1 (board 3), it adds a TX↔RX 0 Ω link,
+pulser and gain-mux pull resistors, the DACOUT1 → RP GPIO26 trace, and an SAO add-on header (J3). Pin headers (J3 included) and SMA bodies
+are left out of the render.*
 
 ## What it is (at a glance)
 
@@ -31,6 +35,9 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 - **Transducer:** 3–4 MHz single-element piezo, separate TX and RX connectors (SMA + U.FL); raw RF A-mode.
   The probe used for all measurements is characterised from its S11 in datasheet Annex A
   ([`datasheet/piezo_test/`](datasheet/piezo_test/)).
+- **Add-ons:** CN1 (2×20) breaks out the RP2354A and H6 (2×9) the PIC. From v1.2, **J3** is a 2×3
+  "Shitty Add-On" header with 3.3 V, GND, I²C (SDA/SCL, shared with the LED driver and the PIC) and RP GPIO27/28
+  (ADC-capable).
 - **Open:** open hardware + firmware + docs, designed for JLCPCB fabrication
   (see [LICENSE.md](LICENSE.md)); OSHWA certified, UID [FR000032](https://certification.oshwa.org/fr000032.html).
 

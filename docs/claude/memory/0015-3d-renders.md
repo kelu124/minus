@@ -18,3 +18,8 @@ Rendered as-is, the board shows bare pads only.
 - **Owner rule:** always omit the 2×N pin headers (H6), the IDC box header (CN1) and the SMA
   edge connectors (RF3, RF22) from renders (`OMIT` list). The 1×1 headers H5/H10 have no model.
 - Check new boards by cropping the render around each substituted part (orientation, pin-1 dot).
+
+- 2026-11-22: OMIT now also matches stock KiCad `Connector_PinHeader_2.54mm:PinHeader_2x…` footprints, so the SAO header J3
+  (stock `PinHeader_2x03_P2.54mm_Vertical`) is omitted like the other 2×N headers (owner, after one render with it shown). The
+  `hardware/` renders show the v1.2 design; `datasheet/figures/minUS_*.png` stay the v1.1 renders (the datasheet documents
+  the built v1.1 board) — do not copy new renders there until the datasheet moves to v1.2. Full render ≈ 2 min 40 s.

@@ -12,8 +12,8 @@ What the patch does (see docs/claude/memory for the why):
   * EasyEDA models we don't have -> closest stock KiCad model (SUBST).
   * Per-footprint fixups (FIXUPS): orientation/offset of substitutes, stray
     duplicate models.
-  * Always OMIT models of the 2xN pin headers / IDC box header and the SMA
-    edge connectors (owner preference, 2026-11-11).
+  * Always OMIT models of the 2xN pin headers (EasyEDA and stock KiCad, e.g. J3 SAO) / IDC box
+    header and the SMA edge connectors (owner preference, 2026-11-11, J3 added 2026-11-22).
 """
 import os, re, subprocess, sys, tempfile
 
@@ -45,7 +45,8 @@ FIXUPS = {
 }
 
 # footprints whose 3D models are always stripped from renders
-OMIT = [r"EasyEDA:HDR-TH_\d+P-P2\.54-V-M-R2-", r"EasyEDA:IDC-TH_", r"EasyEDA:SMA-"]
+OMIT = [r"EasyEDA:HDR-TH_\d+P-P2\.54-V-M-R2-", r"EasyEDA:IDC-TH_", r"EasyEDA:SMA-",
+        r"Connector_PinHeader_2\.54mm:PinHeader_2x"]   # stock 2xN headers too (J3 SAO, 2026-11-22)
 
 MODEL_RE = re.compile(r'\n\t\t\(model "([^"]*)".*?\n\t\t\)', re.S)
 

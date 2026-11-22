@@ -66,3 +66,7 @@
 - Stale-docs sweep recipe: grep every tracked .md/.ipynb (not logs/changelog/DONE/dated bench READMEs) for old version
   strings (`rp 1.1.[0-8]`, `proto 1[0-4]`), old speeds (`0.9 s`, `0.71 s`), old datasheet revs, "not yet / unused /
   uncompiled", then read each hit in context; keep "since rp x.y.z" history lines.
+- **Check a requested pin before wiring it out**: GPIO21/22 looked free on CN1 but reach the PIC ICSP (PGC1/PGD1) through
+  0 Ω R22/R23 — `nets.py pins <R>` on each passive found it; the SAO header uses GPIO27/28 instead (owner, 2026-11-22).
+- Schematic labels: a global label named like a power net (`+3V3_DVDD`, `GND`) joins the power-symbol net — verified by
+  node count in the exported netlist (51 → 52).

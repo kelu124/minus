@@ -37,6 +37,15 @@ history (this file before 2026-11-19).
 - **[should] DACOUT1 → RP ADC0 trace (owner, 2026-11-21) — in the schematic (global label `RP_GPIO26` on the U9.3 wire, PIC32 sheet); PCB: update from schematic + route (owner):** U9 pin 3 (PGC2/DACOUT1/AD1AN7/AD2AN3,
   today only on H6.16) to U8 pin 40 (GPIO26/ADC0, net `RP_GPIO26`, also CN1.37). Lets the RP ADC read the PIC DAC; the PIC
   ADCs already see it on the same pin (AD1AN7/AD2AN3). Firmware: keep GPIO26 as a Hi-Z ADC input, pulls off.
+- **[could] SAO add-on header J3 (owner, 2026-11-22) — in the schematic (RP2354A sheet, under CN1); placed at (147.1, 126.1)
+  and routed by the owner 2026-11-22** (checked: parity 0, unconnected 0, DRC counts = baseline; 3V3 = 50 mm of 0.2 mm
+  from C19, ~12 mV at 100 mA; silk labels match the pads; renders regenerated, J3 model omitted like the other headers). Still to do: re-export JLC outputs; optional
+  cosmetic — the "3.3V" silk label touches the pin-1 corner of the outline. 2×3 2.54 mm male header, Shitty Add-On v1.69bis pinout: 1 `+3V3_DVDD`, 2 GND, 3 SDA, 4 SCL, 5
+  `RP_GPIO27` (ADC1), 6 `RP_GPIO28` (ADC2). GPIO27/28 instead of GPIO21/22: those reach the PIC ICSP PGC1/PGD1 through
+  R22/R23 0 Ω, so an add-on would sit on `pic flash` traffic. Part PZ254V-12-6P, LCSC C492420 (same family as H6; a keyed
+  shrouded BH254V-6P C492441 does not fit the gap). Free area between CN1 (ends x 139.4) and RF23/H3: x 139.5–148.3,
+  y 121–130.4 mm (B.Cu `RP_GC1`/`RP_GC2` run at x 148.8/149.2 and y 130.9/131.5); e.g. pins along x centred near
+  (143.9, 125.5). I²C pull-ups R15/R16 (10 k) already on the bus; add-ons must not add strong pull-ups.
 - **[should] DRC:** the two silkscreen QR codes cause all 25 remaining clearance errors — keep one, on a clear area.
   Delete the dangling stubs on OA2OUT, PIC32_ADC, AVDD; enlarge the C5 reference text.
 
