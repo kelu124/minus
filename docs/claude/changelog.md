@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  d99dce2  Last stale-docs pass: memory status lines, removed-folder notes, docs/bench paths, link check; resume hook injects current firmware rows
+
 - 2026-11-22  8287ce3  Skills + memory: workshop notebook convention, average RF before envelope, Hilbert edge effect, stale-docs sweep recipe
 
 - 2026-11-22  7a10c84  Stale-docs sweep (README, intended-use, READMEs, skill, memory index) + workshop notebook 00_acquisition_101 for beginners
