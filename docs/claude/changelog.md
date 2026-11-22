@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  0ea951a  Datasheet rev 0.3 (link, envelope detection step by step, tof, acqos, tgc, lock check, period-4 correction) from a campaign with the transducer; data as .npz in docs/bench/2026-11-22-datasheet-ext; DAC test pending (board off USB)
+
 - 2026-11-22  b949f31  minus.live: auto GUI backend (Qt/Tk/GTK), clear error when only agg exists (pyenv python3 showed nothing), progress lines; README launch notes
 
 - 2026-11-22  e1a2f67  Library: close() restores fmt text so a human at the CLI sees decimals (test added, 24 tests)
