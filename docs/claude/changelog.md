@@ -12,6 +12,8 @@ the sha.
 
 ## Committed
 
+- 2026-11-22  b949f31  minus.live: auto GUI backend (Qt/Tk/GTK), clear error when only agg exists (pyenv python3 showed nothing), progress lines; README launch notes
+
 - 2026-11-22  e1a2f67  Library: close() restores fmt text so a human at the CLI sees decimals (test added, 24 tests)
 
 - 2026-11-22  55d0df1  Morning report (docs/claude/log/2026-11-22-morning-report.md) + version mentions rp 1.1.8 / pic 1.1.5
