@@ -1,0 +1,243 @@
+"""Analysis for datasheet rev 0.3: reads the .npz files of campaign.py, writes datasheet/figures/ext_*.pdf and
+datasheet/ext_values.tex (LaTeX macros, letters only). Run from the repo root:
+    /usr/bin/python3 docs/bench/2026-11-22-datasheet-ext/analyze.py
+"""
+import json, sys
+from pathlib import Path
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[2]
+FIG = ROOT / "datasheet" / "figures"
+sys.path.insert(0, str(ROOT / "python" / "library"))
+from minus.live import hilbert_envelope  # noqa: E402
+
+V = {}                                  # macro name -> text
+plt.rcParams.update({"font.size": 8, "axes.titlesize": 8, "axes.labelsize": 8, "legend.fontsize": 7,
+                     "xtick.labelsize": 7, "ytick.labelsize": 7, "lines.linewidth": 0.8})
+
+
+def load(name):
+    p = HERE / f"{name}.npz"
+    return np.load(p, allow_pickle=False) if p.exists() else None
+
+
+def v(name, val, fmt="{:.1f}"):
+    V[name] = fmt.format(val) if not isinstance(val, str) else val
+
+
+def pic_env(y, dec):
+    """The PIC's ENV algorithm (firmware/pic32/pe_ext.c pe_env), one shot, in LSB: mean over all 4095 samples (rounded),
+    |x - mean|, integrate-and-dump over dec samples, rounded to 1/16 LSB."""
+    m = int((int(y.sum()) + len(y) // 2) // len(y))
+    n = len(y) // dec
+    s = np.abs(y[:n * dec].astype(np.int64) - m).reshape(n, dec).sum(1)
+    return np.floor((s * 16 + dec // 2) / dec) / 16.0
+
+
+meta = None
+# ------------------------------------------------------------------------------------------------ pe reference
+z = load("pe_ref")
+if z is not None:
+    meta = json.loads(str(z["meta"]))
+    y = z["g010"].astype(float); dt = float(z["g010_dt_ns"].mean()); t = np.arange(4095) * dt / 1000
+    e = np.mean([hilbert_envelope(s) for s in y], axis=0)
+    m1 = (t > 38) & (t < 52); i1 = np.argmax(np.where(m1, e, 0))
+    m2 = (t > 80) & (t < 102); i2 = np.argmax(np.where(m2, e, 0))
+    v("xEchoAt", t[i1]); v("xEchoAmp", e[i1], "{:.0f}"); v("xEchoBt", t[i2]); v("xEchoBamp", e[i2], "{:.0f}")
+    v("xEchoAmm", t[i1] * 0.77, "{:.1f}"); v("xNoiseQuiet", np.mean([s[(t > 55) & (t < 78)].std() for s in y]), "{:.1f}")
+    v("xRefGain", float(z["g010_total"]), "{:.1f}")
+
+# ------------------------------------------------------------------------------------------------ link
+z = load("link")
+if z is not None:
+    tab = z["table"]
+    rows = []
+    for r in tab:
+        mhz, cnt, ok, fe, pe_, mean, mn, mx, rdy, wire, uart = r
+        rows.append(f"{mhz:g} & {int(ok)}/{int(cnt)} & {int(fe)} & {mean / 1000:.2f} & {rdy:.0f} & {wire / 1000:.2f} & "
+                    f"{'yes' if uart else 'no'}\\\\")
+    V["xLinkRows"] = "\n".join(rows)
+    v("xLinkMeanA", tab[0, 5] / 1000, "{:.1f}")
+z = load("fmt")
+if z is not None:
+    v("xFmtText", np.median(z["text_s"]) * 1000, "{:.0f}"); v("xFmtBsix", np.median(z["b64_s"]) * 1000, "{:.0f}")
+    v("xFmtTextKB", int(z["text_chars"]) / 1000, "{:.1f}"); v("xFmtBsixKB", int(z["b64_chars"]) / 1000, "{:.1f}")
+
+# ------------------------------------------------------------------------------------------------ lock
+z = load("lock")
+if z is not None:
+    tab = z["table"]
+    v("xLockBoots", len(tab), "{:d}"); v("xLockOk", int((tab[:, 3] == 20).sum()), "{:d}")
+    v("xLockMax", int(tab[:, 1].max()), "{:d}"); v("xLockMean", tab[:, 1].mean(), "{:.1f}")
+    v("xLockFirst", int((tab[:, 1] == 1).sum()), "{:d}")
+
+# ------------------------------------------------------------------------------------------------ DAC
+z = load("dac")
+if z is not None:
+    tri = z["tri_spi"].astype(float); dt = float(z["tri_dt_ns"]); t = np.arange(4095) * dt / 1000
+    pers = []
+    for s in tri:
+        c = s - (s.max() + s.min()) / 2; i = np.where((c[:-1] < 0) & (c[1:] >= 0))[0]
+        tc = t[i] + (t[i + 1] - t[i]) * (-c[i]) / (c[i + 1] - c[i]); pers += list(np.diff(tc))
+    v("xTriPer", np.mean(pers), "{:.2f}"); v("xTriLo", tri.min(1).mean(), "{:.0f}"); v("xTriHi", tri.max(1).mean(), "{:.0f}")
+    v("xTriSame", "identical" if np.allclose(z["tri_uart"].mean(), tri.mean(), atol=60) else "different")
+    for code in (512, 2048, 3584):
+        v({512: "xDcLo", 2048: "xDcMid", 3584: "xDcHi"}[code], z[f"dc_{code}"].astype(float)[:, 64:].mean(), "{:.0f}")
+    if "sine_slow" in z.files:
+        v("xSineSlow", int(z["sine_slow"]), "{:d}"); v("xSineN", int(z["sine_n"]), "{:d}")
+    fig, ax = plt.subplots(1, 1, figsize=(6.5, 1.8))
+    ax.plot(t, tri[0], lw=0.6); ax.set_xlabel("time (µs)"); ax.set_ylabel("ADC code")
+    ax.set_title("dac tri 512 3584 16, read back by ADC2 on AD2AN3 (acq 4 0 19) over SPI")
+    fig.tight_layout(); fig.savefig(FIG / "ext_dac.pdf"); plt.close(fig)
+
+# ------------------------------------------------------------------------------------------------ acqos
+z = load("acqos")
+if z is not None:
+    k = {"acq": 1, "os4": 2, "os16": 4}
+    for name, mac in (("acq", "xOsNoiseA"), ("os4", "xOsNoiseB"), ("os16", "xOsNoiseC")):
+        v(mac, np.mean([(s.astype(float) / k[name])[64:].std() for s in z[f"dc_{name}"]]), "{:.2f}")
+    v("xOsDtB", float(z["dc_os4_dt_ns"]), "{:.0f}"); v("xOsDtC", float(z["dc_os16_dt_ns"]), "{:.0f}")
+    fig, ax = plt.subplots(1, 2, figsize=(7.0, 2.1))
+    names = ["acq\n40 ns", "acqos 4\n186 ns", "acqos 16\n565 ns"]
+    ax[0].bar(names, [float(V["xOsNoiseA"]), float(V["xOsNoiseB"]), float(V["xOsNoiseC"])], color="0.4")
+    ax[0].set_ylabel("noise (LSB rms, 12-bit units)"); ax[0].set_title("DAC DC level on AD2AN3")
+    for name, lab in (("pe", "pe (25 Msps)"), ("os4", "acqos 4 25 1"), ("os16", "acqos 16 25 1")):
+        dtn = float(z[f"echo_{name}_dt_ns"]); s = z[f"echo_{name}"][0].astype(float) / k["acq" if name == "pe" else name]
+        tt = np.arange(4095) * dtn / 1000; m = (tt > 36) & (tt < 56)
+        ax[1].plot(tt[m], s[m] - np.median(s), label=lab, lw=0.6 if name == "pe" else 1.0)
+    ax[1].set_xlabel("time after the pulse (µs)"); ax[1].set_ylabel("12-bit LSB, minus median")
+    ax[1].set_title("first echo: oversampling kills the 3.3 MHz RF"); ax[1].legend(loc="lower right", fontsize=6)
+    fig.tight_layout(); fig.savefig(FIG / "ext_acqos.pdf"); plt.close(fig)
+    def echo_pk(name, k):                                 # peak |x - median| inside the first-echo window only (38-52 us)
+        dtn = float(z[f"echo_{name}_dt_ns"]); tt = np.arange(4095) * dtn / 1000; m = (tt > 38) & (tt < 52)
+        a = z[f"echo_{name}"].astype(float) / k
+        return np.mean([np.abs(r[m] - np.median(r)).max() for r in a])
+    pe_pk = echo_pk("pe", 1)
+    v("xOsEchoRatioB", echo_pk("os4", 2) / pe_pk * 100, "{:.0f}"); v("xOsEchoRatioC", echo_pk("os16", 4) / pe_pk * 100, "{:.0f}")
+
+# ------------------------------------------------------------------------------------------------ tof
+z = load("tof")
+if z is not None:
+    tab = z["table"]; dt = float(z["pe_dt_ns"]); ref = z["pe_ref"].astype(float)
+    blank = 25000 // 40
+    fig, ax = plt.subplots(1, 1, figsize=(6.5, 2.0))
+    rows = []
+    for j, thr in enumerate(np.unique(tab[:, 0])):
+        r = tab[tab[:, 0] == thr]; found = r[:, 1] >= 0; tt = r[found, 1] * r[found, 6] / 1000
+        host = []
+        for s in ref:                                     # the same search on host-side pe captures
+            m = s.mean(); i = np.where(np.abs(s[blank:] - m) > thr)[0]
+            if len(i): host.append((blank + i[0]) * dt / 1000)
+        host = np.array(host)
+        rows.append(f"{thr:.0f} & {found.mean() * 100:.0f} & {tt.mean():.2f} & {tt.std() * 1000:.0f} & "
+                    f"{(r[found, 3]).mean():.0f} & {host.mean() if len(host) else float('nan'):.2f} & "
+                    f"{host.std() * 1000 if len(host) else float('nan'):.0f} & {r[:, 5].mean() * 100:.0f}\\\\")
+        ax.hist(tt, bins=np.arange(41.0, 44.0, 0.04), alpha=0.6, label=f"thr {thr:.0f} (PIC)")
+        ax.plot(host, np.full(len(host), -1 - j), "|", ms=6)
+    ax.set_xlabel("first crossing after the 25 µs blank (µs)"); ax.set_ylabel("shots (bars); host check (ticks below)")
+    ax.set_title("tof on the first echo, 50 shots per threshold, gain ×3.2"); ax.legend(ncol=4, loc="upper left")
+    fig.tight_layout(); fig.savefig(FIG / "ext_tof.pdf"); plt.close(fig)
+    V["xTofRows"] = "\n".join(rows)
+    v("xTofTime", np.median(z["tof_time_s"]) * 1000, "{:.1f}")
+
+# ------------------------------------------------------------------------------------------------ env (step by step)
+z = load("env")
+if z is not None:
+    pe = z["pe_ref"].astype(np.int64); dt = float(z["pe_dt_ns"]); t = np.arange(4095) * dt / 1000
+    dec = 8; y = pe[0]; m = int((int(y.sum()) + 2047) // 4095)
+    em = pic_env(y, dec); te = np.arange(len(em)) * dt * dec / 1000
+    pic1 = z["env_d8_s1"][0]; pic16 = z["env_d8_s16"].mean(0)
+    host16 = np.mean([pic_env(s, dec) for s in pe], axis=0)
+    hil = np.mean([hilbert_envelope(s.astype(float)) for s in pe], axis=0)
+    fig, ax = plt.subplots(4, 1, figsize=(7.0, 6.0), sharex=True)
+    w = (t > 38) & (t < 56); we = (te > 38) & (te < 56)
+    ax[0].plot(t[w], y[w], lw=0.6); ax[0].axhline(m, color="r", lw=0.6)
+    ax[0].set_ylabel("1. capture\n(ADC code)"); ax[0].set_title(f"on-PIC envelope (env {dec}), first echo; red = capture mean {m}")
+    ax[1].plot(t[w], np.abs(y[w] - m), lw=0.6); ax[1].set_ylabel("2. |x − mean|\n(LSB)")
+    ax[2].step(te[we], em[we], where="post", label="host emulation of this shot"); ax[2].step(te[we], pic1[we], where="post",
+                                                                                         label="PIC env (another shot)")
+    ax[2].set_ylabel(f"3. mean over\n{dec} samples (LSB)"); ax[2].legend(loc="upper right")
+    ax[3].plot(te[we], pic16[we], label="PIC env, 16 shots (mean of 5 runs)")
+    ax[3].plot(te[we], host16[we], label="host emulation, 16 pe shots", ls="--")
+    ax[3].plot(t[w], hil[w] * 2 / np.pi, label="host Hilbert |analytic| × 2/π, 16 shots", lw=0.6)
+    ax[3].set_ylabel("4. average over\nshots (LSB)"); ax[3].set_xlabel("time after the pulse (µs)"); ax[3].legend(loc="upper right")
+    fig.tight_layout(); fig.savefig(FIG / "ext_env_steps.pdf"); plt.close(fig)
+    # agreement PIC vs host emulation (16-shot means), and noise floor vs shots
+    c = np.corrcoef(pic16, host16)[0, 1]; v("xEnvCorr", c, "{:.3f}")
+    k = (te > 38) & (te < 52); v("xEnvRatio", pic16[k].sum() / host16[k].sum() * 100, "{:.0f}")
+    rows = []
+    fig, ax = plt.subplots(1, 1, figsize=(4.2, 2.1))
+    for dd in (4, 8, 16, 32):
+        dte = float(z[f"env_d{dd}_dt_ns"]); tt = np.arange(4095 // dd) * dte / 1000; q = (tt > 55) & (tt < 78)
+        pk = (tt > 38) & (tt < 52)
+        cells, nf = [], []
+        for sh in (1, 4, 16):                             # random part: spread across the 5 runs, per point, in the quiet region
+            a = z[f"env_d{dd}_s{sh}"]
+            fl = float(a[:, q].std(0).mean()); nf.append(fl)
+            cells.append(f"{a[:, q].mean():.1f} / {fl:.2f}")
+        peak = z[f"env_d{dd}_s16"][:, pk].max(1).mean()
+        rows.append(f"{dd} & {dte:.0f} & {4095 // dd} & " + " & ".join(cells) + f" & {peak:.0f}\\\\")
+        ax.plot([1, 4, 16], nf, "o-", label=f"dec {dd}")
+    ax.set_xscale("log", base=2); ax.set_yscale("log"); ax.set_xticks([1, 4, 16]); ax.set_xticklabels(["1", "4", "16"])
+    ax.plot([1, 16], [nf[0] * 1.0 / 1, nf[0] / 4], "k:", lw=0.6, label="1/√N")
+    ax.set_xlabel("shots averaged"); ax.set_ylabel("run-to-run spread (LSB rms)"); ax.legend(fontsize=6)
+    ax.set_title("env noise floor, 55–78 µs (no echo)")
+    fig.tight_layout(); fig.savefig(FIG / "ext_env_shots.pdf"); plt.close(fig)
+    V["xEnvRows"] = "\n".join(rows)
+    v("xEnvTimeA", np.median(z["time_s1"]) * 1000, "{:.0f}"); v("xEnvTimeB", np.median(z["time_s16"]) * 1000, "{:.0f}")
+
+# ------------------------------------------------------------------------------------------------ tgc
+z = load("tgc")
+if z is not None:
+    dt = float(z["dt_ns"]); t = np.arange(4095) * dt / 1000
+    env = {k: np.mean([hilbert_envelope(s.astype(float)) for s in z[k]], axis=0) for k in ("off", "step30_leg2", "leg2_const")}
+    fig, ax = plt.subplots(1, 1, figsize=(7.0, 2.2))
+    for k, lab in (("off", "gain 0 0 0 (×10)"), ("step30_leg2", "×10, tgc 30 2 (→ ×61 at 30 µs)"), ("leg2_const", "gain 2 0 0 (×61)")):
+        ax.semilogy(t, np.maximum(env[k], 0.5), label=lab)
+    ax.axvspan(30, 47, color="0.85"); ax.set_xlabel("time after the pulse (µs)"); ax.set_ylabel("mean envelope (LSB)")
+    ax.set_title("time-gain step on the echoes (16 shots each; grey = switch transient)"); ax.legend(loc="upper right")
+    fig.tight_layout(); fig.savefig(FIG / "ext_tgc.pdf"); plt.close(fig)
+    b = (t > 80) & (t < 92)
+    v("xTgcRatio", env["step30_leg2"][b].max() / env["off"][b].max(), "{:.1f}")
+    v("xTgcConst", env["leg2_const"][b].max() / env["off"][b].max(), "{:.1f}")
+
+# ------------------------------------------------------------------------------------------------ period-4 pattern
+z = load("pc")
+if z is not None:
+    def phase_dev(a):                                     # per capture: phase means minus overall mean, samples 64..
+        out = []
+        for s in a.astype(float):
+            q = s[64:]; ph = np.arange(64, 4095) & 3
+            pm = np.array([q[ph == k].mean() for k in range(4)]); out.append(pm - q.mean())
+        return np.array(out)
+    raw, cor = phase_dev(z["raw"]), phase_dev(z["corrected"])
+    rr = np.sqrt((raw ** 2).mean(1)); rc = np.sqrt((cor ** 2).mean(1))
+    v("xPcRaw", np.median(rr), "{:.1f}"); v("xPcCor", np.median(rc), "{:.2f}")
+    v("xPcLow", np.median(raw.min(1)), "{:.0f}"); v("xPcBad", (rc > 2).mean() * 100, "{:.0f}")
+    v("xPcN", len(rc), "{:d}")
+    rot = np.array([np.roll(r, -int(np.argmin(r))) for r in raw])         # align on the low phase
+    fig, ax = plt.subplots(1, 3, figsize=(7.2, 2.0))
+    ax[0].plot(range(4), rot.T, color="0.6", lw=0.5); ax[0].plot(range(4), np.median(rot, 0), "k-o", ms=3)
+    ax[0].set_xticks(range(4)); ax[0].set_xlabel("phase (rotated: low phase first)"); ax[0].set_ylabel("phase mean − mean (LSB)")
+    ax[0].set_title(f"raw pattern, {len(rr)} captures")
+    ax[1].hist(rr, bins=20, alpha=0.7, label="raw (pc 0)"); ax[1].hist(rc, bins=20, alpha=0.7, label="corrected (pc 1)")
+    ax[1].set_xlabel("pattern rms (LSB)"); ax[1].legend(); ax[1].set_title("per capture")
+    f = np.fft.rfftfreq(4095, 40.2e-9) / 1e6
+    for a, lab in ((z["raw"], "pc 0"), (z["corrected"], "pc 1")):
+        S = np.mean([np.abs(np.fft.rfft((s.astype(float) - s.mean()) * np.hanning(4095))) for s in a], axis=0)
+        ax[2].semilogy(f, S, lw=0.5, label=lab)
+    ax[2].set_xlabel("MHz"); ax[2].set_title("spectrum: fs/4 = 6.2, fs/2 = 12.4 MHz"); ax[2].legend()
+    fig.tight_layout(); fig.savefig(FIG / "ext_pc.pdf"); plt.close(fig)
+
+# ------------------------------------------------------------------------------------------------ write
+if meta:
+    V["xCampFw"] = f"rp {meta['rp']} / pic {meta['pic']}, proto {meta['proto']}"; V["xCampDate"] = meta["date"]
+lines = ["% generated by docs/bench/2026-11-22-datasheet-ext/analyze.py — do not edit"]
+for k, val in sorted(V.items()):
+    lines.append(f"\\newcommand{{\\{k}}}{{{val}}}")
+(ROOT / "datasheet" / "ext_values.tex").write_text("\n".join(lines) + "\n")
+print("\n".join(f"{k} = {V[k][:80]}" for k in sorted(V)))

@@ -44,6 +44,7 @@
 \input{noise_rows.tex}
 \input{jitter_values.tex}
 \input{piezo_values.tex}
+\input{ext_values.tex}
 
 \definecolor{accent}{HTML}{1F5FA8}
 \definecolor{accentlight}{HTML}{E8F0FA}
@@ -52,7 +53,7 @@
 
 \newcommand{\product}{minus}
 \newcommand{\repo}{\href{https://github.com/kelu124/minus}{github.com/kelu124/minus}}
-\newcommand{\rpfwrel}{1.1.3}\newcommand{\picfwrel}{1.1.0}
+\newcommand{\rpfwrel}{1.1.8}\newcommand{\picfwrel}{1.1.5}
 \newcommand{\board}{v1.1}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
 \newcommand{\us}{\,\textmu s}
@@ -75,7 +76,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\bfseries\color{accent}\product{} \textcolor{black}{\mdseries| single-channel ultrasound front end \board}}
-\fancyhead[R]{\small Datasheet rev.~0.2 · 2026-11-19}
+\fancyhead[R]{\small Datasheet rev.~0.3 · 2026-11-22}
 \fancyfoot[L]{\scriptsize Open hardware (TAPR OHL v1.0) · \repo{} · values marked \meas{} are measured on one board (unique ID \vuid), \des{} are design values}
 \fancyfoot[R]{\small \thepage/\pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -109,7 +110,10 @@
   \item \textbf{Receive chain}: 24\,dB LNA (BGA2817, nominal\des) + 9-step switchable \textbf{0–42.5\,dB} op-amp gain (two on-chip stages\meas), $\approx$\,24–66\,dB total
   \item \textbf{12-bit ADC} at \textbf{24.86\,Msps}\meas{}, 4095 samples = 164.7\us{} = 12.7\,cm depth at 1540\,m/s
   \item ADC alone: \vadcenob{}~noise-limited bits\meas{}; in-band input noise \veninmax{}\,nV/$\sqrt{\text{Hz}}$ at the OA1 input at full gain\meas{}
-  \item On-chip fixed-pattern correction (period-4 pin pattern removed, \cmd{pc})
+  \item On-chip fixed-pattern correction (period-4 pin pattern removed, \cmd{pc}): \xPcRaw{} → \xPcCor\,LSB rms\meas{}
+  \item \textbf{Fast capture link}: RP↔PIC SPI frame with CRC (\xLinkMeanA\,ms), base64 to the host: one \cmd{pe} in \xFmtBsix\,ms end to end\meas{}
+  \item On the PIC: \textbf{envelope} (\cmd{env}, multi-shot average), \textbf{time of flight} (\cmd{tof}, one line), ADC
+        \textbf{oversampling} (\cmd{acqos}, 13/14-bit); \textbf{time-gain steps} (\cmd{tgc}); DAC test signal (\cmd{dac})
   \item Two MCUs: RP2354A (USB, control, pulser PIO) + PIC32AK1216GC41048 (op-amps, ADC, DMA)
   \item USB-C powered and controlled (CDC console, text commands); in-system programming of the PIC by the RP
   \item 85.7\,×\,54.0\,mm, 4-layer, 1.6\,mm; SMA + U.FL on TX and RX
@@ -395,12 +399,13 @@ op-amp's internal unity-gain switch (AMPxCON1.UGE). The LNA gain (24\,dB, not me
 SCCP1 produces a 20\,ns trigger comb (CLKGEN12 / 4); the 32\,ns ADC2 conversion takes every second trigger, giving a uniform
 40\,ns sample period (24.86\,Msps measured against the PIC's own timer). DMA0 moves each 16-bit result to RAM (40\,ns per transfer at
 200\,MHz is the DMA ceiling). At some start phases the ADC locks to a 40/60/60\,ns pattern (fill 226\us{} instead of 164.7\us);
-since pic~0.1.25 the PIC flags it (status \cmd{slow}, no payload) and \cmd{pe}/\cmd{acq} re-fire within milliseconds. How often it happens depends
-on the code timing of the build (0 of 12 captures with rp~\vrpfw/pic~\vpicfw, 0 of \vEshots{} with rp~1.1.1/pic~1.1.0, up to \vretryrate\,\% with earlier builds).
+since pic~0.1.25 the PIC flags it (status \cmd{slow}, no payload) and \cmd{pe}/\cmd{acq} re-fire within milliseconds. Since rev~0.3
+the cause is better understood: it is a \emph{per-PLL-lock} state (after a lock, either almost no capture or 85–100\,\% of them come
+out slow), and the PIC now re-locks at boot until its test captures are uniform (\S\ref{sec:lock}).
 The phase of the sample comb relative to the pulse varies from shot to shot over one full sample period: see
 \S\ref{sec:combphase}. Align shots (cross-correlation on a strong echo, sub-sample shift) before averaging.
-After the capture the PIC removes the period-4 fixed pattern (below) and sends a header line plus 8190 bytes (little-endian u16)
-to the RP, which prints decimal samples on the USB console.
+After the capture the PIC removes the period-4 fixed pattern (below) and replies with a header line; the RP then pulls the
+8190 bytes over SPI (\S\ref{sec:link}) and prints them on the USB console (decimal, or base64 with \cmd{fmt b64}).
 
 \subsection{Sample-comb phase and slips (E3)}\label{sec:combphase}
 A campaign of \vEshots{} \cmd{pe} shots (\texttt{docs/bench/2026-11-19-jitter/}, rp~1.1.1/pic~1.1.0, gain 2\,0\,0)
@@ -426,12 +431,30 @@ conversion.
 \caption{Left: pulse vs sample-comb phase over \vEshots{} shots. Right: echo delay minus $\varphi$ (slow acoustic drift removed);
 bands at ±40.2\,ns are whole-sample slips.}\end{figure}
 
-\subsection{Fixed-pattern correction}
-All external ADC inputs show a pattern locked to the sample clock with a period of four samples (one sample in four
-$\approx$\,23\,LSB low, $\approx$\,10.5\,LSB rms), independent of the analog gain; the internal band-gap input does not. It is the
-fs/4 and fs/2 line pair of the raw spectrum. Firmware pic~0.1.24 estimates the four phase offsets from each capture (samples
-64…4094, mean per phase minus overall mean, 1/16\,LSB) and subtracts them. At unity gain this lowers the output noise from
-8.9 to 3.6\,LSB rms; the residual pattern is 0.17\,LSB rms. \cmd{pc 0} disables it, \cmd{pc} shows the last offsets.
+\subsection{Fixed-pattern correction (period-4 pattern)}\label{sec:pc}
+\textbf{The pattern.} Every external ADC input carries a pattern locked to the sample clock with a period of four samples: one
+phase in four sits $\approx$\,\xPcLow\,LSB below the other three, \xPcRaw\,LSB rms over the four phase means (median of \xPcN{}
+captures, gain ×10, no pulse\meas). It does not scale with the analog gain and the internal band-gap input is free of it, so it is
+injected at the ADC (digital/DMA activity at fs/4 coupling into the sample-and-hold or the references), not in the front end. In the
+spectrum it is the line pair at fs/4 = 6.2\,MHz and fs/2 = 12.4\,MHz. Its phase (which of the four samples is low) is random from
+capture to capture, so it cannot be calibrated once: it is estimated in every capture.
+
+\textbf{The correction, step by step} (PIC firmware, \texttt{acq.c} \texttt{acq\_pc\_apply}, after every single-conversion capture):
+\begin{enumerate}[nosep]
+  \item Skip the first 64 samples (main bang and settling).
+  \item Over samples 64…4094, compute the mean of each phase $k = i \bmod 4$ and the overall mean.
+  \item Offset of phase $k$ = its mean minus the overall mean, kept in 1/16\,LSB (\cmd{pc} prints the four values).
+  \item Subtract the offset of its phase from every sample (0…4094), round, clamp to 0…4095.
+\end{enumerate}
+Echoes and noise average out over the $\approx$\,1000 samples of each phase because they are not locked to fs/4.
+Measured\meas: residual pattern \xPcCor\,LSB rms after correction (median of \xPcN{} captures; \xPcBad\,\% of captures above 2\,LSB).
+The estimator assumes one phase for the whole capture: a whole-sample comb slip (E3) in the middle of a capture swaps the phases for
+the rest of it and leaves part of the pattern in that capture. A block-wise robust variant was tried against a tgc switch transient
+and gave the same residual (\texttt{docs/bench/2026-11-22-pc-robust/}), so the simple estimator is kept. \cmd{pc 0} disables the
+correction (it is also skipped for \cmd{navg} > 1, \cmd{samc} > 0 and oversampling).
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_pc.pdf}
+\caption{Period-4 pattern\meas. Left: phase means minus the mean, \xPcN{} raw captures, rotated so the low phase comes first.
+Middle: pattern rms per capture, raw (\cmd{pc 0}) and corrected (\cmd{pc 1}). Right: mean spectra; the fs/4 and fs/2 lines go away.}\end{figure}
 
 \subsection{Noise summary}
 \begin{table}[H]\centering\small
@@ -445,6 +468,129 @@ e\textsubscript{n} referred to the OA1 input (= LNA output) using the measured g
 Below $\approx$\,20\,dB the ADC itself sets the in-band floor; above $\approx$\,32\,dB the front end dominates. At full gain the
 in-band noise referred to the LNA input is $\approx$\,0.85\,nV/$\sqrt{\text{Hz}}$ if the LNA gives 24\,dB — the thermal noise of
 50\,Ω (0.91\,nV/$\sqrt{\text{Hz}}$) — so extra analog gain mostly amplifies front-end noise; averaging is the better lever.
+
+% ====================================================================== 4b on-PIC processing (rev 0.3)
+\section{Capture link and on-PIC processing}
+All measurements in this section: campaign of \xCampDate{} on board~3 with the Annex~A transducer (echoes at \xEchoAt\us{} =
+\xEchoAmm\,mm and \xEchoBt\us), firmware \xCampFw; data as compressed NumPy files and scripts in
+\texttt{docs/bench/2026-11-22-datasheet-ext/} (\texttt{campaign.py} records, \texttt{analyze.py} makes the figures and numbers).
+
+\subsection{RP↔PIC data link}\label{sec:link}
+The capture payload (4095 × u16) no longer travels over the 115\,200\,Bd UART (0.71\,s): the RP pulls it as one SPI frame.
+\begin{enumerate}[nosep]
+  \item The PIC answers a capture command with its header line only and keeps the samples.
+  \item The RP sends \cmd{SPIX}. The PIC drops RDY, preloads its SPI1 transmit FIFO, raises RDY (= ``clock now'').
+  \item The RP (SPI0 master, mode 1, CS on GPIO5) clocks 12 + 2n bytes: \cmd{A5 5A 'M' '1'}, n, sequence number, the samples
+        (little-endian u16) and a CRC-32 over all of it; the PIC computes the CRC while feeding the FIFO and drops RDY at the end.
+  \item The RP checks magic, n (against the header) and the CRC; on any error it asks again over the UART (\cmd{UTX}) and counts it.
+\end{enumerate}
+\begin{table}[H]\centering\small
+\caption{\cmd{linktest}: the PIC fills its buffer with a 16-bit LFSR, the RP pulls it 200 times and checks every word\meas.}
+\begin{tabular}{@{}rrrrrrl@{}}\toprule
+\textbf{SPI (MHz)} & \textbf{ok} & \textbf{errors} & \textbf{per frame (ms)} & \textbf{SPIX→RDY (µs)} & \textbf{clocking (ms)} & \textbf{= UART copy}\\\midrule
+\xLinkRows
+\bottomrule\end{tabular}\end{table}
+12.5\,MHz is the default (\cmd{link spi 25} is also clean); the 455\us{} SPIX→RDY is the 5-character request on the UART. The text
+sent to the host was the next limit: \cmd{fmt b64} sends the samples as base64 (\xFmtBsixKB\,KB instead of \xFmtTextKB\,KB), and a
+complete \cmd{acq} from Python takes \textbf{\xFmtBsix\,ms} instead of \xFmtText\,ms\meas. The Python library selects it on connect.
+
+\subsection{Envelope detection}\label{sec:env}
+Two envelope detectors are available: one on the PIC (\cmd{env}, only the envelope crosses the link) and one on the host
+(library and live viewer, from the full RF A-line). Both are shown on the same first echo in Fig.~\ref{fig:envsteps}.
+
+\textbf{On the PIC (\cmd{env <dec> [shots [in]]}, firmware \texttt{pe\_ext.c} \texttt{pe\_env}), step by step:}
+\begin{enumerate}[nosep]
+  \item \textbf{Capture.} The RP arms the pulser; the PIC captures 4095 samples at 25\,Msps with the standard settings (div 4, samc 0,
+        navg 1, whatever the last \cmd{acq} used) and applies the period-4 correction (\S\ref{sec:pc}).
+  \item \textbf{Baseline.} The mean of the 4095 samples is the baseline (the echoes are sparse, so the mean is the bias point).
+  \item \textbf{Rectify.} Each sample becomes $|x - \text{mean}|$.
+  \item \textbf{Integrate and dump.} The rectified samples are summed over blocks of \cmd{dec} = 4…64 samples and divided by \cmd{dec}:
+        one value per block, kept in 1/16\,LSB. This is a boxcar low-pass plus decimation: 4095/dec values, dec × 40.2\,ns apart.
+        For a sine of amplitude $A$ it gives $2A/\pi$ (the mean of $|\sin|$).
+  \item \textbf{Average over shots.} With \cmd{shots} > 1 the RP fires again and the PIC adds each new envelope into a running
+        32-bit sum (the second capture buffer); the current average is written back for transfer. Envelopes can be averaged
+        although the sample comb moves by up to one sample from shot to shot (E3): 40\,ns is small against a 1\us{} envelope.
+  \item \textbf{Transfer.} The RP pulls the 4095/dec values over SPI and prints them (1/16\,LSB).
+\end{enumerate}
+\textbf{On the host (library \texttt{minus.live.hilbert\_envelope}, live viewer):} (1) take the RF A-line; (2) remove its mean;
+(3) FFT, zero the negative frequencies and double the positive ones (analytic signal); (4) inverse FFT and take the magnitude.
+This gives the instantaneous amplitude $A$ at every sample (no decimation, no $2/\pi$ factor) but needs the whole A-line on the host.
+
+Checks\meas: an emulation of steps 2–4 on 16 host-side \cmd{pe} shots matches the PIC's 16-shot \cmd{env 8} with correlation
+\xEnvCorr{} (energy ratio \xEnvRatio\,\%), and $2/\pi$ × the Hilbert envelope lies on both. One \cmd{env 8} takes \xEnvTimeA\,ms end
+to end, \cmd{env 8 16} \xEnvTimeB\,ms.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_env_steps.pdf}
+\caption{Envelope detection on the first echo, gain ×\xRefGain\meas. 1: the capture and its mean; 2: rectified; 3: integrate-and-dump
+over 8 samples (host emulation of this shot and the PIC's \cmd{env 8} of another shot); 4: averages over 16 shots — PIC, host
+emulation and the host Hilbert envelope × $2/\pi$.}\label{fig:envsteps}\end{figure}
+\begin{table}[H]\centering\small
+\caption{\cmd{env} on the echoes (gain ×\xRefGain, 5 runs per setting)\meas. Floor = mean / run-to-run spread in the echo-free
+55–78\us{} window (LSB); the spread falls roughly as $1/\sqrt{\text{shots}}$.}
+\begin{tabular}{@{}rrrcccr@{}}\toprule
+\textbf{dec} & \textbf{ns/value} & \textbf{values} & \textbf{floor, 1 shot} & \textbf{4 shots} & \textbf{16 shots} & \textbf{echo peak (LSB)}\\\midrule
+\xEnvRows
+\bottomrule\end{tabular}\end{table}
+\begin{figure}[H]\centering\includegraphics[width=0.55\textwidth]{figures/ext_env_shots.pdf}
+\caption{Run-to-run spread of the \cmd{env} noise floor vs shots averaged\meas.}\end{figure}
+
+\subsection{Time of flight}\label{sec:tof}
+\textbf{\cmd{tof <thr> [blank\_ns [in [ref]]]}, step by step} (firmware \texttt{pe\_tof}):
+\begin{enumerate}[nosep]
+  \item The ADC channel's digital comparator is armed out of [ref − thr, ref + thr] (ref = 2048 when not given); its flag tells
+        whether any sample of the capture left that window (reported, not used for the result).
+  \item Pulse + capture with the standard settings, period-4 correction.
+  \item If ref was not given, the baseline is the capture mean.
+  \item The PIC scans from the sample \cmd{blank\_ns}/40 onward for the first $|x - \text{ref}| > \text{thr}$, then for the largest
+        $|x - \text{ref}|$ in the next 64 samples.
+  \item One line goes back: index, time, one-way depth at 1540\,m/s, peak, ref, comparator flag — no A-line transfer
+        (\xTofTime\,ms per shot end to end).
+\end{enumerate}
+\begin{table}[H]\centering\small
+\caption{\cmd{tof} on the first echo, 25\us{} blank, gain ×\xRefGain, 50 shots per threshold\meas. ``Host'' = the same search
+run on 30 host-side \cmd{pe} captures.}
+\begin{tabular}{@{}rrrrrrrr@{}}\toprule
+\textbf{thr} & \textbf{found \%} & \textbf{mean (µs)} & \textbf{std (ns)} & \textbf{peak} & \textbf{host mean} & \textbf{host std} & \textbf{flag \%}\\\midrule
+\xTofRows
+\bottomrule\end{tabular}\end{table}
+The result is the first RF half-cycle that crosses the threshold, not the envelope onset: with a threshold close to the peak of one
+cycle, noise and the shot-to-shot comb phase pick that cycle or the next (one 3.3\,MHz period = 303\,ns), which is the large spread
+at thr 100. Choose thr well between two cycle peaks, or use \cmd{env} for an envelope-based timing.
+\begin{figure}[H]\centering\includegraphics[width=0.85\textwidth]{figures/ext_tof.pdf}
+\caption{\cmd{tof} crossing times per threshold\meas.}\end{figure}
+
+\subsection{Oversampling (\cmd{acqos})}
+\cmd{acqos 4|16 [in [pe]]} sets the ADC channel to hardware oversampling (MODE 11): every trigger runs 4 or 16 back-to-back 32\,ns
+conversions and returns one 13- or 14-bit result (2× or 4× a 12-bit code). The trigger period is raised to fit: \xOsDtB{} and
+\xOsDtC\,ns per sample\meas, i.e. a 0.76 / 2.32\,ms window. On a DC level the noise falls from \xOsNoiseA{} to \xOsNoiseB{} and
+\xOsNoiseC\,LSB rms\meas. One pulse, averaging inside each sample. \textbf{It is not an RF mode:} at 5.4 / 1.77\,Msps a 3.3\,MHz echo
+aliases (Nyquist 2.7 / 0.88\,MHz) and the 128 / 512\,ns average cancels it — the first echo keeps \xOsEchoRatioB\,\% / \xOsEchoRatioC\,\%
+of its \cmd{pe} amplitude. Use it for slow signals and long, low-noise windows; use \cmd{pe}, \cmd{env} or \cmd{tof} for echoes.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_acqos.pdf}
+\caption{\cmd{acqos}: noise on a DAC DC level (left) and the first echo with \cmd{pe} vs oversampling (right)\meas.}\end{figure}
+
+\subsection{Time-gain steps (\cmd{tgc})}
+\cmd{tgc <t\_us> <leg> [<t\_us> <leg> …]} switches the 74HC4052 gain leg of both stages at up to four times after the pulse, during
+every capture; the leg set by \cmd{gain} is restored after. With a step from ×10 to ×61 at 30\us{} the second echo grows ×\xTgcRatio{}
+(a constant ×61 gives ×\xTgcConst)\meas. Each switch costs $\approx$\,2\us{} of saturation and $\approx$\,15\us{} of settling: the 4052
+breaks before it makes, so the op-amp feedback opens for a moment. Place steps away from echoes of interest; the Python
+\texttt{Capture.tgc\_valid()} masks 17\us{} after each step.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_tgc.pdf}
+\caption{Time-gain step on the echoes (mean envelope of 16 shots)\meas.}\end{figure}
+
+\subsection{DAC test signal}
+\cmd{dac off|dc <code>|tri <lo> <hi> <slope>|sine <hz> [amp [mid]]} drives DACOUT1 (U9 pin 3, H6.16), which is also ADC2 input
+AD2AN3: \cmd{acq 4 0 19} reads it with no wiring. Codes 205…3890 = 5…95\,\% of 3.3\,V; the PDM DAC settles in 0.75–2\us.
+\cmd{tri} runs in hardware (half period (hi−lo)·16/slope × 4\,ns) and is the reference to use during captures; \cmd{sine} is fed by
+DMA and makes 20–25\,Msps captures \cmd{slow} (bus contention) — the PIC pauses it during its lock check.
+\IfFileExists{figures/ext_dac.pdf}{\begin{figure}[H]\centering\includegraphics[width=0.9\textwidth]{figures/ext_dac.pdf}
+\caption{DAC triangle read back by the capture ADC: period \xTriPer\us{} (nominal 24.58), codes \xTriLo…\xTriHi\meas.}\end{figure}}{}
+
+\subsection{PLL lock check at boot (E2)}\label{sec:lock}
+The 40/60/60\,ns ``slow'' lock is set when PLL1 locks: the phase between its CPU/SCCP divider (VCO/5) and its ADC divider (VCO/4)
+decides it, and a new lock re-rolls it (12 boots before the fix: 6 clean, 6 with 85–100\,\% slow captures). At boot the PIC runs
+8 test captures and re-locks PLL1 (up to 12 times) until none is slow; \cmd{raw LOCK?} reports \cmd{LOCK <locks> <slow of 8>}, and
+the RP sends \cmd{RELOCK} if 3 captures in a row come back slow. Over \xLockBoots{} boots\meas: all \xLockOk{} uniform (20 of 20
+captures each), \xLockFirst{} on the first lock, at most \xLockMax{} locks (mean \xLockMean).
 
 % ====================================================================== 5 pinout
 \section{Connectors and pin assignment}
@@ -490,8 +636,16 @@ H1–H4 & M2 holes & mounting, padded.\\\bottomrule
 \cmd{pe [hi [lo [in [dead]]]]} & Pulse-echo: arm the pulser on the next RDY rise, capture 4095 samples on input \cmd{in} (default 25), print header + samples; auto re-shot (≤ 8) if the sample clock locked slow. Defaults 200\,ns / 500\,ns / 25 / 27\,ns.\\
 \cmd{pulse [hi [lo [dead]]]} & One pulser shot now, no capture (scope check).\\
 \cmd{gain [leg [u1 [u2]]]} & Set R\textsubscript{f} leg 0–3 on both stages and unity bypass per stage; no argument: show.\\
-\cmd{acq [div [samc [in [navg]]]]} & Capture without pulsing. \cmd{div}: trigger period in 5\,ns (4 = 25\,Msps, 10 = 20, 20 = 10); \cmd{samc} 0–7 sampling time; \cmd{in} input code; \cmd{navg} 1–16 summed conversions.\\
-\cmd{pc [0|1]} & Fixed-pattern correction off/on; show last offsets.\\
+\cmd{acq [div [samc [in [navg]]]]} & Capture without pulsing. \cmd{div}: trigger period in 5\,ns (4 = 25\,Msps, 10 = 20, 20 = 10); \cmd{samc} 0–7 sampling time; \cmd{in} input code (19 = DAC); \cmd{navg} 1–16 summed conversions (back to 1 when not given).\\
+\cmd{pc [0|1]} & Fixed-pattern correction off/on; show last offsets (\S\ref{sec:pc}).\\
+\cmd{env <dec> [shots [in]]} & Pulse + envelope computed on the PIC (dec 4–64), averaged over shots; 4095/dec values (\S\ref{sec:env}).\\
+\cmd{tof <thr> [blank\_ns [in [ref]]]} & Pulse + first threshold crossing after the blank, computed on the PIC; one line (\S\ref{sec:tof}).\\
+\cmd{acqos <4|16> [in [pe]]} & Capture with ADC oversampling, 13/14-bit, 186/565\,ns per sample; not for RF echoes.\\
+\cmd{tgc [off|<t\_us> <leg> …]} & Time-gain steps: gain leg switched at up to 4 times after the pulse.\\
+\cmd{link [uart|spi [MHz]]}, \cmd{linktest [n [MHz]]} & Payload path and counters; SPI link self-test (\S\ref{sec:link}).\\
+\cmd{fmt [text|b64]} & Sample output: decimal lines or base64 (the Python library uses b64).\\
+\cmd{dac …} & PIC DAC test signal on DACOUT1 = input 19.\\
+\cmd{raw LOCK?}, \cmd{raw RELOCK} & PIC PLL lock check result / redo it (\S\ref{sec:lock}).\\
 \cmd{version}, \cmd{help} & Firmware, chip and unique ID; command list.\\
 \cmd{ping}, \cmd{auto}, \cmd{stop}, \cmd{stat} & Link test (\cmd{PING n}→\cmd{PONG n}), periodic ping, counters.\\
 \cmd{raw <text>} & Send a link line to the PIC and print the reply (e.g. \cmd{raw ID?}).\\
@@ -525,6 +679,9 @@ dev.gain(2, 0, 0)
 a = dev.pe()                       # a.samples (uint16), a.t_us, a.depth_mm(), a.fs_msps, a.shots
 \end{lstlisting}
 One-off commands from a shell: \texttt{python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "gain 2 0 0" "pe" --wait=2 > shot.txt}.
+With \cmd{fmt b64} the samples follow the header as \cmd{\# b64 8190} and lines of 76 base64 characters (57 bytes of u16
+little-endian each). Live view: \texttt{python3 -m minus.live} (A-line, envelope, M-mode; needs a matplotlib GUI backend) or
+\texttt{minus.live.LiveView(dev)} in Jupyter.
 
 % ====================================================================== 7 application
 \section{Application information}
@@ -546,8 +703,9 @@ the plateau is 75–130\,ns. The GND clamp length (0–2\,µs) changes neither t
 the ring-down is the transducer's own; the clamp mainly defines the end state before the output is released.
 \subsection{Limitations}
 \begin{itemize}
-  \item Throughput is limited by the 115\,200\,Bd RP↔PIC link: \vpetime\,s per shot, i.e. \vprf\,shots/s (the capture itself takes 165\us).
-  \item No time-gain compensation yet: the gain is fixed during a capture.
+  \item Throughput: one \cmd{pe} takes \xFmtBsix\,ms end to end from Python (SPI link + base64; rev 0.2: \vpetime\,s over the UART),
+        \cmd{tof} \xTofTime\,ms, \cmd{env 8} \xEnvTimeA\,ms; the USB CDC buffer of the RP SDK (256 bytes) is the remaining limit.
+  \item Time-gain compensation is by steps (\cmd{tgc}), each costing $\approx$\,17\us{} of switch transient.
   \item 5\,V excitation only: echoes from deep or attenuating targets need averaging.
 \end{itemize}
 
@@ -557,16 +715,17 @@ the ring-down is the transducer's own; the clamp mainly defines the end state be
 \begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
 \textbf{ID} & \textbf{Issue and workaround}\\\midrule
 E1 & \textbf{TX at +5\,V during power-up.} GPIO9 has no pull-up; the RP2350 pad default pull-down turns Q1 on until the firmware idles the pins (a few ms). Fix: 10\,kΩ pull-up on GPIO9, 10\,kΩ pull-down on GPIO8. The net names PWM\_H/PWM\_L are swapped vs function.\\
-E2 & \textbf{ADC slow lock.} The 32\,ns conversion on 20\,ns triggers sometimes locks to 40/60/60\,ns. Detected on the PIC since 0.1.25 (status \cmd{slow}); \cmd{pe} and \cmd{acq} re-shoot automatically (≤ 8).\\
+E2 & \textbf{ADC slow lock.} The 32\,ns conversion on 20\,ns triggers sometimes locks to 40/60/60\,ns. It is a per-PLL-lock state (\S\ref{sec:lock}); since pic 1.1.2 the PIC re-locks at boot until uniform and the RP sends \cmd{RELOCK} after 3 slow captures; \cmd{pe}/\cmd{acq} still re-shoot (≤ 8).\\
 E3 & \textbf{Sample-comb phase} varies over one sample period from shot to shot (\vEphispan\,ns p-p, \vEphirms\,ns rms, independent shots), and the comb slips by a whole sample during \vEslipa–\vEslipb\,\% of captures (more often later in the capture; \S\ref{sec:combphase}). Align on the echo of interest before averaging. Root cause (SCCP/ADC clock-domain start) not yet fixed.\\
-E4 & \textbf{Period-4 fixed pattern} on external ADC inputs (10.5\,LSB rms). Removed in firmware (\cmd{pc}); source of the coupling not yet found.\\
+E4 & \textbf{Period-4 fixed pattern} on external ADC inputs (\xPcRaw\,LSB rms). Removed in firmware (\cmd{pc}, \S\ref{sec:pc}; \xPcCor\,LSB residual); a comb slip inside a capture leaves part of it in that capture. Source of the coupling not yet found.\\
 E5 & \textbf{Interference lines} at 2.72\,MHz (in band) and 0.49\,MHz entering at the front end; up to half the in-band noise at high gain. Source unknown.\\
 E6 & \textbf{LNA output tap (input 1)} reads 26\,mV rms of flat, aliased noise that does not reach OA1OUT: GHz-wide LNA noise or an oscillation folded by the ADC sample-and-hold. Not a valid measurement point; to check with a fast scope.\\
 E7 & \textbf{RGB LED} — \emph{fixed in rp 1.1.1}: \cmd{rgb} now drives the LP5562 over I²C (the WS2812 driver on GPIO10 was for the devkit).\\
-E8 & \textbf{\cmd{reboot dfu}} occasionally restarts the application instead of BOOTSEL; use SW2 at plug-in.\\
+E8 & \textbf{\cmd{reboot dfu}} occasionally does not come back as the UF2 drive (seen again 2026-11-22: no USB device at all until replugged); use SW2 at plug-in.\\
 E9 & U3 is fitted as MIC4427YMM (TC4427 out of stock); fixed in the design files (2026-11-21).\\
 E10 & Internal 15/16\,AVDD channel reads 3480 instead of 3840 codes; internal references need SAMC ≥ 3.\\
-E11 & \textbf{TX and RX are separate nets}: a single-element probe needs an external tee (a 0\,Ω TX–RX link is planned for the next revision).\\\bottomrule
+E11 & \textbf{TX and RX are separate nets}: a single-element probe needs an external tee (R69, a 0\,Ω TX–RX link, is in the next revision).\\
+E12 & \textbf{tgc switch transient}: $\approx$\,2\us{} saturation + 15\us{} settling per 4052 switch (break-before-make); a make-before-break or parallel-R\textsubscript{f} switch would remove it.\\\bottomrule
 \end{tabularx}
 \normalsize
 
@@ -609,7 +768,10 @@ Certification & OSHWA open source hardware, UID \textbf{FR000032}; mark + UID on
 \textbf{Rev} & \textbf{Date} & \textbf{Change}\\\midrule
 0.1 & 2026-11-19 & First release: board 3 bring-up, firmware rp \vrpfw{} / pic \vpicfw, measurements of session 11.\\
 0.2 & 2026-11-19 & Board named v1.1; firmware rp 1.1.2 / pic 1.1.0 (LP5562 \cmd{rgb} with brightness, E7 fixed); Python library + notebooks;\\
-    &            & E3 sample-comb phase study (400 shots); licenses and repository links; Annex A test transducer.\\\bottomrule
+    &            & E3 sample-comb phase study (400 shots); licenses and repository links; Annex A test transducer.\\
+0.3 & 2026-11-22 & Firmware rp \rpfwrel{} / pic \picfwrel{} (proto 14): SPI capture link + base64 host output; on-PIC envelope, time of\\
+    &            & flight and oversampling; time-gain steps; DAC test signal; PLL lock check (E2); period-4 correction explained;\\
+    &            & new measurements with the transducer (\texttt{docs/bench/2026-11-22-datasheet-ext/}).\\\bottomrule
 \end{tabular}
 
 \newpage
