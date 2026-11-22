@@ -42,3 +42,17 @@
 - The rtk hook rewrites commands; in auto mode a rewritten call can get "no verdict" — re-issue exactly the rewritten text.
 - Library parsers: `_fail_if_error` treats any `<cmd>: ` line as an error; commands whose normal output starts that way
   (`link`, `linktest`, `dac`) use `_fail_on_usage`.
+
+## Afternoon 2026-11-22 (with the transducer)
+- **Brick-wall FFT filters ring**: a hard 2–6 MHz mask made the envelope floor worse (43 vs 50 dB); taper the pass band
+  (raised cosine 53, Gaussian 62 dB). Measure a hypothesis on recorded data before building it into firmware (bandpass_env.py).
+- **Check the metric before believing it**: an "echo kept" ratio over the whole capture included the main bang; a noise
+  "floor" std along the trace measured structure, not randomness (use the run-to-run spread); FFT-bin-limited frequencies.
+- **Pick representative examples**: the first capture of a set was a slipped one (bimodal phases) — choose the clean one for
+  the walk-through and show the anomaly separately with its frequency (7/40).
+- The fixture is keyed by command text (repeat commands need distinct arguments); a test sequence that switches something
+  off (`raw AMP2 0`) must switch it back on.
+- `reboot dfu` (E8) lost the board twice with the transducer connected; watch `lsusb` + `journalctl -k` to tell "no device"
+  from "slow mount", and use a background loop to wait for the owner's replug.
+- Git: `git checkout -- file` to revert one experiment also drops every other uncommitted edit in that file — re-check the
+  diff; stash untested firmware instead of committing it when the board is away.

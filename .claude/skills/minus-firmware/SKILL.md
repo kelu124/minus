@@ -56,6 +56,13 @@ comparator + first-crossing search, one line, 8.9 ms), `env` (|x−mean| integra
 the acqil buffer). Test them with the DAC on input 19 (`docs/bench/2026-11-22-adc-extras/`). The fixture is keyed by command
 text: two identical commands with different replies need distinct arguments.
 
+## Envelope detectors and the datasheet campaign (proto 15)
+`env` (|x−mean| integrate-and-dump), `envbp` (Gaussian complex FIR at fc/bw at the decimated outputs = FFT band-pass +
+Hilbert without the RAM; tapered pass band essential — brick-wall rings), host `minus.live.hilbert_envelope`. Re-run the
+datasheet campaign after firmware changes: `docs/bench/2026-11-22-datasheet-ext/campaign.py` → `analyze.py` → `make -C datasheet`.
+The PIC lock check pauses DMA2 (DAC sine); never trust "slow" while `dac sine` runs. **E8:** with the transducer connected,
+`reboot dfu` twice left the RP off USB (needs SW2 at plug-in) — prefer asking the owner for a BOOTSEL replug when flashing then.
+
 ## Output format, TGC, viewer (proto 14)
 `fmt b64` (base64 u16 LE samples; the library sets it on connect) — keep `print_samples()` the only sample printer.
 `tgc <t_us> <leg> …` switches the 4052 leg from `rdy_window()` during each capture: ~17 µs switch transient. Live viewer:
