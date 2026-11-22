@@ -33,7 +33,7 @@ dev.last.show()                    # the exchange as it went over the wire
 
 How a command is framed: the CLI has no prompt, so the library sends `<command>\n#end<k>\n`. The firmware handles
 lines in order and answers the sentinel with `unknown '#end<k>' — try help`, so everything before that line is the
-reply. Long captures (`pe`, ~0.9 s, 4097 lines) frame the same way as one-liners.
+reply. Long captures (`pe`, ~31 ms, a header + 150 base64 lines with `fmt b64`) frame the same way as one-liners.
 
 | CLI | Python | returns |
 |-----|--------|---------|
@@ -100,13 +100,17 @@ The check runs automatically:
 
 ## Notebooks
 
+0. [`00_acquisition_101.ipynb`](notebooks/00_acquisition_101.ipynb): **workshop notebook for complete beginners** — first
+   echo, reading an A-line, time → distance, gain and saturation, envelope and dB, averaging, M-mode, challenges, glossary.
 1. [`01_getting_started.ipynb`](notebooks/01_getting_started.ipynb): connect, versions, the wire framing, link tests, LED, errors.
 2. [`02_acquisition.ipynb`](notebooks/02_acquisition.ipynb): `acq` and `pe` captures, time/depth axes, gain, pattern correction, averaging.
 3. [`03_frontend_and_pic.ipynb`](notebooks/03_frontend_and_pic.ipynb): pulser, I²C, op amps, ADC timing, PIC programmer, reboot;
    SPI payload link and the PIC DAC test signal.
 4. [`04_live_viewer.ipynb`](notebooks/04_live_viewer.ipynb): the live A-line / envelope / M-mode view (`LiveView`).
 
-Notebook 02 also covers the ADC extras (`acqos`, `tof`, `env`).
+Notebook 02 also covers the period-4 correction step by step (host before/after), the on-PIC processing on real echoes
+(`tof`, `env`, `envbp`, `acqos`) and `tgc`; notebooks 01–04 together show every library function (`pic_erase` and `reboot`
+are described, not run).
 
 Re-execute them on a board with
 `jupyter nbconvert --to notebook --execute --inplace python/notebooks/*.ipynb` (kernel with numpy, pyserial and matplotlib).

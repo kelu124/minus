@@ -29,8 +29,8 @@ A medical device. It is non-clinical and meant for research, education and NDT o
 README, datasheet and LICENSE all state.
 
 ## Practical limits today
-- About 0.9 s per shot, because the link between the two chips runs at 115 200 Bd. M-mode is
-  therefore slow (about 1 line per second), not real-time.
+- About 23 A-lines per second from Python (31 ms per shot: SPI link between the chips + base64 over USB), ~36 per second
+  with the envelope computed on the PIC: enough for a live M-mode view (`python3 -m minus.live`), not for fast motion.
 - Sample-comb phase jitter and slips (datasheet erratum E3): shots must be aligned before
   averaging.
 - TX and RX are on separate connectors, so a single-element probe needs an external tee for now.

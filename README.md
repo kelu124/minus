@@ -11,8 +11,8 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 
 > ⚠️ **Status: working prototype (minus v1.1, board 3).** Pulse-echo, the
 > switchable RX gain, the fixed-pattern correction and the RGB LED work on the bench, and the
-> [datasheet rev 0.2](datasheet/minus-datasheet.pdf) gives measured figures, errata and the
-> test transducer (Annex A). Firmware RP2354A **1.1.9**, PIC32AK **1.1.6**, link protocol **15** (capture payload over SPI; on-PIC time of flight, envelope, oversampling; time-gain steps; live viewer `python3 -m minus.live`).
+> [datasheet rev 0.3](datasheet/minus-datasheet.pdf) gives measured figures, errata, the on-PIC processing
+> (envelopes step by step, band-pass envelope `envbp`) and the test transducer (Annex A). Firmware RP2354A **1.1.9**, PIC32AK **1.1.6**, link protocol **15** (capture payload over SPI; on-PIC time of flight, envelope, band-pass envelope, oversampling; time-gain steps; live viewer `python3 -m minus.live`).
 > Source: <https://github.com/kelu124/minus>.
 > **OSHWA-certified open source hardware, UID [FR000032](https://certification.oshwa.org/fr000032.html)**
 > (2026-11-20); the mark and UID are on the front silkscreen.
@@ -41,7 +41,7 @@ experiment with (coded excitation, on-device DSP, add-on boards). See [`docs/int
 | [`hardware/`](hardware/) | KiCad project of the current board (`minUS.kicad_pro`, minus v1.1), [`production/`](hardware/production/) JLCPCB outputs (Gerbers zip, BOM, positions), 3D renders + [`render_3d.py`](hardware/render_3d.py). |
 | [`firmware/`](firmware/README.md) | `rp2354/` (pico-sdk) and `pic32/` (XC-DSC) sources, **built images committed** in `*/build/`, [`VERSIONS.md`](firmware/VERSIONS.md). |
 | [`python/`](python/README.md) | `minus` Python library (one method per CLI command, firmware-sync check, offline tests) + step-by-step [notebooks](python/notebooks/). |
-| [`datasheet/`](datasheet/) | Product datasheet rev 0.2 (LaTeX source, generated values/figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)); [`piezo_test/`](datasheet/piezo_test/) = test-probe S11 (Annex A). |
+| [`datasheet/`](datasheet/) | Product datasheet rev 0.3 (LaTeX source, generated values/figures, [`minus-datasheet.pdf`](datasheet/minus-datasheet.pdf)); [`piezo_test/`](datasheet/piezo_test/) = test-probe S11 (Annex A). |
 | [`docs/intended-use.md`](docs/intended-use.md) | Intended use (workshop badge, research / education / NDT). |
 | [`docs/costs/`](docs/costs/) | BOM cost sheet ([`cost_bom.xls`](docs/costs/cost_bom.xls)). |
 | [`docs/bench/`](docs/bench/) | Bench campaigns: raw captures, capture/analysis scripts and a README per campaign (pulse-echo, gain, noise, pattern correction, datasheet, [E3 comb-phase jitter](docs/bench/2026-11-19-jitter/)). |
@@ -109,12 +109,13 @@ Build the PIC **first**: the RP image embeds the PIC hex (`tools/hex2c.py` → `
 3. **PIC32AK, from the RP:** `pic id` must print `… DEVID 0x9da2 DEVREV 2 -> PIC32AK1216GC41048`, then run
    `pic flash` (erase, program, verify, ~1 s). It writes the PIC image embedded in the RP firmware,
    so check `version` first.
-4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.0 proto 10`; `rgb 0 255 0` → LED green (25 % brightness by default; `rgb 0 255 0 100` = full).
+4. **Link check:** `ping` → `ok`; `raw ID?` → `PIC32AK1216GC41048 minus-pic32 1.1.6 proto 15`; `rgb 0 255 0` → LED green (25 % brightness by default; `rgb 0 255 0 100` = full).
 5. **Pulse-echo:** `pe` fires the pulser and captures one A-line, and `gain [leg [u1 [u2]]]` sets
    the RX gain. The full command reference and pin map are in
    [`firmware/README.md`](firmware/README.md). Measurement campaigns to reproduce are in
    [`docs/bench/`](docs/bench/).
-6. **From Python:** `pip install -e python/library`, then follow [`python/notebooks/`](python/notebooks/)
+6. **From Python:** `pip install -e python/library`, then follow [`python/notebooks/`](python/notebooks/) — new to
+   ultrasound? start with [`00_acquisition_101.ipynb`](python/notebooks/00_acquisition_101.ipynb) (workshop notebook)
    (`from minus import Minus; dev = Minus(); dev.pe()`). See [`python/README.md`](python/README.md).
 
 ## Known limitations
@@ -124,7 +125,8 @@ The full list is in the datasheet errata; the ones that matter when you use the 
   the comb slips by a whole sample during the capture. Align shots on the echo of interest before averaging
   ([`docs/bench/2026-11-19-jitter/`](docs/bench/2026-11-19-jitter/)).
 - **ADC slow lock (E2):** detected on the PIC; `pe` and `acq` re-shoot automatically.
-- **Link speed:** 115 200 Bd between the MCUs, so one 4095-sample shot takes ~0.9 s end to end.
+- **Frame rate:** the capture crosses the RP↔PIC SPI link in 5.7 ms; a full 4095-sample `pe` takes ~31 ms end to end from
+  Python (~23 A-lines/s in the live viewer, ~36/s with the on-PIC envelope). The 4052 gain switch costs ~17 µs per TGC step.
 - **TX and RX are separate nets:** a single-element probe on one connector needs an external tee for now.
 
 ## Keeping firmware and Python in sync

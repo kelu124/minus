@@ -20,7 +20,7 @@ history; their pin map and flaws are in `docs/claude/memory/0008-devkit-minUS_10
 |-----|--------------|--------------|-------|
 | `UART_TX` | GPIO16 (UART0 TX) | RC6 / **RP39**, pin 25 (→ U1RX via PPS) | also CN1.9, H6.7. Net names are RP-side! |
 | `UART_RX` | GPIO17 (UART0 RX) | RC7 / **RP40**, pin 26 (← U1TX via PPS) | also H6.8 |
-| `SPI_CLK` | GPIO2 (SPI0 SCK) | RD1 / RP50 (**TCK**) → SCK1, pin 38 | CN1.23; capture payload link since proto 11 (RP master, PIC client, mode 0) |
+| `SPI_CLK` | GPIO2 (SPI0 SCK) | RD1 / RP50 (**TCK**) → SCK1, pin 38 | CN1.23; capture payload link since proto 11 (RP master, PIC client, mode 1 since proto 12) |
 | `SPI_MOSI` | GPIO3 (SPI0 TX) | RD2 / RP51 (**TDO**) → SDI1 (disabled), pin 39 | CN1.24; unused (RP sends 0x00) |
 | `SPI_MISO` | GPIO4 (SPI0 RX) | RC2 / RP35 (PGC3) ← SDO1, pin 31 | CN1.22; the frame data |
 | `SPI_CS` | GPIO5 (SIO, idle high) | RD0 / RP49 → SS1, pin 37 | CN1.21 |

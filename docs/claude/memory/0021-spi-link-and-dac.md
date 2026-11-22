@@ -1,6 +1,6 @@
 # 0021 — SPI capture payload link + PIC DAC test signal (2026-11-21, session 13)
 
-**Status:** current · rp 1.1.5 / pic 1.1.2, **proto 12** (was 11 on 2026-11-21) · design `docs/claude/specs/2026-11-21-dac-spi-link-design.md` ·
+**Status:** current · now rp 1.1.9 / pic 1.1.6, **proto 15** (sections below: proto 11 → 15, newest last) · design `docs/claude/specs/2026-11-21-dac-spi-link-design.md` ·
 bench `docs/bench/2026-11-21-spi-dac/`
 
 ## SPI payload link

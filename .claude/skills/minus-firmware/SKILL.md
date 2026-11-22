@@ -26,8 +26,8 @@ cmake --build firmware/rp2354/build -j && picotool load -x firmware/rp2354/build
 make -C firmware/pic32 info && make -C firmware/pic32 && make -C firmware/pic32 flash TOOL=SNAP   # or PKBASIC/PK4/PK5/ICD4/ICD5/ICE4
 ```
 Board header: `firmware/rp2354/board/minus_devkit.h` (`PICO_BOARD=minus_devkit`, 2 MB flash,
-`MINUS_PIN_*` names). Always rebuild the RP side before claiming a change works; the PIC side
-is uncompiled until XC-DSC is installed (**REQUIRED SUB-SKILL:** pic32ak-xcdsc-toolchain).
+`MINUS_PIN_*` names). Always rebuild the RP side before claiming a change works; build the PIC side with XC-DSC 3.31.01
+(**REQUIRED SUB-SKILL:** pic32ak-xcdsc-toolchain), then rebuild the RP to embed it.
 
 ## Bench driving
 `python3 firmware/rp2354/tools/rpcli.py /dev/ttyACM0 "cmd1" "cmd2" --wait=2` sends CLI lines and
@@ -77,7 +77,7 @@ else `ERR`. Changing it = bump `PROTO_VERSION` on both sides, same commit.
 - RP GPIO21/22/24 (PGC1/PGD1/MCLR taps) stay **Hi-Z** unless programming; `reset` = drive
   low then release, never drive high.
 - RP is the **only master** of I²C (PIC I²C pins Hi-Z); since proto 11 the PIC's SPI1 is a client of the RP's SPI0.
-- PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. PIC runs on FRC 8 MHz (no crystal).
+- PIC config: `JTAGEN = OFF`, `WDTEN = SW`, `WINDIS = ON`. FRC 8 MHz (no crystal) → PLL1: CPU 200 MHz, ADC 250 MHz; PLL2 → DAC 500 MHz.
 - Pin map and board flaws: `firmware/README.md`; setup/flash procedure: `README.md` (Getting started).
 
 ## Board 3 (v1.1, KiCad in `hardware/`) — current target = minus v1.1 (2026-11-21, rp 1.1.9 / pic 1.1.6, proto 15)
@@ -89,7 +89,7 @@ Same RP pin map as the devkit build (`minus_devkit` header). Differences that th
   (aliased noise, not a real measurement), 15/31 band gap, 14/30 15/16 AVDD. DMA trigger ADC2 ch0 = CHSEL 0x40.
 - **Commands**: `pe [hi [lo [in [dead]]]]`, `pulse`, `gain [leg [u1 [u2]]]`, `pc [0|1]` (period-4 pattern correction, on).
 - **ACQ status `slow`** (PIC, no payload) = ADC locked to 40/60/60 ns; `pe`/`acq` re-shoot ≤ 8.
-- Not driven: LP5562 RGB at I²C 0x30 (WS2812 code targets GPIO10 = nothing on board 3). LED1 = PIC RC5 heartbeat.
+- RGB = LP5562 at I²C 0x30 (`rgb`, rp ≥ 1.1.1; the WS2812 code on GPIO10 drives nothing on board 3). LED1 = PIC RC5 heartbeat.
 
 ## Flashing pitfalls (learnt the hard way)
 ```bash
