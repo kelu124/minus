@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-23  cost_bom.xls updated (owner's edit); rule: node_modules/ never committed (.gitignore + pre-commit guard + CLAUDE.md)
 
 ## Committed
 

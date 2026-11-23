@@ -35,6 +35,7 @@ Then you are "up and running" with the past discussions and discoveries.
   fixture (`tests/record_fixture.py`) and the notebooks; then `python3 -m minus.fwsync --update` (from
   `python/library`). A PostToolUse hook (`.claude/hooks/fwsync-check.sh`) and the git pre-commit hook
   (`.githooks/pre-commit`, `git config core.hooksPath .githooks`) enforce it.
+- **Never commit `node_modules/`** (ignored in `.gitignore`, refused by `.githooks/pre-commit`).
 - **Repo size:** overall size is fine, but **never commit a single file larger than
   45 MB**. Skip/trim oversized files (or note them and link instead).
 
