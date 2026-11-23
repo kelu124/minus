@@ -8,9 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-23  cost_bom.xls updated (owner's edit); rule: node_modules/ never committed (.gitignore + pre-commit guard + CLAUDE.md)
+- (none)
 
 ## Committed
+
+- 2026-11-23  b3b7c48  cost_bom.xls updated (owner's edit); rule: node_modules/ never committed (.gitignore + pre-commit guard + CLAUDE.md)
 
 - 2026-11-23  7ec793a  datasheet rev 0.3a: envbp host simulation vs firmware (Fig. ext_envbp_sim, Table tab:envbpsim, analyze.py port of pe_envbp); tap count fixed 21 → 23
 
