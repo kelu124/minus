@@ -8,9 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-23  .gitignore: root package.json / package-lock.json (local xpm install)
+- (none)
 
 ## Committed
+
+- 2026-11-23  af1ec8f  .gitignore: root package.json / package-lock.json (local xpm install)
 
 - 2026-11-23  b3b7c48  cost_bom.xls updated (owner's edit); rule: node_modules/ never committed (.gitignore + pre-commit guard + CLAUDE.md)
 
