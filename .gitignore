@@ -28,3 +28,5 @@ __pycache__/
 .vscode/
 # Node.js dependencies (e.g. xpm installs) — never committed; also refused by .githooks/pre-commit
 node_modules/
+/package.json
+/package-lock.json

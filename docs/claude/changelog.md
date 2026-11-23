@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-23  .gitignore: root package.json / package-lock.json (local xpm install)
 
 ## Committed
 
