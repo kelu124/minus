@@ -107,6 +107,9 @@ The check runs automatically:
 3. [`03_frontend_and_pic.ipynb`](notebooks/03_frontend_and_pic.ipynb): pulser, I²C, op amps, ADC timing, PIC programmer, reboot;
    SPI payload link and the PIC DAC test signal.
 4. [`04_live_viewer.ipynb`](notebooks/04_live_viewer.ipynb): the live A-line / envelope / M-mode view (`LiveView`).
+5. [`05_envbp_filter.ipynb`](notebooks/05_envbp_filter.ipynb): **offline, no board** — the PIC's Gaussian band-pass envelope
+   (`envbp`) ported to Python and run on recorded `pe` shots (`docs/bench/2026-11-22-datasheet-ext/envbp.npz`): taps, frequency
+   response, raw RF behind the filtered envelope, dB floor (≈44 → 56 dB echo/floor, ≈66 dB pulse/floor), check vs the firmware's output.
 
 Notebook 02 also covers the period-4 correction step by step (host before/after), the on-PIC processing on real echoes
 (`tof`, `env`, `envbp`, `acqos`) and `tgc`; notebooks 01–04 together show every library function (`pic_erase` and `reboot`

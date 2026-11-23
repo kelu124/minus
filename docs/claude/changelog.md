@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-23  notebook 05_envbp_filter: offline simulation of the PIC envbp Gaussian filter on recorded envbp.npz shots (raw RF behind the envelope, dB floor, check vs firmware)
 
 ## Committed
 
