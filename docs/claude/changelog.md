@@ -8,9 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-23  memory 0023 (envbp sim vs firmware, repo rules), 0018 → rev 0.3a, TODO/DONE, session 14 log
+- (none)
 
 ## Committed
+
+- 2026-11-23  7fb31a0  memory 0023 (envbp sim vs firmware, repo rules), 0018 → rev 0.3a, TODO/DONE, session 14 log
 
 - 2026-11-23  af1ec8f  .gitignore: root package.json / package-lock.json (local xpm install)
 
