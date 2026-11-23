@@ -8,9 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-23  notebook 05_envbp_filter: offline simulation of the PIC envbp Gaussian filter on recorded envbp.npz shots (raw RF behind the envelope, dB floor, check vs firmware)
+- (none)
 
 ## Committed
+
+- 2026-11-23  ef90ac5  notebook 05_envbp_filter: offline simulation of the PIC envbp Gaussian filter on recorded envbp.npz shots (raw RF behind the envelope, dB floor, check vs firmware)
 
 - 2026-11-22  b25cf6f  TODO_HARDWARE: JLC outputs re-exported (R69–R73, J3 in bom.csv)
 
