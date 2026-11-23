@@ -8,9 +8,11 @@ the sha.
 
 ## Pending
 
-- 2026-11-23  datasheet rev 0.3a: envbp host simulation vs firmware (Fig. ext_envbp_sim, Table tab:envbpsim, analyze.py port of pe_envbp); tap count fixed 21 → 23
+- (none)
 
 ## Committed
+
+- 2026-11-23  7ec793a  datasheet rev 0.3a: envbp host simulation vs firmware (Fig. ext_envbp_sim, Table tab:envbpsim, analyze.py port of pe_envbp); tap count fixed 21 → 23
 
 - 2026-11-23  ef90ac5  notebook 05_envbp_filter: offline simulation of the PIC envbp Gaussian filter on recorded envbp.npz shots (raw RF behind the envelope, dB floor, check vs firmware)
 
