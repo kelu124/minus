@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-23  datasheet rev 0.3a: envbp host simulation vs firmware (Fig. ext_envbp_sim, Table tab:envbpsim, analyze.py port of pe_envbp); tap count fixed 21 → 23
 
 ## Committed
 

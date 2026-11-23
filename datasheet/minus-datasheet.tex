@@ -76,7 +76,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\bfseries\color{accent}\product{} \textcolor{black}{\mdseries| single-channel ultrasound front end \board}}
-\fancyhead[R]{\small Datasheet rev.~0.3 · 2026-11-22}
+\fancyhead[R]{\small Datasheet rev.~0.3a · 2026-11-23}
 \fancyfoot[L]{\scriptsize Open hardware (TAPR OHL v1.0) · \repo{} · values marked \meas{} are measured on one board (unique ID \vuid), \des{} are design values}
 \fancyfoot[R]{\small \thepage/\pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -566,7 +566,7 @@ fc 3300\,kHz, bw 2500\,kHz):
   \item \textbf{Capture} as for \cmd{env} (pulse, standard settings, period-4 correction).
   \item \textbf{Filter design}, from the measured sample period $\Delta t$: a Gaussian window $g_k = e^{-k^2\Delta t^2/2\sigma_t^2}$ with
         $\sigma_t = 1/(2\pi\sigma_f)$ and $\sigma_f = \text{bw}/2.355$ (bw = full width at half maximum of the pass band), cut at
-        $\pm3\sigma_t$ (21 taps for 2.5\,MHz), times $e^{j2\pi f_c k\Delta t}$. In frequency this is a Gaussian pass band centred on
+        $\pm3\sigma_t$ (\xBpTaps{} taps for 2.5\,MHz at 40.2\,ns), times $e^{j2\pi f_c k\Delta t}$. In frequency this is a Gaussian pass band centred on
         $+f_c$ only: band-pass and Hilbert transform in one complex filter.
   \item \textbf{Baseline}: subtract the capture mean.
   \item \textbf{Filter at the output points only}: for block $j$ (centre sample $c = j\cdot\text{dec} + \text{dec}/2$),
@@ -592,6 +592,28 @@ each envelope, legend = first-echo peak / floor 55–78\us{} (right)\meas.}\labe
 \bottomrule\end{tabular}\end{table}
 \begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_envbp.pdf}
 \caption{\cmd{env} vs \cmd{envbp} on the PIC, same session\meas.}\end{figure}
+
+\textbf{Firmware vs a host simulation.} The PIC returns only the envelope, never the RF it filtered. To see what the filter does
+to the signal, \texttt{pe\_envbp} is ported line by line to Python (same filter design, mean removal, block-centre evaluation,
+rounding to 1/16\,LSB and integer shot average) and run on the 16 raw \cmd{pe} shots recorded in the same session, at the same
+gain (\texttt{analyze.py}; interactive version: notebook \texttt{python/notebooks/05\_envbp\_filter.ipynb}, no board needed).
+Fig.~\ref{fig:envbpsim} puts the raw RF behind the filtered envelope: the echo peaks are unchanged, the floor between the echoes
+drops by about 13\,dB, and an out-of-band burst at 135–145\us{} (≈\,25\,dB above the raw floor, not an echo) is removed. On the
+first echo the simulation gives \xBpSimDb\,dB peak/floor against \xBpPicDb\,dB from the firmware (raw signal: \xBpRawDb\,dB);
+from the transmit pulse to the floor the \cmd{envbp} envelope spans \xBpRange\,dB (Table~\ref{tab:envbpsim}). Simulated and
+measured envelopes come from different pulses, so they agree in their statistics, not sample by sample. Averaging 16 shots adds
+only $\approx$\,1\,dB: what is left between the echoes is mostly in-band and repeatable (ring-down, reverberation), not noise.
+\begin{figure}[H]\centering\includegraphics[width=\textwidth]{figures/ext_envbp_sim.pdf}
+\caption{\cmd{envbp} 8, 3.3 / 2.5\,MHz, simulated on a recorded shot (gain ×\xRefGain): raw RF (grey) behind the filtered
+envelope (red), on the first echo (left) and over the whole record in dB (right, blue: an envelope returned by the PIC in the
+same session)\meas.}\label{fig:envbpsim}\end{figure}
+\begin{table}[H]\centering\small
+\caption{Host simulation of \cmd{envbp} 8 on the 16 recorded \cmd{pe} shots vs the firmware's own output (5 runs), first echo,
+gain ×\xRefGain\meas. Peak and floor (rms, 55–78\us) of the simulation, in LSB.}\label{tab:envbpsim}
+\begin{tabular}{@{}lrrrrrr@{}}\toprule
+\textbf{Detector (fc / bw kHz)} & \textbf{taps} & \textbf{peak} & \textbf{floor} & \textbf{dB, sim.} & \textbf{dB, PIC} & \textbf{dB, 16 shots sim. / PIC}\\\midrule
+\xBpSimRows
+\bottomrule\end{tabular}\end{table}
 
 \subsection{Time of flight}\label{sec:tof}
 \textbf{\cmd{tof <thr> [blank\_ns [in [ref]]]}, step by step} (firmware \texttt{pe\_tof}):
@@ -851,7 +873,9 @@ Certification & OSHWA open source hardware, UID \textbf{FR000032}; mark + UID on
     &            & E3 sample-comb phase study (400 shots); licenses and repository links; Annex A test transducer.\\
 0.3 & 2026-11-22 & Firmware rp \rpfwrel{} / pic \picfwrel{} (proto 14): SPI capture link + base64 host output; on-PIC envelope, time of\\
     &            & flight and oversampling; time-gain steps; DAC test signal; PLL lock check (E2); period-4 correction explained;\\
-    &            & new measurements with the transducer (\texttt{docs/bench/2026-11-22-datasheet-ext/}).\\\bottomrule
+    &            & new measurements with the transducer (\texttt{docs/bench/2026-11-22-datasheet-ext/}).\\
+0.3a & 2026-11-23 & \cmd{envbp}: host simulation of the firmware filter vs the PIC's output (Fig.~\ref{fig:envbpsim},
+                    Table~\ref{tab:envbpsim}); tap count corrected (\xBpTaps, was 21).\\\bottomrule
 \end{tabular}
 
 \newpage

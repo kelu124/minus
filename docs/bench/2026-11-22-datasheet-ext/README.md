@@ -25,6 +25,7 @@ make -C datasheet                                                             # 
 | `envbp.npz` | `envbp 8 shots 25 fc bw` for 3300/1500, 3300/2500, 3300/4000, 4000/4000 × 1 and 16 shots × 5 runs; env alongside; 16 pe shots; timing |
 | `live.npz` | live viewer, 60 frames in pe and envbp modes: last frame's depth axis, RF, envelope, M-mode image; frames/s |
 | `bandpass_env.npz` | host prototype (`bandpass_env.py`): peak / floor / dB for env, Hilbert, brick-wall, raised-cosine and Gaussian band-pass |
+| (no file) | `analyze.py` also ports `pe_envbp` to Python and runs it on `envbp.npz` `pe_ref` → `datasheet/figures/ext_envbp_sim.pdf` + `\xBpSim*` macros (sim vs PIC, datasheet rev 0.3a Fig. 15 / Table 7; same code as notebook 05) |
 | `pc_host.npz` | the `pc.npz` raw captures corrected on the host with the PIC's algorithm (+ offsets) |
 
 Results are in datasheet rev 0.3 §4.7 (pattern correction) and §5 (link, envelope detection step by step, time of flight,

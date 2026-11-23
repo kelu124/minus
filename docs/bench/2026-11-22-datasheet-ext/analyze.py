@@ -138,6 +138,60 @@ if z is not None:
     ax.set_title("on-PIC envelopes on the echoes, gain ×3.2: band-pass removes the out-of-band floor")
     fig.tight_layout(); fig.savefig(FIG / "ext_envbp.pdf"); plt.close(fig)
 
+# ------------------------------------------------------------------------------------------------ envbp, simulated on the host
+def pic_envbp(x, dt, dec=8, fc_khz=3300, bw_khz=2500):
+    """Port of firmware/pic32/pe_ext.c pe_envbp for one shot (same formulas and rounding), in LSB; also returns the tap count.
+    Same code as python/notebooks/05_envbp_filter.ipynb."""
+    sig_t = 1.0 / (2 * np.pi * bw_khz * 1e3 / 2.3548)
+    half = min(max(int(3.0 * sig_t / dt + 0.5), 1), 32); k = np.arange(-half, half + 1)
+    g = np.exp(-0.5 * (k * dt / sig_t) ** 2); w = 2 * np.pi * fc_khz * 1e3 * dt
+    c, s_ = g * np.cos(w * k), g * np.sin(w * k); scale = 32.0 / g.sum()
+    x = x - x.mean(); n = len(x) // dec; out = np.empty(n)
+    for j in range(n):
+        i = j * dec + dec // 2 + k; m = (i >= 0) & (i < len(x))
+        out[j] = np.floor(np.hypot((c[m] * x[i[m]]).sum(), (s_[m] * x[i[m]]).sum()) * scale + 0.5)
+    return out / 16.0, 2 * half + 1
+
+
+z = load("envbp")
+if z is not None:
+    rf = z["pe_ref"].astype(float); dts = float(z["pe_dt_ns"]) * 1e-9; dec = 8
+    t = np.arange(rf.shape[1]) * dts * 1e6; te = (np.arange(rf.shape[1] // dec) * dec + dec // 2) * dts * 1e6
+    q, e1, qr, e1r = (te > 55) & (te < 78), (te > 38) & (te < 52), (t > 55) & (t < 78), (t > 38) & (t < 52)
+
+    def st(A, qq=q, ee=e1):                             # mean peak, mean floor rms, mean dB over the rows of A
+        pk = np.array([a[ee].max() for a in A]); fl = np.array([np.sqrt((a[qq] ** 2).mean()) for a in A])
+        return pk.mean(), fl.mean(), np.mean(20 * np.log10(pk / fl))
+    R = np.abs(rf - rf.mean(1, keepdims=True)); sr = st(R, qr, e1r)
+    rows = [f"raw $|x-\\bar x|$ (per sample) & -- & {sr[0]:.0f} & {sr[1]:.2f} & {sr[2]:.1f} & -- & --\\\\"]
+    sims = {}
+    for fc, bw in ((3300, 1500), (3300, 2500), (3300, 4000), (4000, 4000)):
+        sims[(fc, bw)] = (E := np.array([pic_envbp(y, dts, dec, fc, bw)[0] for y in rf]))
+        ntap = pic_envbp(rf[0], dts, dec, fc, bw)[1]
+        E16 = np.floor((np.sum(E * 16, 0) + 8) / 16) / 16.0
+        s1, m1, s16, m16 = st(E), st(z[f"bp_f{fc}_b{bw}_s1"]), st([E16]), st(z[f"bp_f{fc}_b{bw}_s16"])
+        rows.append(f"envbp {fc} / {bw} & {ntap} & {s1[0]:.0f} & {s1[1]:.2f} & {s1[2]:.1f} & {m1[2]:.1f} & {s16[2]:.1f} / {m16[2]:.1f}\\\\")
+        if (fc, bw) == (3300, 2500):
+            v("xBpSimDb", s1[2]); v("xBpPicDb", m1[2]); v("xBpTaps", ntap, "{:d}")
+            v("xBpRawDb", sr[2]); v("xBpRange", np.mean([20 * np.log10(a.max() / np.sqrt((a[q] ** 2).mean())) for a in E]))
+    V["xBpSimRows"] = "\n".join(rows)
+    E = sims[(3300, 2500)]; x0 = rf[0] - rf[0].mean()
+    fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.5), gridspec_kw=dict(width_ratios=[1, 1.6]))
+    m, me = (t >= 38) & (t <= 52), (te >= 38) & (te <= 52)
+    ax[0].plot(t[m], x0[m], color="0.7", lw=0.5, label="raw RF − mean")
+    ax[0].plot(te[me], E[0][me], "C3", lw=1.1, label="envbp (simulated)"); ax[0].plot(te[me], -E[0][me], "C3", lw=1.1)
+    ax[0].plot(te[me], E[0][me], "C3o", ms=2)
+    ax[0].set_xlabel("time after the pulse (µs)"); ax[0].set_ylabel("LSB"); ax[0].set_title("first echo (dots: one output per 8 samples)")
+    ax[0].legend(loc="upper right")
+    db = lambda a: 20 * np.log10(np.maximum(a, 1e-2))
+    ax[1].plot(t, db(R[0]), color="0.75", lw=0.4, label="raw |x − mean|")
+    ax[1].plot(te, db(E[0]), "C3", lw=0.9, label="envbp, simulated on this shot")
+    ax[1].plot(te, db(z["bp_f3300_b2500_s1"][0]), "C0", lw=0.7, alpha=0.8, label="envbp returned by the PIC (another shot)")
+    ax[1].axvspan(55, 78, color="C0", alpha=0.08)
+    ax[1].set_xlim(0, 165); ax[1].set_ylim(-20, 75); ax[1].set_xlabel("time after the pulse (µs)"); ax[1].set_ylabel("dB re 1 LSB")
+    ax[1].set_title("whole record in dB (shaded: floor window)"); ax[1].legend(loc="upper right")
+    fig.tight_layout(); fig.savefig(FIG / "ext_envbp_sim.pdf"); plt.close(fig)
+
 # ------------------------------------------------------------------------------------------------ acqos
 z = load("acqos")
 if z is not None:
