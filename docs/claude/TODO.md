@@ -5,6 +5,8 @@ When an item is finished, move it to [`DONE.md`](DONE.md) with the date.
 
 ## Now
 
+- **2026-11-23 (session 14, offline, no board):** notebook 05 (envbp simulated on `envbp.npz`: 56.5 dB sim vs 56.0 dB PIC
+  echo/floor, ~66 dB full range) + datasheet rev 0.3a. Firmware unchanged (rp 1.1.9 / pic 1.1.6); the 2026-11-22 next steps below still apply.
 - **RESUME HERE (2026-11-22 afternoon, session 13): rp 1.1.9 / pic 1.1.6, proto 15 on board 3, transducer connected.**
   Datasheet rev 0.3 (22 pages) from `docs/bench/2026-11-22-datasheet-ext/` (12 tests, .npz). Next: (a) **E8**: `reboot dfu` loses the
   board when the transducer is connected — test with TX unplugged, then with R70/R71-like pulls (E1) bodged on; (b) period-4

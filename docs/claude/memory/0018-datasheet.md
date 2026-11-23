@@ -1,6 +1,6 @@
 # 0018 — Datasheet of board 3 (2026-11-19, session 11)
 
-**Status:** now **rev 0.3** (2026-11-22, 22 pages, rp 1.1.9 / pic 1.1.6): rev 0.1 numbers below + `ext_values.tex` from
+**Status:** now **rev 0.3a** (2026-11-23, 23 pages: + envbp sim vs firmware Fig. 15 / Table 7, see [[0023-envbp-simulation-and-repo-rules]]; rev 0.3 2026-11-22, rp 1.1.9 / pic 1.1.6): rev 0.1 numbers below + `ext_values.tex` from
 `docs/bench/2026-11-22-datasheet-ext/` (campaign.py → .npz → analyze.py; link, envelopes step by step, envbp, tof, acqos, tgc,
 DAC, lock, period-4 before/after, live view) · type: project
 - Source `datasheet/minus-datasheet.tex` (pdflatex; no siunitx/latexmk on this machine; Unicode symbols declared

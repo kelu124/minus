@@ -8,7 +8,7 @@ the sha.
 
 ## Pending
 
-- (none)
+- 2026-11-23  memory 0023 (envbp sim vs firmware, repo rules), 0018 → rev 0.3a, TODO/DONE, session 14 log
 
 ## Committed
 
